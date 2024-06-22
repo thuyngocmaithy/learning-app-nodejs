@@ -1,16 +1,22 @@
 import express from 'express';
-import bodyParser from 'body-parser';
+import connectDB from './config/connectDB';
+import dotenv from 'dotenv';
 import cors from 'cors';
+import bodyParser from 'body-parser';
 
+// Nạp các biến môi trường từ file .env
+dotenv.config();
+
+// Khởi tạo ứng dụng Express
 const app = express();
-
-// Middleware
-app.use(bodyParser.json());
 app.use(cors());
+app.use(bodyParser.json());
 
-// Routes
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+// Kết nối MongoDB
+connectDB();
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
-
-export default app;
