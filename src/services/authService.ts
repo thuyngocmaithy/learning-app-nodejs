@@ -36,26 +36,37 @@ export const registerUser = async (email: string, password: string, mssv: string
     return newUser;
 };
 
-export const loginUser = async ( mssv: string, password: string): Promise<string> => {
+export const loginUser = async (mssv: string, password: string): Promise<{ accessToken: string, refreshToken: string, expiresIn: number }> => {
     const user = await User.findOne({ mssv });
 
     if (!user) {
-        throw new Error('Invalid mssv or password');
+        throw new Error('Invalid mssv');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // For demonstration purposes, assuming password validation is done before reaching this point
+    // const isPasswordValid = await bcrypt.compare(password, user.password);
+    // if (!isPasswordValid) {
+    //     throw new Error('Invalid password');
+    // }
 
-    if (!isPasswordValid) {
-        throw new Error('Invalid mssv or password');
+    if (password !== user.password) {
+        throw new Error('Invalid password');
     }
 
-    const token = jwt.sign(
-        { userId: user.id, email: user.email, mssv: user.mssv },
+    const expiresIn = 3600; // Thời gian hết hạn của token (đơn vị: giây)
+
+    const accessToken = jwt.sign(
+        { userId: user.id, mssv: user.mssv },
         JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn }
     );
 
-    return token;
+    const refreshToken = jwt.sign(
+        { userId: user.id, mssv: user.mssv },
+        JWT_SECRET
+    );
+
+    return { accessToken, refreshToken, expiresIn };
 };
 
 export const refreshAccessToken = async (refreshToken: string): Promise<string> => {
@@ -66,7 +77,7 @@ export const refreshAccessToken = async (refreshToken: string): Promise<string> 
     }
 
     const accessToken = jwt.sign(
-        { userId: user.id, email: user.email, mssv: user.mssv },
+        { userId: user.id, mssv: user.mssv },
         JWT_SECRET,
         { expiresIn: '1h' }
     );

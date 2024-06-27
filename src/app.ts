@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 connectDB();
 
 // Sử dụng router xác thực
-app.use('/api/auth', authRouter);
+app.use('/api', authRouter);
 
 // Route được bảo vệ để kiểm tra xác thực
 app.get('/api/protected', authMiddleware, async (req, res) => {
