@@ -1,4 +1,4 @@
-import User, { IUser } from '../models/user';
+import User, { IUser } from '../models/user.model';
 import { validateEmail, validatePassword, validateMSSV } from '../utils/config';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
@@ -36,7 +36,7 @@ export const registerUser = async (email: string, password: string, mssv: string
     return newUser;
 };
 
-export const loginUser = async (password: string, mssv: string): Promise<string> => {
+export const loginUser = async ( mssv: string, password: string): Promise<string> => {
     const user = await User.findOne({ mssv });
 
     if (!user) {

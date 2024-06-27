@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { registerUser, loginUser, refreshAccessToken } from '../../services/authService';
-import User from '../../models/user';
+import User from '../../models/user.model';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import randToken from 'rand-token';
@@ -27,7 +27,7 @@ export const registerController = async (req: Request, res: Response): Promise<v
     const { password, mssv } = req.body;
   
     try {
-      const token = await loginUser(password, mssv);
+      const token = await loginUser( mssv, password);
       await response(res, 200, 'success', { token }, 'Login successful');
     } catch (error) {
       await response(res, 401, 'error', null, error instanceof Error ? error.message : 'Login failed');
