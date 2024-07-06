@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { ISubject } from './subject.models'; // Adjust the import path as needed
+import { ISubject } from './subject.model'; // Adjust the import path as needed
 
 interface IDiemThanhPhan extends Document {
     ten_thanh_phan: string;

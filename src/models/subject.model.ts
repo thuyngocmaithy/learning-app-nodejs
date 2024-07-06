@@ -11,17 +11,17 @@ export interface ISubject extends Document {
     idMonhoc: string;
     tenMonHoc: string;
     tinchi: number;
-    divide: string;
-    idMonhoc_truoc: string;
+    divide: boolean;
+    idMonhoc_truoc?: string;
     haveMonhoctuongduong: boolean;
-    idMonhoctuongduong: string;
+    idMonhoctuongduong?: string;
 }
 
 const subjectSchema: Schema<ISubject> = new Schema<ISubject>({
     idMonhoc: { type: String, required: true, unique: true },
     tenMonHoc: { type: String, required: true },
     tinchi: { type: Number, required: true },
-    divide: { type: String, required: true },
+    divide: { type: Boolean, required: true },
     idMonhoc_truoc: { type: String, required: false },
     haveMonhoctuongduong: { type: Boolean, required: true },
     idMonhoctuongduong: { type: String, required: false }
@@ -29,3 +29,4 @@ const subjectSchema: Schema<ISubject> = new Schema<ISubject>({
 
 const Subject = mongoose.model<ISubject>('Subject', subjectSchema);
 export default Subject;
+
