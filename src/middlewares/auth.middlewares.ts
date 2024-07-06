@@ -5,7 +5,7 @@ import { response } from '../utils/responseHelper';
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 interface DecodedToken {
-  userId: string;
+  accountId: string;
   email: string;
   mssv: string;
 }
@@ -13,7 +13,7 @@ interface DecodedToken {
 declare global {
   namespace Express {
     interface Request {
-      user?: DecodedToken;
+      account?: DecodedToken;
     }
   }
 }
@@ -28,7 +28,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
-    req.user = decoded;
+    req.account = decoded;
     next();
   } catch (error) {
     return await response(res, 403, 'error', null, 'Invalid or expired token');

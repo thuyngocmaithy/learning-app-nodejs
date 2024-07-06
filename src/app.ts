@@ -23,7 +23,7 @@ app.use('/api', authRouter);
 
 // Route được bảo vệ để kiểm tra xác thực
 app.get('/api/protected', authMiddleware, async (req, res) => {
-  await response(res, 200, 'success', { user: req.user }, 'Xác thực thành công!');
+  await response(res, 200, 'success', { account: req.account }, 'Xác thực thành công!');
 });
 
 // Route chính

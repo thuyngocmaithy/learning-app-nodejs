@@ -30,10 +30,6 @@ const chucNangSchema = new mongoose_1.Schema({
     ma_menu: { type: String },
     thu_tu: { type: Number, required: true },
     ten_hien_thi: { type: String, required: true },
-    ten_mobile: {
-        nhom: { type: String },
-        ten_eng: { type: String }
-    },
     ten_hien_thi_Eg: { type: String, required: true },
     ten_tooltip: { type: String, required: true },
     url: { type: String, required: true },
