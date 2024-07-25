@@ -1,36 +1,11 @@
-// src/config/connectDB.ts
-import { Sequelize } from 'sequelize';
-import dotenv from 'dotenv';
-import mysql2 from 'mysql2'
-
-// Nạp các biến môi trường từ file .env
-dotenv.config();
-
-const sequelize = new Sequelize(
-  process.env.DB_NAME as string,
-  process.env.DB_USER as string,
-  process.env.DB_PASSWORD as string,
-  {
-    host: process.env.DB_HOST as string,
-    dialect: 'mysql',
-    logging: false, // Đặt thành true nếu muốn xem các câu lệnh SQL trong console
-    dialectModule: mysql2
-  }
-);
+import { AppDataSource } from '../data-source';
 
 export const connectDB = async (): Promise<void> => {
   try {
-    await sequelize.authenticate();
+    await AppDataSource.initialize();
     console.log('Cơ sở dữ liệu MySQL được kết nối thành công');
-
-    // Đồng bộ các mô hình với cơ sở dữ liệu
-    await sequelize.sync({ alter: true }); // Thay đổi bảng nếu cần thiết
-
-    console.log('Cơ sở dữ liệu được đồng bộ hóa');
   } catch (error) {
     console.error('Không thể kết nối với cơ sở dữ liệu MySQL:', error);
     process.exit(1);
   }
 };
-
-export { sequelize };

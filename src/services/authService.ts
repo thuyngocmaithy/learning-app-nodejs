@@ -1,5 +1,5 @@
-// services/authService.ts
-import Account from '../models/account.model';
+import { AppDataSource } from '../data-source';
+import { Account } from '../entities/Account';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -14,10 +14,15 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
  * @returns Tài khoản mới được tạo
  */
 export const registerAccount = async (email: string, password: string, mssv: string) => {
+    const accountRepository = AppDataSource.getRepository(Account);
+
     // Mã hóa mật khẩu
     const hashedPassword = await bcrypt.hash(password, 10);
+
     // Tạo tài khoản mới trong cơ sở dữ liệu
-    const newAccount = await Account.create({ email, password: hashedPassword, mssv });
+    const newAccount = accountRepository.create({ email, password: hashedPassword, mssv });
+    await accountRepository.save(newAccount);
+
     return newAccount;
 };
 
@@ -28,8 +33,10 @@ export const registerAccount = async (email: string, password: string, mssv: str
  * @returns Object chứa accessToken, refreshToken và thời gian hết hạn của accessToken
  */
 export const loginAccount = async (mssv: string, password: string) => {
+    const accountRepository = AppDataSource.getRepository(Account);
+
     // Tìm tài khoản trong cơ sở dữ liệu
-    const account = await Account.findOne({ where: { mssv } });
+    const account = await accountRepository.findOneBy({ mssv });
     if (!account) throw new Error('Tài khoản không tồn tại');
 
     // So sánh mật khẩu

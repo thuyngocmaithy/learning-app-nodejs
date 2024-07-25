@@ -1,14 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { response } from '../utils/responseHelper';
-
+import { AppDataSource } from '../data-source'; // Import DataSource từ TypeORM
+import { Account } from '../entities/Account'; // Import model Account
 
 // Lấy bí mật JWT từ biến môi trường hoặc đặt giá trị mặc định
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
 // Định nghĩa kiểu dữ liệu cho token đã giải mã
 interface DecodedToken {
-  accountId: string;
+  accountId: number;
   email: string;
   mssv: string;
 }
@@ -17,7 +18,7 @@ interface DecodedToken {
 declare global {
   namespace Express {
     interface Request {
-      account?: DecodedToken;
+      account?: Account;
     }
   }
 }
@@ -37,7 +38,16 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
   try {
     // Giải mã token và gán thông tin vào req.account
     const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
-    req.account = decoded;
+
+    // Tìm tài khoản trong cơ sở dữ liệu
+    const accountRepository = AppDataSource.getRepository(Account);
+    const account = await accountRepository.findOneBy({ id: decoded.accountId });
+
+    if (!account) {
+      return await response(res, 403, 'error', null, 'Tài khoản không tồn tại');
+    }
+
+    req.account = account;
     next(); // Tiếp tục với middleware hoặc route handler kế tiếp
   } catch (error) {
     // Xử lý lỗi nếu token không hợp lệ hoặc đã hết hạn

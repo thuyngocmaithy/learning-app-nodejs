@@ -1,4 +1,3 @@
-// controllers/auth.controller.ts
 import { Request, Response } from 'express';
 import { registerAccount, loginAccount, refreshAccessToken } from '../../services/authService';
 import { response } from '../../utils/responseHelper';
