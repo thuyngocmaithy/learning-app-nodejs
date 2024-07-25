@@ -1,7 +1,7 @@
 // src/config/connectDB.ts
 import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
-import Account from '../models/account.model';
+import mysql2 from 'mysql2'
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
@@ -13,7 +13,8 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST as string,
     dialect: 'mysql',
-    logging: false // Đặt thành true nếu muốn xem các câu lệnh SQL trong console
+    logging: false, // Đặt thành true nếu muốn xem các câu lệnh SQL trong console
+    dialectModule: mysql2
   }
 );
 
