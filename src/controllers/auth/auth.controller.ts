@@ -1,44 +1,63 @@
+// controllers/auth.controller.ts
 import { Request, Response } from 'express';
 import { registerAccount, loginAccount, refreshAccessToken } from '../../services/authService';
-import Account from '../../models/account.model';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import randToken from 'rand-token';
 import { response } from '../../utils/responseHelper';
 
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
-
+/**
+ * Controller xử lý đăng ký tài khoản người dùng
+ * @param req - Đối tượng yêu cầu HTTP
+ * @param res - Đối tượng phản hồi HTTP
+ */
 export const registerController = async (req: Request, res: Response): Promise<void> => {
-    const { email, password, mssv } = req.body;
-  
-    try {
-      const newAccount = await registerAccount(email, password, mssv);
-      await response(res, 201, 'success', { Account: newAccount }, 'Account registered successfully');
-    } catch (error) {
-      await response(res, 400, 'error', null, error instanceof Error ? error.message : 'Registration failed');
-    }
+  const { email, password, mssv } = req.body;
+
+  try {
+    // Gọi hàm đăng ký tài khoản từ service
+    const newAccount = await registerAccount(email, password, mssv);
+    // Gửi phản hồi thành công với thông tin tài khoản mới
+    await response(res, 201, 'success', { Account: newAccount }, 'Tài khoản đã được đăng ký thành công');
+  } catch (error) {
+    // Gửi phản hồi lỗi nếu có lỗi xảy ra
+    await response(res, 400, 'error', null, error instanceof Error ? error.message : 'Đăng ký không thành công');
+  }
 };
 
+/**
+ * Controller xử lý đăng nhập người dùng
+ * @param req - Đối tượng yêu cầu HTTP
+ * @param res - Đối tượng phản hồi HTTP
+ */
 export const loginController = async (req: Request, res: Response): Promise<void> => {
-    console.log('Received login request:', req.body); // Debugging line
-    const { mssv, password } = req.body;
-    
-    try {
-        const { accessToken, refreshToken, expiresIn } = await loginAccount(mssv, password);
-        await response(res, 200, 'success', { accessToken, refreshToken, expiresIn }, 'Login successful');
-    } catch (error) {
-        await response(res, 401, 'error', null, error instanceof Error ? error.message : 'Login failed');
-    }
+  console.log('Nhận yêu cầu đăng nhập:', req.body); // Dòng log debug
+
+  const { mssv, password } = req.body;
+
+  try {
+    // Gọi hàm đăng nhập từ service
+    const { accessToken, refreshToken, expiresIn } = await loginAccount(mssv, password);
+    // Gửi phản hồi thành công với thông tin token và thời gian hết hạn
+    await response(res, 200, 'success', { accessToken, refreshToken, expiresIn }, 'Đăng nhập thành công');
+  } catch (error) {
+    // Gửi phản hồi lỗi nếu có lỗi xảy ra
+    await response(res, 401, 'error', null, error instanceof Error ? error.message : 'Đăng nhập không thành công');
+  }
 };
-  
+
+/**
+ * Controller xử lý làm mới token
+ * @param req - Đối tượng yêu cầu HTTP
+ * @param res - Đối tượng phản hồi HTTP
+ */
 export const refreshTokenController = async (req: Request, res: Response): Promise<void> => {
-    const { refreshToken } = req.body;
-  
-    try {
-      const accessToken = await refreshAccessToken(refreshToken);
-      await response(res, 200, 'success', { accessToken }, 'Access token refreshed successfully');
-    } catch (error) {
-      await response(res, 401, 'error', null, error instanceof Error ? error.message : 'Token refresh failed');
-    }
+  const { refreshToken } = req.body;
+
+  try {
+    // Gọi hàm làm mới token từ service
+    const accessToken = await refreshAccessToken(refreshToken);
+    // Gửi phản hồi thành công với token truy cập mới
+    await response(res, 200, 'success', { accessToken }, 'Token truy cập đã được làm mới thành công');
+  } catch (error) {
+    // Gửi phản hồi lỗi nếu có lỗi xảy ra
+    await response(res, 401, 'error', null, error instanceof Error ? error.message : 'Làm mới token không thành công');
+  }
 };

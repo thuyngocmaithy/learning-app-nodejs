@@ -1,21 +1,48 @@
-import mongoose, { Schema, Document } from 'mongoose';
+// src/models/account.model.ts
+import { DataTypes, Model, Optional } from 'sequelize';
+import { sequelize } from '../config/connectDB';
 
-export interface IAccount extends Document {
-  mssv: string;
-  password: string;
+interface AccountAttributes {
+  id: number;
   email: string;
-  role : string,
-  refreshToken?: string;
+  password: string;
+  mssv: string;
 }
 
-const AccountSchema = new Schema<IAccount>({
-  mssv: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  role: { type: String, enum: ['admin', 'Account'], required: true },
-  refreshToken: { type: String, required: true }
-});
+interface AccountCreationAttributes extends Optional<AccountAttributes, 'id'> { }
 
-const Account = mongoose.model<IAccount>('Account', AccountSchema);
+class Account extends Model<AccountAttributes, AccountCreationAttributes> implements AccountAttributes {
+  public id!: number;
+  public email!: string;
+  public password!: string;
+  public mssv!: string;
+}
+
+Account.init(
+  {
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    mssv: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+  },
+  {
+    sequelize,
+    tableName: 'account',
+    timestamps: false,
+  }
+);
 
 export default Account;

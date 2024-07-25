@@ -1,3 +1,4 @@
+// src/utils/responseHelper.ts
 import { Response } from "express";
 
 // Định nghĩa kiểu cho StatusCodes
@@ -24,6 +25,7 @@ interface ResponseData {
   message: string;
 }
 
+// Hàm phản hồi
 const response = async (
   res: Response,
   code: StatusCodes,
