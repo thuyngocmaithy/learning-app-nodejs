@@ -1,7 +1,7 @@
 // src/index.ts (hoặc file tương tự)
 import express, { Request, Response } from 'express';
-import { connectDB } from '../src/config/connectDB';
-import authRoutes from '../src/routes/authRoutes';
+import { connectDB } from './config/connectDB';
+import authRoutes from './routes/authRoutes';
 
 const app = express();
 
