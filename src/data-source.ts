@@ -14,7 +14,7 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_NAME,
     synchronize: true, // Đồng bộ tự động
     logging: false, // Đặt thành true nếu muốn xem các câu lệnh SQL trong console
-    entities: [Account], // Đường dẫn đến các thực thể
+    entities: [__dirname + '/entities/*.ts'], // Đường dẫn đến các thực thể
     migrations: [__dirname + '/migrations/*.ts'], // Đường dẫn đến các tệp di chuyển
     subscribers: [__dirname + '/subscribers/*.ts'], // Đường dẫn đến các tệp phụ
 });

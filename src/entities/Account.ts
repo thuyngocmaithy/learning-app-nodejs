@@ -1,16 +1,28 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { User } from './User';
+import { Permission } from './Permission';
 
-@Entity('account')
+// Tài khoản
+@Entity()
 export class Account {
     @PrimaryGeneratedColumn()
     id!: number;
 
-    @Column({ type: 'varchar', length: 255 })
-    email!: string;
+    @Column({ unique: true })
+    username!: string;
 
-    @Column({ type: 'varchar', length: 255 })
+    @Column()
     password!: string;
 
-    @Column({ type: 'varchar', length: 255 })
-    mssv!: string;
+    @Column({ unique: true })
+    email!: string;
+
+    @Column({ nullable: true })
+    refreshToken!: string;
+
+    // @OneToOne(() => User, user => user.account)
+    // user!: User;
+
+    @OneToMany(() => Permission, p => p.account)
+    permissions: Permission[];
 }

@@ -2,10 +2,11 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import authRouter from './routes/authRoutes';
+// import authRouter from './routes/authRoutes';
 import { authMiddleware } from './middlewares/auth.middlewares';
 import { response } from './utils/responseHelper';
 import { connectDB } from './config/connectDB'; // Import kết nối TypeORM
+import path from 'path';
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
@@ -22,8 +23,9 @@ connectDB().then(() => {
     console.error('Không thể kết nối cơ sở dữ liệu:', error);
 });
 
+app.use(express.static(getPublicDir()))
 // Sử dụng router xác thực
-app.use('/api', authRouter);
+// app.use('/api', authRouter);
 
 // Route được bảo vệ để kiểm tra xác thực
 app.get('/api/protected', authMiddleware, async (req, res) => {
@@ -42,3 +44,7 @@ app.listen(PORT, () => {
 });
 
 export default app;
+
+function getPublicDir() {
+    return process.env.PUBLIC_DIR || path.resolve(__dirname, "..", "public");
+}
