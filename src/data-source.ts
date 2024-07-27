@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
-import { Account } from './entities/Account';
+import { Account } from './entities/account.entities';
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
@@ -14,7 +14,7 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_NAME,
     synchronize: true, // Đồng bộ tự động
     logging: false, // Đặt thành true nếu muốn xem các câu lệnh SQL trong console
-    entities: [__dirname + '/entities/*.ts'], // Đường dẫn đến các thực thể
-    migrations: [__dirname + '/migrations/*.ts'], // Đường dẫn đến các tệp di chuyển
-    subscribers: [__dirname + '/subscribers/*.ts'], // Đường dẫn đến các tệp phụ
+    entities: [__dirname + '/entities/*{.js,.ts}'], // Đường dẫn đến các thực thể
+    migrations: [__dirname + '/migrations/**{.js,.ts}'], // Đường dẫn đến các tệp di chuyển
+    subscribers: [__dirname + '/subscribers/**{.js,.ts}'], // Đường dẫn đến các tệp phụ
 });

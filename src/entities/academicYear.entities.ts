@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
-import { Semester } from './Semester';
+import { Semester } from './semester.entities';
 
 // Năm học
 @Entity()

@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne } from 'typeorm';
-import { Account } from './Account';
+import { Account } from './account.entities';
 
 // Quyền
 @Entity()

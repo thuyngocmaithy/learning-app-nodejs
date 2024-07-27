@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, OneToMany, BeforeInsert, BeforeUpdate, ManyToMany, JoinTable } from 'typeorm';
-import { Follower } from './Follower';
-import { User, UserRole } from './User';
+import { Follower } from './follower.entities';
+import { User, UserRole } from './user.entities';
 // import { BadRequestException } from '@nestjs/common';
 
 // Khóa luận

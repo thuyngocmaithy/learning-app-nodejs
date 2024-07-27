@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToOne, JoinColumn, PrimaryGeneratedColumn, OneToOne } from 'typeorm';
-import { User } from './User';
-import { Subject } from './Subject';
-import { Score } from './Score';
+import { User } from './user.entities';
+import { Subject } from './subject.entities';
+import { Score } from './score.entities';
 
 // Sinh viên đăng ký môn nào
 @Entity()

@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne, OneToMany } from 'typeorm';
-import { Permission } from './Permission';
+import { Permission } from './permission.entities';
 
 // Chức năng
 @Entity()

@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, OneToOne } from 'typeorm';
-import { Subject } from './Subject'; // Adjust the import path as needed
-import { User } from './User';
-import { Student_Subject } from './Student_Subject';
+import { Subject } from './subject.entities'; // Adjust the import path as needed
+import { User } from './user.entities';
+import { Student_Subject } from './student_subject.entities';
 
 // Điểm
 @Entity()

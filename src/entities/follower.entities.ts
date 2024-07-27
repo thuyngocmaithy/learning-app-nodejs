@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, ManyToOne } from 'typeorm';
-import { User } from './User'; // Replace with your User entity
-import { Internship } from './Intern';
-import { Project } from './Project';
-import { Thesis } from './Thesis';
+import { User } from './user.entities'; // Replace with your User entity
+import { Internship } from './intern.entities';
+import { Project } from './project.entities';
+import { Thesis } from './thesis.entities';
 
 // Người theo dõi
 @Entity()

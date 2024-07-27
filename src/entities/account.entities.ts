@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
-import { User } from './User';
-import { Permission } from './Permission';
+import { User } from './user.entities';
+import { Permission } from './permission.entities';
 
 // Tài khoản
 @Entity()

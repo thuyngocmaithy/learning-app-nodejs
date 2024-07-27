@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany, ManyToOne } from 'typeorm';
-import { Subject } from './Subject';
+import { Subject } from './subject.entities';
 
 
 // Khung đào tạo

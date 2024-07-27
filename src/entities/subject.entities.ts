@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany } from 'typeorm';
-import { User } from './User';
-import { Score } from './Score';
-import { Student_Subject } from './Student_Subject';
-import { StudyFrame } from './StudyFrame';
+import { User } from './user.entities';
+import { Score } from './score.entities';
+import { Student_Subject } from './student_subject.entities';
+import { StudyFrame } from './studyFrame.entities';
 
 // Học phần
 @Entity()

@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne } from 'typeorm';
-import { Subject } from './Subject';
-import { AcademicYear } from './AcademicYear';
+import { Subject } from './subject.entities';
+import { AcademicYear } from './academicYear.entities';
 
 // Học kỳ
 @Entity()

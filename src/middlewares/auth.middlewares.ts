@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { response } from '../utils/responseHelper';
 import { AppDataSource } from '../data-source'; // Import DataSource từ TypeORM
-import { Account } from '../entities/Account'; // Import model Account
+import { Account } from '../entities/account.entities'; // Import model Account
 
 // Lấy bí mật JWT từ biến môi trường hoặc đặt giá trị mặc định
 const JWT_SECRET = process.env.JWT_SECRET as string;

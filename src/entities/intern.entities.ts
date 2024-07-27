@@ -10,8 +10,8 @@ import {
   UpdateDateColumn,
   OneToMany
 } from 'typeorm';
-import { User } from './User';
-import { Follower } from './Follower';
+import { User } from './user.entities';
+import { Follower } from './follower.entities';
 
 
 // Thực tập

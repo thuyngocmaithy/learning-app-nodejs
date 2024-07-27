@@ -1,13 +1,13 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinTable, ManyToMany, OneToOne } from 'typeorm';
-import { Subject } from './Subject';
-import { Project } from './Project';
-import { Student_Subject } from './Student_Subject';
-import { Score } from './Score';
-import { Follower } from './Follower';
-import { Thesis } from './Thesis';
-import { Account } from './Account';
-import { Attachment } from './Attach';
-import { Internship } from './Intern';
+import { Subject } from './subject.entities';
+import { Project } from './project.entities';
+import { Student_Subject } from './student_subject.entities';
+import { Score } from './score.entities';
+import { Follower } from './follower.entities';
+import { Thesis } from './thesis.entities';
+import { Account } from './account.entities';
+import { Attachment } from './attach.entities';
+import { Internship } from './intern.entities';
 
 export enum UserRole {
   STUDENT = 'student',

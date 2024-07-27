@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, ManyToOne, OneToMany } from 'typeorm';
-import { Follower } from './Follower';
-import { User } from './User';
+import { Follower } from './follower.entities';
+import { User } from './user.entities';
 
 // Dự án nghiên cứu
 @Entity()
