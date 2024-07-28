@@ -17,12 +17,12 @@ export const validatePassword = (password: string): boolean => {
   });
 };
 
-export const validateMSSV = (mssv: string): boolean => {
-  // MSSV có dạng 312xxxxxxx (tổng 10 số)
-  const mssvRegex = /^312\d{7}$/;
-  return mssvRegex.test(mssv);
+export const validateusername = (username: string): boolean => {
+  // username có dạng 312xxxxxxx (tổng 10 số)
+  const usernameRegex = /^312\d{7}$/;
+  return usernameRegex.test(username);
 };
 
-export const validateUser = (email: string, password: string, mssv: string): boolean => {
-  return validateEmail(email) && validatePassword(password) && validateMSSV(mssv);
+export const validateUser = (email: string, password: string, username: string): boolean => {
+  return validateEmail(email) && validatePassword(password) && validateusername(username);
 };

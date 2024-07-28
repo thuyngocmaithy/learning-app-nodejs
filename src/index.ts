@@ -3,10 +3,11 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 // import authRouter from './routes/authRoutes';
-import { authMiddleware } from './middlewares/auth.middlewares';
+import { authMiddleware } from './middlewares/auth.middleware';
 import { response } from './utils/responseHelper';
 import { connectDB } from './config/connectDB'; // Import kết nối TypeORM
 import path from 'path';
+import authRoutes from './routes/auth.route';
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
@@ -16,14 +17,20 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+const PORT = process.env.PORT || 5000;
+
 // Kết nối cơ sở dữ liệu với TypeORM
 connectDB().then(() => {
-    console.log('Kết nối cơ sở dữ liệu thành công');
+    // Chỉ khởi động server sau khi kết nối cơ sở dữ liệu thành công
+    app.listen(PORT, () => {
+        console.log(`Server đang chạy trên cổng ${PORT}`);
+    });
 }).catch((error) => {
     console.error('Không thể kết nối cơ sở dữ liệu:', error);
 });
 
-app.use(express.static(getPublicDir()))
+app.use(express.static(getPublicDir()));
+
 // Sử dụng router xác thực
 // app.use('/api', authRouter);
 
@@ -37,11 +44,8 @@ app.get('/', (req, res) => {
     res.send('Chào mừng đến với API của chúng tôi!');
 });
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-    console.log(`Server đang chạy trên cổng ${PORT}`);
-});
+// Sử dụng router auth
+app.use('/api/auth', authRoutes);
 
 export default app;
 

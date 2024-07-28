@@ -1,6 +1,5 @@
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
-import { Account } from './entities/account.entities';
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
