@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Permission } from './Permission';
 
 /**
@@ -37,9 +37,9 @@ export class Account {
   refreshToken: string;
 
   /**
-   * Quyền (tham chiếu đến thực thể Permission, không rỗng)
+   * Quyền (tham chiếu đến thực thể Permission)
    */
-  @OneToOne(() => Permission, { nullable: false })
-  @JoinColumn()
+  @ManyToOne(() => Permission)
+  @JoinColumn({ name: 'permissionId' })
   permission: Permission;
 }

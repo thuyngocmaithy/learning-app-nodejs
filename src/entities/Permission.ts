@@ -1,6 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Account } from './Account';
-import { User } from './User';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * Thực thể Quyền

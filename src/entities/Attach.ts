@@ -14,6 +14,12 @@ export class Attach {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+    /**
+   * Tên code tập tin (không rỗng)
+   */
+    @Column({ nullable: false })
+    code: string;
+
   /**
    * Tên tập tin (không rỗng)
    */

@@ -31,7 +31,7 @@ const response = async (
   code: StatusCodes,
   status: string,
   data: any,
-  message?: string
+  message?: unknown | string,
 ): Promise<Response<ResponseData>> => {
   if (!message) {
     message = getReasonPhrase(code);

@@ -1,0 +1,18 @@
+import { Request, Response } from 'express';
+import { FollowerService } from '../services/follower.service';
+import { DataSource } from 'typeorm';
+import { RequestHandler } from '../utils/requestHandler';
+import { Follower } from '../entities/Follower';
+export class FollowerController {
+  private followerService: FollowerService;
+
+  constructor(dataSource: DataSource) {
+    this.followerService = new FollowerService(dataSource);
+  }
+
+  public getAllFollowers = (req: Request, res: Response) => RequestHandler.getAll<Follower>(req, res, this.followerService);
+  public getFollowerById = (req: Request, res: Response) => RequestHandler.getById<Follower>(req, res, this.followerService);
+  public createFollower = (req: Request, res: Response) => RequestHandler.create<Follower>(req, res, this.followerService);
+  public updateFollower = (req: Request, res: Response) => RequestHandler.update<Follower>(req, res, this.followerService);
+  public deleteFollower = (req: Request, res: Response) => RequestHandler.delete(req, res, this.followerService);
+}
