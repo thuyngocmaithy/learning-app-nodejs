@@ -25,9 +25,20 @@ export class StudyFrame {
   @Column({ nullable: false })
   description: string;
 
-  /**
-   * Số khung (không rỗng)
-   */
-  @Column('int', { nullable: false })
-  frameNumber: number;
+  // /**
+  //  * Số khung (không rỗng)
+  //  */
+  // @Column('int', { nullable: false })
+  // frameNumber: number;
+
+  // /**
+  //  * có chia (không rỗng)
+  //  */
+  @Column('boolean', {nullable: false})
+  divide : boolean;
+
+
+  // @Column('boolean', {nullable: false})
+  // isComplusory : boolean;
+
 }

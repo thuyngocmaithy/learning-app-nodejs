@@ -21,6 +21,7 @@ import internshipFacultyRoutes from './routes/internship_faculty.route';
 import internshipRoutes from './routes/internship.route';
 import thesisRoute from './routes/thesis.route';
 import subjectRoute from './routes/subject.route';
+import subject_SemesteRouter from './routes/subject_semester.route';
 import studyFrameRoute from './routes/studyFrame.route';
 import statusRoute from './routes/status.route';
 import semesterRoute from './routes/semeter.route';
@@ -88,6 +89,7 @@ app.use('/api/semesters', semesterRoute);
 app.use('/api/statuses', statusRoute);
 app.use('/api/study-frames', studyFrameRoute);
 app.use('/api/subjects', subjectRoute);
+app.use('/api/subject-semester', subject_SemesteRouter);
 app.use('/api/theses', thesisRoute);
 
 export default app;

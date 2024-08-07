@@ -24,4 +24,7 @@ export class Semester {
    */
   @ManyToOne(() => AcademicYear, data => data.id, { nullable: false })
   academicYear: AcademicYear;
+
+
+  
 }

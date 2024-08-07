@@ -35,8 +35,8 @@ export class Subject {
   /**
    * ID học kỳ (tham chiếu đến thực thể Semester, không rỗng)
    */
-  @ManyToOne(() => Semester, data => data.id, { nullable: false })
-  semester: Semester;
+  // @ManyToOne(() => Semester, data => data.id, { nullable: false })
+  // semester: Semester[];
 
   /**
    * Số tín chỉ (không rỗng)
