@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { User } from "./User";
 
 /**
  * Thực thể Loại trạng thái
@@ -30,8 +31,32 @@ export class Status {
     type: 'Tiến độ dự án nghiên cứu' | 'Tiến độ khóa luận' | 'Tiến độ thực tập' = "Tiến độ dự án nghiên cứu";
 
     /**
-     * Mô tả (không rỗng)
+         * Số thứ tự (không rỗng)
+         */
+    @Column('int', { nullable: false })
+    orderNo: number;
+
+    /**
+     * ID người tạo (tham chiếu đến thực thể User, không rỗng)
      */
-    @Column({ nullable: false })
-    description: string;
+    @ManyToOne(() => User, data => data.id, { nullable: false })
+    createUser: User;
+
+    /**
+     * Ngày tạo (không rỗng)
+     */
+    @CreateDateColumn()
+    createDate: Date;
+
+    /**
+     * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
+     */
+    @ManyToOne(() => User, data => data.id, { nullable: true })
+    lastModifyUser: User;
+
+    /**
+     * Ngày chỉnh sửa cuối cùng (không rỗng)
+     */
+    @UpdateDateColumn()
+    lastModifyDate: Date;
 }

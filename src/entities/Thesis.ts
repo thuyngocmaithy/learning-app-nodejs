@@ -45,12 +45,6 @@ export class Thesis {
   supervisor: User;
 
   /**
-   * ID sinh viên (tham chiếu đến thực thể User, không rỗng)
-   */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
-  student: User;
-
-  /**
    * ID khoa (tham chiếu đến thực thể Faculty, không rỗng)
    */
   @ManyToOne(() => Faculty, faculty => faculty.id, { nullable: false })

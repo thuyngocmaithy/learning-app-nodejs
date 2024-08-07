@@ -20,14 +20,8 @@ export class StudyFrame {
   frameName: string;
 
   /**
-   * Mô tả (không rỗng)
+   * Có chia ra cơ sở và chuyên không, mặc định: không, không rỗng
    */
-  @Column({ nullable: false })
-  description: string;
-
-  /**
-   * Số khung (không rỗng)
-   */
-  @Column('int', { nullable: false })
-  frameNumber: number;
+  @Column({ default: false, nullable: false })
+  isDivide: boolean;
 }

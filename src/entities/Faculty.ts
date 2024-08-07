@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { User } from "./User";
 
 /**
  * Thực thể Khoa
@@ -24,8 +25,26 @@ export class Faculty {
     facultyName: string;
 
     /**
-     * Mô tả (không rỗng)
+     * ID người tạo (tham chiếu đến thực thể User, không rỗng)
      */
-    @Column({ nullable: false })
-    description: string;
+    @ManyToOne(() => User, data => data.id, { nullable: false })
+    createUser: User;
+
+    /**
+     * Ngày tạo (không rỗng)
+     */
+    @CreateDateColumn()
+    createDate: Date;
+
+    /**
+     * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
+     */
+    @ManyToOne(() => User, data => data.id, { nullable: true })
+    lastModifyUser: User;
+
+    /**
+     * Ngày chỉnh sửa cuối cùng (không rỗng)
+     */
+    @UpdateDateColumn()
+    lastModifyDate: Date;
 }

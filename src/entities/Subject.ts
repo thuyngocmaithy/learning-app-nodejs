@@ -15,34 +15,52 @@ export class Subject {
   id: string;
 
   /**
-   * Mã môn học (duy nhất, không rỗng)
-   */
+     * Mã môn học (duy nhất, không rỗng)
+     */
   @Column({ unique: true, nullable: false })
   subjectId: string;
 
   /**
-   * Tên môn học (không rỗng)
-   */
+    * Tên môn học (không rỗng)
+    */
   @Column({ nullable: false })
   subjectName: string;
 
   /**
-   * ID khung học tập (tham chiếu đến thực thể Frame, không rỗng)
-   */
+    * Số tín chỉ (không rỗng)
+    */
+  @Column('int', { nullable: false })
+  creditHour: number;
+
+  /**
+    * Môn học trước (có thể rỗng)
+    */
+  @ManyToOne(() => Subject, data => data.id, { nullable: true })
+  subjectBeforeId: Subject;
+
+  /**
+    * Môn học tương đương (có thể rỗng)
+    */
+  @ManyToOne(() => Subject, data => data.id, { nullable: true })
+  subjectEqualId: string | null;
+
+  /**
+    * Có bắt buộc không (không rỗng)
+    */
+  @Column({ type: 'boolean', nullable: false })
+  isCompulsory: boolean;
+
+  /**
+    * Chuyên ngành (có thể rỗng)
+    */
+  @Column({ nullable: true })
+  specialization: string | null;
+
+  /**
+    * ID khung học tập (tham chiếu đến thực thể StudyFrame, không rỗng)
+    */
   @ManyToOne(() => StudyFrame, data => data.id, { nullable: false })
   frame: StudyFrame;
-
-  /**
-   * ID học kỳ (tham chiếu đến thực thể Semester, không rỗng)
-   */
-  @ManyToOne(() => Semester, data => data.id, { nullable: false })
-  semester: Semester;
-
-  /**
-   * Số tín chỉ (không rỗng)
-   */
-  @Column('int', { nullable: false })
-  numberOfCredit: number;
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
