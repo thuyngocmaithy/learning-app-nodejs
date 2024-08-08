@@ -33,7 +33,7 @@ export class Major {
     /**
      * ID người tạo (tham chiếu đến thực thể User, không rỗng)
      */
-    @ManyToOne(() => User, data => data.id, { nullable: false })
+    @ManyToOne(() => User, data => data.id, { nullable: true })
     createUser: User;
 
     /**

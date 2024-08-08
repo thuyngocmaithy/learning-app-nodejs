@@ -15,11 +15,11 @@ export class SubjectService {
   }
 
   async getAll(): Promise<Subject[]> {
-    return this.subjectRepository.find({ relations: ['frame', 'semester', 'createUser', 'lastModifyUser'] });
+    return this.subjectRepository.find({ relations: ['frame', 'createUser', 'lastModifyUser'] });
   }
 
   async getById(id: string): Promise<Subject | null> {
-    const options: FindOneOptions<Subject> = { where: { id }, relations: ['frame', 'semester', 'createUser', 'lastModifyUser'] };
+    const options: FindOneOptions<Subject> = { where: { id }, relations: ['frame', 'createUser', 'lastModifyUser'] };
     return await this.subjectRepository.findOne(options);
   }
 

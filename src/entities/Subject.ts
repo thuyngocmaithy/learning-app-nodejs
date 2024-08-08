@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany, UpdateDateColumn, JoinColumn, CreateDateColumn } from 'typeorm';
 import { StudyFrame } from './StudyFrame';
-import { Semester } from './Semester';
 import { User } from './User';
 
 /**
@@ -53,7 +52,7 @@ export class Subject {
   /**
     * Chuyên ngành (có thể rỗng)
     */
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   specialization: string | null;
 
   /**

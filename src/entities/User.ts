@@ -65,16 +65,16 @@ export class User {
   /**
    * ID khoa (tham chiếu đến thực thể Faculty, không rỗng)
    */
-  @ManyToOne(() => Faculty, { nullable: false })
+  @ManyToOne(() => Faculty, { nullable: true })
   @JoinColumn({ name: 'facultyId' })
   faculty: Faculty;
 
   /**
    * ID chuyên ngành (tham chiếu đến thực thể Major, không rỗng)
    */
-  @ManyToOne(() => Major, { nullable: false })
-  @JoinColumn({ name: 'majorId' })
-  major: Major;
+  @ManyToOne(() => Major, { nullable: true })
+@JoinColumn({ name: 'majorId' })
+major: Major;
 
   /**
    * Vẫn còn học hay không (có thể rỗng)
@@ -103,7 +103,7 @@ export class User {
   /**
    * ID tài khoản (tham chiếu đến thực thể Account, không rỗng)
    */
-  @ManyToOne(() => Account, { nullable: false })
+  @ManyToOne(() => Account, { nullable: true })
   @JoinColumn({ name: 'accountId' })
   account: Account;
 
