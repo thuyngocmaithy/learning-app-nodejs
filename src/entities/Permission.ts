@@ -28,11 +28,8 @@ export class Permission {
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: true })
+  @ManyToOne(() => User, data => data.id, { nullable: false })
   createUser: User;
-
-  // @Column({ nullable: true })
-  // createUserId: string;
 
   /**
    * Ngày tạo (không rỗng)
