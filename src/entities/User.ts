@@ -65,14 +65,14 @@ export class User {
   /**
    * ID khoa (tham chiếu đến thực thể Faculty, không rỗng)
    */
-  @ManyToOne(() => Faculty, { nullable: false })
+  @ManyToOne(() => Faculty, data => data.id, { nullable: false })
   @JoinColumn({ name: 'facultyId' })
   faculty: Faculty;
 
   /**
    * ID chuyên ngành (tham chiếu đến thực thể Major, không rỗng)
    */
-  @ManyToOne(() => Major, { nullable: false })
+  @ManyToOne(() => Major, data => data.id, { nullable: false })
   @JoinColumn({ name: 'majorId' })
   major: Major;
 
@@ -103,14 +103,14 @@ export class User {
   /**
    * ID tài khoản (tham chiếu đến thực thể Account, không rỗng)
    */
-  @ManyToOne(() => Account, { nullable: false })
+  @ManyToOne(() => Account, data => data.id, { nullable: false })
   @JoinColumn({ name: 'accountId' })
   account: Account;
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, có thể rỗng)
    */
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => User, data => data.id, { nullable: true })
   @JoinColumn({ name: 'createUserId' })
   createUser: User;
 
@@ -123,7 +123,7 @@ export class User {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, có thể rỗng)
    */
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => User, data => data.id, { nullable: true })
   @JoinColumn({ name: 'lastModifyUserId' })
   lastModifyUser: User;
 

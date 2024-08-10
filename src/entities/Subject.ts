@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany, UpdateDateColumn, JoinColumn, CreateDateColumn } from 'typeorm';
 import { StudyFrame } from './StudyFrame';
 import { User } from './User';
+import { Major } from './Major';
 
 /**
  * Thực thể Môn học
@@ -50,10 +51,10 @@ export class Subject {
   isCompulsory: boolean;
 
   /**
-    * Chuyên ngành (có thể rỗng)
-    */
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  specialization: string | null;
+   * ID chuyên ngành (tham chiếu đến thực thể Major, có thể rỗng)
+   */
+  @ManyToOne(() => Major, data => data.id, { nullable: true })
+  major: Major;
 
   /**
     * ID khung học tập (tham chiếu đến thực thể StudyFrame, không rỗng)
