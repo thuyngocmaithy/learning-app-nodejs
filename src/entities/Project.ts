@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn, PrimaryColumn } from 'typeorm';
 import { Follower } from './Follower';
 import { User } from './User';
 import { Status } from './Status';
+import { Faculty } from './Faculty';
 
 /**
  * Thực thể Dự án
@@ -9,15 +10,9 @@ import { Status } from './Status';
 @Entity()
 export class Project {
   /**
-   * Khóa chính
-   */
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  /**
    * Mã dự án (duy nhất, không rỗng)
    */
-  @Column({ unique: true, nullable: false })
+  @PrimaryColumn({ type: 'varchar', length: 25 })
   projectId: string;
 
   /**
@@ -47,7 +42,7 @@ export class Project {
   /**
    * Trạng thái (tham chiếu đến thực thể Status, không rỗng)
    */
-  @ManyToOne(() => Status, data => data.id, { nullable: false })
+  @ManyToOne(() => Status, data => data.statusId, { nullable: false })
   status: Status;
 
   /**
@@ -71,13 +66,19 @@ export class Project {
   /**
    * Người hướng dẫn (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
   instructor: User;
+
+  /**
+   * ID khoa (tham chiếu đến thực thể Faculty, không rỗng)
+   */
+  @ManyToOne(() => Faculty, data => data.facultyId, { nullable: false })
+  faculty: Faculty;
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
   createUser: User;
 
   /**
@@ -89,7 +90,7 @@ export class Project {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
   lastModifyUser: User;
 
   /**

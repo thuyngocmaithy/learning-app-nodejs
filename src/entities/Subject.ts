@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany, UpdateDateColumn, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany, UpdateDateColumn, JoinColumn, CreateDateColumn, PrimaryColumn } from 'typeorm';
 import { StudyFrame } from './StudyFrame';
 import { User } from './User';
 import { Major } from './Major';
@@ -9,15 +9,9 @@ import { Major } from './Major';
 @Entity()
 export class Subject {
   /**
-   * Khóa chính
+   * Mã môn học (duy nhất, không rỗng)
    */
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  /**
-     * Mã môn học (duy nhất, không rỗng)
-     */
-  @Column({ unique: true, nullable: false })
+  @PrimaryColumn({ type: 'varchar', length: 25 })
   subjectId: string;
 
   /**
@@ -35,14 +29,16 @@ export class Subject {
   /**
     * Môn học trước (có thể rỗng)
     */
-  @ManyToOne(() => Subject, data => data.id, { nullable: true })
-  subjectBeforeId: Subject;
+  @ManyToOne(() => Subject, data => data.subjectId, { nullable: true })
+  @JoinColumn({ name: 'subjectBeforeId' })
+  subjectBefore: Subject;
 
   /**
     * Môn học tương đương (có thể rỗng)
     */
-  @ManyToOne(() => Subject, data => data.id, { nullable: true })
-  subjectEqualId: string | null;
+  @ManyToOne(() => Subject, data => data.subjectId, { nullable: true })
+  @JoinColumn({ name: 'subjectEqualId' })
+  subjectEqual: string | null;
 
   /**
     * Có bắt buộc không (không rỗng)
@@ -51,15 +47,22 @@ export class Subject {
   isCompulsory: boolean;
 
   /**
+  * Danh sách các frame có môn này
+  */
+  @Column()
+  listFrame: string;
+
+  /**
    * ID chuyên ngành (tham chiếu đến thực thể Major, có thể rỗng)
    */
-  @ManyToOne(() => Major, data => data.id, { nullable: true })
+  @ManyToOne(() => Major, data => data.majorId, { nullable: true })
+  @JoinColumn({ name: 'majorId' })
   major: Major;
 
   /**
-    * ID khung học tập (tham chiếu đến thực thể StudyFrame, không rỗng)
+    * ID khung học tập (tham chiếu đến thực thể StudyFrame, có thể rỗng)
     */
-  @ManyToOne(() => StudyFrame, data => data.id, { nullable: false })
+  @ManyToOne(() => StudyFrame, data => data.id, { nullable: true })
   frame: StudyFrame;
 
   /**

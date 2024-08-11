@@ -34,7 +34,7 @@ export class Notification {
   /**
    * ID người nhận thông báo (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
   toUser: User;
 
   /**
@@ -46,7 +46,7 @@ export class Notification {
   /**
    * ID người tạo thông báo (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
   createUser: User;
 
   /**

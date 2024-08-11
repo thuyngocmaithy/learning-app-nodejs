@@ -1,19 +1,19 @@
 import { Request, Response } from 'express';
-import { Project_FacultyService } from '../services/project_faculty.service';
+import { Project_UserService } from '../services/project_user.service';
 import { DataSource } from 'typeorm';
 import { RequestHandler } from '../utils/requestHandler';
-import { Project_Faculty } from '../entities/Project_Faculty';
+import { Project_User } from '../entities/Project_User';
 
-export class Project_FacultyController {
-  private projectFacultyService: Project_FacultyService;
+export class Project_UserController {
+  private projectUserService: Project_UserService;
 
   constructor(dataSource: DataSource) {
-    this.projectFacultyService = new Project_FacultyService(dataSource);
+    this.projectUserService = new Project_UserService(dataSource);
   }
 
-  public getAllProjectFaculties = (req: Request, res: Response) => RequestHandler.getAll<Project_Faculty>(req, res, this.projectFacultyService);
-  public getProjectFacultyById = (req: Request, res: Response) => RequestHandler.getById<Project_Faculty>(req, res, this.projectFacultyService);
-  public createProjectFaculty = (req: Request, res: Response) => RequestHandler.create<Project_Faculty>(req, res, this.projectFacultyService);
-  public updateProjectFaculty = (req: Request, res: Response) => RequestHandler.update<Project_Faculty>(req, res, this.projectFacultyService);
-  public deleteProjectFaculty = (req: Request, res: Response) => RequestHandler.delete(req, res, this.projectFacultyService);
+  public getAllProjectUser = (req: Request, res: Response) => RequestHandler.getAll<Project_User>(req, res, this.projectUserService);
+  public getProjectUserById = (req: Request, res: Response) => RequestHandler.getById<Project_User>(req, res, this.projectUserService);
+  public createProjectUser = (req: Request, res: Response) => RequestHandler.create<Project_User>(req, res, this.projectUserService);
+  public updateProjectUser = (req: Request, res: Response) => RequestHandler.update<Project_User>(req, res, this.projectUserService);
+  public deleteProjectUser = (req: Request, res: Response) => RequestHandler.delete(req, res, this.projectUserService);
 }

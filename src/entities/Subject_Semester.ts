@@ -10,10 +10,9 @@ export class Subject_Semester {
     id: string;
 
     @ManyToOne(() => Subject, subject => subject.subjectId, { nullable: false })
-    @JoinColumn({ name: 'subjectId', referencedColumnName: 'subjectId' })
+    @JoinColumn({ name: 'subjectId' })
     subject: Subject;
 
     @ManyToOne(() => Semester, semester => semester.id, { nullable: false })
-    @JoinColumn({ name: 'semesterId', referencedColumnName: 'id' })
     semester: Semester;
 }

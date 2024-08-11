@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn, PrimaryColumn } from 'typeorm';
 import { Permission } from './Permission';
 
 /**
@@ -7,15 +7,9 @@ import { Permission } from './Permission';
 @Entity()
 export class Feature {
   /**
-   * Khóa chính
+   * Mã tính năng
    */
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  /**
-   * Mã tính năng (duy nhất, không rỗng)
-   */
-  @Column({ unique: true, nullable: false })
+  @PrimaryColumn({ type: 'varchar', length: 25 })
   featureId: string;
 
   /**
@@ -33,6 +27,6 @@ export class Feature {
   /**
    * ID tính năng cha (tham chiếu đến thực thể Feature, có thể rỗng)
    */
-  @ManyToOne(() => Feature, data => data.id, { nullable: true })
-  parentFeatureID: Feature;
+  @ManyToOne(() => Feature, data => data.featureId, { nullable: true })
+  parent: Feature;
 }

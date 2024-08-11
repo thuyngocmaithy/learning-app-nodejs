@@ -47,13 +47,13 @@ export class Thesis {
   /**
    * ID khoa (tham chiếu đến thực thể Faculty, không rỗng)
    */
-  @ManyToOne(() => Faculty, faculty => faculty.id, { nullable: false })
+  @ManyToOne(() => Faculty, faculty => faculty.facultyId, { nullable: false })
   faculty: Faculty;
 
   /**
    * Trạng thái (tham chiếu đến thực thể Status, không rỗng)
    */
-  @ManyToOne(() => Status, status => status.id, { nullable: false })
+  @ManyToOne(() => Status, status => status.statusId, { nullable: false })
   status: Status;
 
   /**

@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 /**
  * Thực thể Khoa
@@ -6,15 +6,9 @@ import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, Up
 @Entity()
 export class Faculty {
     /**
-     * Khóa chính
-     */
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
-
-    /**
      * Mã khoa (duy nhất, không rỗng)
      */
-    @Column({ unique: true, nullable: false })
+    @PrimaryColumn({ type: 'varchar', length: 25 })
     facultyId: string;
 
     /**

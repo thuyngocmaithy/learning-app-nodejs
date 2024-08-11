@@ -17,4 +17,20 @@ export class SubjectController {
   public createSubject = (req: Request, res: Response) => RequestHandler.create<Subject>(req, res, this.subjectService);
   public updateSubject = (req: Request, res: Response) => RequestHandler.update<Subject>(req, res, this.subjectService);
   public deleteSubject = (req: Request, res: Response) => RequestHandler.delete(req, res, this.subjectService);
+
+  public callKhungCTDT = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const result = await this.subjectService.callKhungCTDT();
+      if (!result || result.length === 0) {
+        res.status(404).json({ message: 'No data found for KhungCTDT' });
+        return;
+      }
+      res.json(result);
+    } catch (error) {
+      console.error('Error in callKhungCTDT:', error);
+      res.status(500).json({
+        error: 'Error executing stored procedure khungCTDT',
+      });
+    }
+  }
 }

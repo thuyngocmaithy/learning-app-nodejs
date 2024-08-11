@@ -7,9 +7,11 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany
+  OneToMany,
+  JoinColumn
 } from 'typeorm';
 import { User } from './User';
+import { Faculty } from './Faculty';
 
 /**
  * Thực thể Thực tập
@@ -67,13 +69,19 @@ export class Internship {
   /**
    * Lợi ích (không rỗng)
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   benefit: string;
+
+  /**
+   * ID khoa (tham chiếu đến thực thể Faculty, không rỗng)
+   */
+  @ManyToOne(() => Faculty, data => data.facultyId, { nullable: false })
+  faculty: Faculty;
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
   createUser: User;
 
   /**
@@ -85,7 +93,7 @@ export class Internship {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: true })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
   lastModifyUser: User;
 
   /**

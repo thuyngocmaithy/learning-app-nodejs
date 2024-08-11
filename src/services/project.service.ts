@@ -18,12 +18,12 @@ export class ProjectService {
     return this.projectRepository.find({ relations: ['status', 'instructor', 'createUser', 'lastModifyUser'] });
   }
 
-  async getById(id: string): Promise<Project | null> {
-    return this.projectRepository.findOne({ where: { id }, relations: ['status', 'instructor', 'createUser', 'lastModifyUser'] });
+  async getById(projectId: string): Promise<Project | null> {
+    return this.projectRepository.findOne({ where: { projectId }, relations: ['status', 'instructor', 'createUser', 'lastModifyUser'] });
   }
 
-  async update(id: string, data: Partial<Project>): Promise<Project | null> {
-    const project = await this.projectRepository.findOne({ where: { id } });
+  async update(projectId: string, data: Partial<Project>): Promise<Project | null> {
+    const project = await this.projectRepository.findOne({ where: { projectId } });
     if (!project) {
       return null;
     }
@@ -31,8 +31,8 @@ export class ProjectService {
     return this.projectRepository.save(project);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.projectRepository.delete({ id });
+  async delete(projectId: string): Promise<boolean> {
+    const result = await this.projectRepository.delete({ projectId });
     return result.affected !== 0;
   }
 }
