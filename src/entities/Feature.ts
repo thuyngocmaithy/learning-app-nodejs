@@ -33,6 +33,7 @@ export class Feature {
   /**
    * ID tính năng cha (tham chiếu đến thực thể Feature, có thể rỗng)
    */
-  @ManyToOne(() => Feature, data => data.id, { nullable: true })
+  @ManyToOne(() => Feature, data => data.featureId, { nullable: true })
+  @JoinColumn({ name: 'parentFeatureID', referencedColumnName: 'featureId' })
   parentFeatureID: Feature;
 }
