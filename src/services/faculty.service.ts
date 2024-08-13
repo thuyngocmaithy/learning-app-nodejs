@@ -18,16 +18,12 @@ export class FacultyService {
     return this.facultyRepository.find();
   }
 
-  async getById(id: string): Promise<Faculty | null> {
-    return this.facultyRepository.findOneBy({ id });
-  }
-
   async getByFacultyId(facultyId: string): Promise<Faculty | null> {
     return this.facultyRepository.findOneBy({ facultyId });
   }
 
-  async update(id: string, data: Partial<Faculty>): Promise<Faculty | null> {
-    const faculty = await this.facultyRepository.findOneBy({ id });
+  async update(facultyId: string, data: Partial<Faculty>): Promise<Faculty | null> {
+    const faculty = await this.facultyRepository.findOneBy({ facultyId });
     if (!faculty) {
       return null;
     }
@@ -35,8 +31,8 @@ export class FacultyService {
     return this.facultyRepository.save(faculty);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.facultyRepository.delete({ id });
+  async delete(facultyId: string): Promise<boolean> {
+    const result = await this.facultyRepository.delete({ facultyId });
     return result.affected !== 0;
   }
 }

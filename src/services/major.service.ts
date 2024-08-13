@@ -18,12 +18,12 @@ export class MajorService {
     return this.majorRepository.find();
   }
 
-  async getById(id: string): Promise<Major | null> {
-    return this.majorRepository.findOneBy({ id });
+  async getById(majorId: string): Promise<Major | null> {
+    return this.majorRepository.findOneBy({ majorId });
   }
 
-  async update(id: string, data: Partial<Major>): Promise<Major | null> {
-    const major = await this.majorRepository.findOneBy({ id });
+  async update(majorId: string, data: Partial<Major>): Promise<Major | null> {
+    const major = await this.majorRepository.findOneBy({ majorId });
     if (!major) {
       return null;
     }
@@ -31,8 +31,8 @@ export class MajorService {
     return this.majorRepository.save(major);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.majorRepository.delete({ id });
+  async delete(majorId: string): Promise<boolean> {
+    const result = await this.majorRepository.delete({ majorId });
     return result.affected !== 0;
   }
 }

@@ -63,18 +63,18 @@ export class User {
   class: string;
 
   /**
-   * ID khoa (tham chiếu đến thực thể Faculty, không rỗng)
+   * ID khoa (tham chiếu đến thực thể Faculty, có thể rỗng)
    */
-  @ManyToOne(() => Faculty, { nullable: true })
+  @ManyToOne(() => Faculty, data => data.facultyId, { nullable: true })
   @JoinColumn({ name: 'facultyId' })
   faculty: Faculty;
 
   /**
-   * ID chuyên ngành (tham chiếu đến thực thể Major, không rỗng)
+   * ID chuyên ngành (tham chiếu đến thực thể Major, có thể rỗng)
    */
-  @ManyToOne(() => Major, { nullable: true })
-@JoinColumn({ name: 'majorId' })
-major: Major;
+  @ManyToOne(() => Major, data => data.majorId, { nullable: true })
+  @JoinColumn({ name: 'majorId' })
+  major: Major;
 
   /**
    * Vẫn còn học hay không (có thể rỗng)
@@ -103,15 +103,14 @@ major: Major;
   /**
    * ID tài khoản (tham chiếu đến thực thể Account, không rỗng)
    */
-  @ManyToOne(() => Account, { nullable: true })
+  @ManyToOne(() => Account, data => data.id, { nullable: false })
   @JoinColumn({ name: 'accountId' })
   account: Account;
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, có thể rỗng)
    */
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'createUserId' })
+  @ManyToOne(() => User, data => data.id, { nullable: true })
   createUser: User;
 
   /**
@@ -123,8 +122,7 @@ major: Major;
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, có thể rỗng)
    */
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'lastModifyUserId' })
+  @ManyToOne(() => User, data => data.id, { nullable: true })
   lastModifyUser: User;
 
   /**

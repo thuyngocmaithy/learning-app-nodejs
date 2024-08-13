@@ -16,13 +16,15 @@ export class Score {
   /**
    * ID môn học (tham chiếu đến thực thể Subject, không rỗng)
    */
-  @ManyToOne(() => Subject, data => data.id, { nullable: false })
+  @ManyToOne(() => Subject, data => data.subjectId, { nullable: false })
+  @JoinColumn({ name: 'subjectId' })
   subject: Subject;
 
   /**
    * ID sinh viên (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'studentId' })
   student: User;
 
   /**
@@ -60,30 +62,6 @@ export class Score {
    */
   @Column({ default: false, nullable: false })
   result: boolean;
-
-  /**
-   * ID người tạo (tham chiếu đến thực thể User, không rỗng)
-   */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
-  createUser: User;
-
-  /**
-   * Ngày tạo (không rỗng)
-   */
-  @CreateDateColumn()
-  createDate: Date;
-
-  /**
-   * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
-   */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
-  lastModifyUser: User;
-
-  /**
-   * Ngày chỉnh sửa cuối cùng (không rỗng)
-   */
-  @UpdateDateColumn()
-  lastModifyDate: Date;
 }
 
 /**

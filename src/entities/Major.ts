@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
 import { User } from './User';
+import { Faculty } from './Faculty';
 
 /**
  * Thực thể chuyên ngành
@@ -7,15 +8,9 @@ import { User } from './User';
 @Entity()
 export class Major {
     /**
-     * Khóa chính
-     */
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
-
-    /**
      * Mã chuyên ngành (duy nhất, không rỗng)
      */
-    @Column({ unique: true, nullable: false })
+    @PrimaryColumn({ type: 'varchar', length: 25 })
     majorId: string;
 
     /**
@@ -31,26 +26,9 @@ export class Major {
     orderNo: number;
 
     /**
-     * ID người tạo (tham chiếu đến thực thể User, không rỗng)
+     * Mã khoa
      */
-    @ManyToOne(() => User, data => data.id, { nullable: true })
-    createUser: User;
-
-    /**
-     * Ngày tạo (không rỗng)
-     */
-    @CreateDateColumn()
-    createDate: Date;
-
-    /**
-     * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
-     */
-    @ManyToOne(() => User, data => data.id, { nullable: true })
-    lastModifyUser: User;
-
-    /**
-     * Ngày chỉnh sửa cuối cùng (không rỗng)
-     */
-    @UpdateDateColumn()
-    lastModifyDate: Date;
+    @ManyToOne(() => Faculty, data => data.facultyId, { nullable: true })
+    @JoinColumn({ name: 'facultyId' })
+    faculty: Faculty;
 }

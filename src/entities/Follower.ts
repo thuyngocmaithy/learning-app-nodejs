@@ -24,8 +24,15 @@ export class Follower {
   /**
    * ID dự án (tham chiếu đến thực thể Project, có thể rỗng)
    */
-  @ManyToOne(() => Project, data => data.id, { nullable: true })
+  @ManyToOne(() => Project, data => data.projectId, { nullable: true })
+  @JoinColumn({ name: 'projectId' })
   project: Project;
+
+  /**
+   * ID dự án (tham chiếu đến thực thể Khóa luận, có thể rỗng)
+   */
+  @ManyToOne(() => Thesis, data => data.id, { nullable: true })
+  thesis: Thesis;
 }
 
 /**
@@ -48,6 +55,6 @@ export class FollowerDetail {
   /**
    * ID người dùng (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
   user: User;
 }

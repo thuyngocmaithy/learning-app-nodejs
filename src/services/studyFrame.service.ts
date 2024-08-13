@@ -15,7 +15,9 @@ export class StudyFrameService {
   }
 
   async getAll(): Promise<StudyFrame[]> {
-    return this.studyFrameRepository.find();
+    return this.studyFrameRepository.find({
+      relations: ['parentFrame'], //lấy cột khóa ngoại parentFrame
+    });
   }
 
   async getById(id: string): Promise<StudyFrame | null> {

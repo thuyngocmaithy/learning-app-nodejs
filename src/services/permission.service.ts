@@ -12,11 +12,6 @@ export class PermissionService {
     return this.permissionRepository.find();
   }
 
-  public getById = async (id: string): Promise<Permission | null> => {
-    const options: FindOneOptions<Permission> = { where: { id } };
-    return this.permissionRepository.findOne(options);
-  }
-
   public getByPermissionId = async (permissionId: string): Promise<Permission | null> => {
     const options: FindOneOptions<Permission> = { where: { permissionId } };
     return this.permissionRepository.findOne(options);
@@ -27,9 +22,9 @@ export class PermissionService {
     return this.permissionRepository.save(permission);
   }
 
-  public update = async (id: string, permissionData: Partial<Permission>): Promise<Permission | null> => {
-    await this.permissionRepository.update(id, permissionData);
-    const options: FindOneOptions<Permission> = { where: { id } };
+  public update = async (permissionId: string, permissionData: Partial<Permission>): Promise<Permission | null> => {
+    await this.permissionRepository.update(permissionId, permissionData);
+    const options: FindOneOptions<Permission> = { where: { permissionId } };
     return this.permissionRepository.findOne(options);
   }
 

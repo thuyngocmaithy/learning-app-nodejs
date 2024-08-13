@@ -18,12 +18,12 @@ export class FeatureService {
     return this.featureRepository.find({ relations: ['parentFeatureID'] });
   }
 
-  async getById(id: string): Promise<Feature | null> {
-    return this.featureRepository.findOne({ where: { id }, relations: ['parentFeatureID'] });
+  async getById(featureId: string): Promise<Feature | null> {
+    return this.featureRepository.findOne({ where: { featureId }, relations: ['parentFeatureID'] });
   }
 
-  async update(id: string, data: Partial<Feature>): Promise<Feature | null> {
-    const feature = await this.featureRepository.findOne({ where: { id }, relations: ['parentFeatureID'] });
+  async update(featureId: string, data: Partial<Feature>): Promise<Feature | null> {
+    const feature = await this.featureRepository.findOne({ where: { featureId }, relations: ['parentFeatureID'] });
     if (!feature) {
       return null;
     }
@@ -31,8 +31,8 @@ export class FeatureService {
     return this.featureRepository.save(feature);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.featureRepository.delete({ id });
+  async delete(featureId: string): Promise<boolean> {
+    const result = await this.featureRepository.delete({ featureId });
     return result.affected !== 0;
   }
 }

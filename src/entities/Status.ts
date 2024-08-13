@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { User } from "./User";
 
 /**
@@ -7,15 +7,9 @@ import { User } from "./User";
 @Entity()
 export class Status {
     /**
-     * Khóa chính
-     */
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
-
-    /**
      * Mã trạng thái (duy nhất, không rỗng)
      */
-    @Column({ unique: true, nullable: false })
+    @PrimaryColumn({ type: 'varchar', length: 25 })
     statusId: string;
 
     /**
@@ -31,15 +25,15 @@ export class Status {
     type: 'Tiến độ dự án nghiên cứu' | 'Tiến độ khóa luận' | 'Tiến độ thực tập' = "Tiến độ dự án nghiên cứu";
 
     /**
-         * Số thứ tự (không rỗng)
-         */
+     * Số thứ tự (không rỗng)
+     */
     @Column('int', { nullable: false })
     orderNo: number;
 
     /**
      * ID người tạo (tham chiếu đến thực thể User, không rỗng)
      */
-    @ManyToOne(() => User, data => data.id, { nullable: false })
+    @ManyToOne(() => User, data => data.userId, { nullable: false })
     createUser: User;
 
     /**
@@ -51,7 +45,7 @@ export class Status {
     /**
      * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
      */
-    @ManyToOne(() => User, data => data.id, { nullable: true })
+    @ManyToOne(() => User, data => data.userId, { nullable: true })
     lastModifyUser: User;
 
     /**

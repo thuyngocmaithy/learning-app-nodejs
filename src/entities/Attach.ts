@@ -14,11 +14,11 @@ export class Attach {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-    /**
-   * Tên code tập tin (không rỗng)
-   */
-    @Column({ nullable: false })
-    code: string;
+  //   /**
+  //  * Tên code tập tin (không rỗng)
+  //  */
+  //   @Column({ nullable: false })
+  //   code: string;
 
   /**
    * Tên tập tin (không rỗng)
@@ -41,13 +41,14 @@ export class Attach {
   /**
    * ID dự án (tham chiếu đến thực thể Project, có thể rỗng)
    */
-  @ManyToOne(() => Project, data => data.id, { nullable: true })
+  @ManyToOne(() => Project, data => data.projectId, { nullable: true })
+  @JoinColumn({ name: 'projectId' })
   project: Project;
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
   createUser: User;
 
   /**
@@ -59,7 +60,7 @@ export class Attach {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: true })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
   lastModifyUser: User;
 
   /**

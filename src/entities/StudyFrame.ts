@@ -14,23 +14,39 @@ export class StudyFrame {
   id: string;
 
   /**
+   * Mã khung (duy nhất, không rỗng)
+   */
+  @Column({ unique: true, nullable: false })
+  frameId: string;
+
+  /**
    * Tên khung (không rỗng)
    */
   @Column({ nullable: false })
   frameName: string;
 
-  /**
-   * Có chia ra cơ sở và chuyên không, mặc định: không, không rỗng
-   */
 
+  /**
+   * Mô tả (có thể rỗng)
+   */
   @Column({ nullable: false })
   description: string;
 
-  // /**
-  //  * có chia (không rỗng)
-  //  */
+  /**
+   * Thứ tự, có thể rỗng
+   */
+  @Column({ nullable: true })
+  orderNo: number;
 
-  @Column({ default: false, nullable: false })
-  isDivide: boolean;
+  /**
+   * ID khung cha (tham chiếu đến thực thể StudyFrame, có thể rỗng)
+   */
+  @ManyToOne(() => StudyFrame, data => data.id, { nullable: true })
+  parentFrame: StudyFrame;
 
+  /**
+   * Số tín chỉ yêu cầu, có thể rỗng
+   */
+  @Column({ nullable: true })
+  creditHour: string;
 }

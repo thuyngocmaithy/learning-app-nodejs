@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
 import { Account } from './Account';
 import { User } from './User';
 
@@ -8,15 +8,9 @@ import { User } from './User';
 @Entity()
 export class Permission {
   /**
-   * Khóa chính
-   */
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  /**
    * Mã quyền (duy nhất, không rỗng)
    */
-  @Column({ unique: true, nullable: false })
+  @PrimaryColumn({ type: 'varchar', length: 25 })
   permissionId: string;
 
   /**
@@ -28,11 +22,8 @@ export class Permission {
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: true })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
   createUser: User;
-
-  // @Column({ nullable: true })
-  // createUserId: string;
 
   /**
    * Ngày tạo (không rỗng)
@@ -43,11 +34,8 @@ export class Permission {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: true })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
   lastModifyUser: User;
-
-  // @Column({ nullable: true })
-  // lastModifyUserId: string;
 
   /**
    * Ngày chỉnh sửa cuối cùng (không rỗng)

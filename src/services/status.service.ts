@@ -18,12 +18,12 @@ export class StatusService {
     return this.statusRepository.find();
   }
 
-  async getById(id: string): Promise<Status | null> {
-    return this.statusRepository.findOneBy({ id });
+  async getById(statusId: string): Promise<Status | null> {
+    return this.statusRepository.findOneBy({ statusId });
   }
 
-  async update(id: string, data: Partial<Status>): Promise<Status | null> {
-    const status = await this.statusRepository.findOneBy({ id });
+  async update(statusId: string, data: Partial<Status>): Promise<Status | null> {
+    const status = await this.statusRepository.findOneBy({ statusId });
     if (!status) {
       return null;
     }
@@ -31,8 +31,8 @@ export class StatusService {
     return this.statusRepository.save(status);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.statusRepository.delete({ id });
+  async delete(statusId: string): Promise<boolean> {
+    const result = await this.statusRepository.delete({ statusId });
     return result.affected !== 0;
   }
 }
