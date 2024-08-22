@@ -15,15 +15,15 @@ export class FeatureService {
   }
 
   async getAll(): Promise<Feature[]> {
-    return this.featureRepository.find({ relations: ['parentFeatureID'] });
+    return this.featureRepository.find({ relations: ['parent'] });
   }
 
   async getById(featureId: string): Promise<Feature | null> {
-    return this.featureRepository.findOne({ where: { featureId }, relations: ['parentFeatureID'] });
+    return this.featureRepository.findOne({ where: { featureId }, relations: ['parent'] });
   }
 
   async update(featureId: string, data: Partial<Feature>): Promise<Feature | null> {
-    const feature = await this.featureRepository.findOne({ where: { featureId }, relations: ['parentFeatureID'] });
+    const feature = await this.featureRepository.findOne({ where: { featureId }, relations: ['parent'] });
     if (!feature) {
       return null;
     }

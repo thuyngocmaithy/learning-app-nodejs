@@ -31,6 +31,10 @@ import permissionFeatureRouter from './routes/permission_feature.route';
 import permissionRoute from './routes/permission.route';
 import projectUserRoute from './routes/project_user.route';
 import projectRoute from './routes/project.route';
+import conversationRouter from './routes/conversation.route';
+import messageRouter from './routes/message.route';
+import participantRouter from './routes/participant.route';
+import featureRouter from './routes/feature.route';
 
 
 // Nạp các biến môi trường từ file .env
@@ -93,6 +97,10 @@ app.use('/api/subjects', subjectRoute);
 app.use('/api/subject-semester', subject_SemesteRouter);
 app.use('/api/thesis-user', thesisUserRoutes);
 app.use('/api/thesis', thesisRoute);
+app.use('/api/conversations', conversationRouter);
+app.use('/api/messages', messageRouter);
+app.use('/api/participants', participantRouter);
+app.use('/api/features', featureRouter);
 
 
 export default app;
