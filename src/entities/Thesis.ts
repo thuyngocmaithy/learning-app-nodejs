@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { User } from './User';
 import { Faculty } from './Faculty';
 import { Status } from './Status';
+import { Thesis_User } from './Thesis_User';
 
 /**
  * Thực thể khóa luận
@@ -49,6 +50,18 @@ export class Thesis {
    */
   @ManyToOne(() => Faculty, faculty => faculty.facultyId, { nullable: false })
   faculty: Faculty;
+
+  /**
+ * Số lượng người đăng ký
+ */
+  @Column({ default: 0, nullable: true })
+  registrationCount: number;
+
+  /**
+   * Danh sách user đã đăng ký (quan hệ một-nhiều với Thesis_User)
+   */
+  @OneToMany(() => Thesis_User, thesisUser => thesisUser.thesis, {nullable : false})
+  registrations: Thesis_User[];
 
   /**
    * Trạng thái (tham chiếu đến thực thể Status, không rỗng)

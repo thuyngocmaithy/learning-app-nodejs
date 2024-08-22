@@ -1,15 +1,15 @@
 import { Router } from 'express';
-import { Project_UserController } from '../controllers/project_faculty.controller';
+import { Thesis_UserController } from '../controllers/thesis_faculty.controller';
 import { AppDataSource } from '../data-source';
 
 
-const projectUserRouter = Router();
-const projectUserController = new Project_UserController(AppDataSource);
+const thesisUserRouter = Router();
+const thesis_UserController = new Thesis_UserController(AppDataSource);
 
-projectUserRouter.get('/', projectUserController.getAllProjectUser);
-projectUserRouter.get('/:id', projectUserController.getProjectUserById);
-projectUserRouter.post('/', projectUserController.createProjectUser);
-projectUserRouter.put('/:id', projectUserController.updateProjectUser);
-projectUserRouter.delete('/:id', projectUserController.deleteProjectUser);
+thesisUserRouter.get('/', thesis_UserController.getAllThesisUser);
+thesisUserRouter.get('/:id', thesis_UserController.getThesisUserById);
+thesisUserRouter.post('/', thesis_UserController.createThesisUser);
+thesisUserRouter.put('/:id', thesis_UserController.updateThesisUser);
+thesisUserRouter.delete('/:id', thesis_UserController.deleteThesisUser);
 
-export default projectUserRouter;
+export default thesisUserRouter;

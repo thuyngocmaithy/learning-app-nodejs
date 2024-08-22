@@ -19,7 +19,7 @@ import followerRoutes from './routes/follower.route';
 import followerDetailRoutes from './routes/followerDetail.route';
 import internshipUserRoutes from './routes/internship_user.route';
 import internshipRoutes from './routes/internship.route';
-import thesisUserRoutes from './routes/internship_user.route';
+import thesisUserRoutes from './routes/thesis_user.route';
 import thesisRoute from './routes/thesis.route';
 import subjectRoute from './routes/subject.route';
 import subject_SemesteRouter from './routes/subject_semester.route';
