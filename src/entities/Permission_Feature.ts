@@ -17,12 +17,14 @@ export class PermissionFeature {
      * ID quyền (tham chiếu đến thực thể Permission, không rỗng)
      */
     @ManyToOne(() => Permission, data => data.permissionId, { nullable: false })
+    @JoinColumn({ name: 'permissionId' })
     permission: Permission;
 
     /**
      * ID tính năng (tham chiếu đến thực thể Feature, không rỗng)
      */
     @ManyToOne(() => Feature, data => data.featureId, { nullable: false })
+    @JoinColumn({ name: 'featureId' })
     feature: Feature;
 
     /**

@@ -13,7 +13,7 @@ export class Feature {
   featureId: string;
 
   /**
-   * Tên tính năng (không rỗng)
+   * Tên tính năng => Tên menu (không rỗng)
    */
   @Column({ nullable: false })
   featureName: string;
@@ -23,6 +23,13 @@ export class Feature {
    */
   @Column({ nullable: false })
   url: string;
+
+  /**
+   * keyRoute => cấu hình route FE (không rỗng)
+   */
+  @Column({ nullable: false })
+  keyRoute: string;
+
 
   /**
    * ID tính năng cha (tham chiếu đến thực thể Feature, có thể rỗng)

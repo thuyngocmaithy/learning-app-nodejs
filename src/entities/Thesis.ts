@@ -60,7 +60,7 @@ export class Thesis {
   /**
    * Danh sách user đã đăng ký (quan hệ một-nhiều với Thesis_User)
    */
-  @OneToMany(() => Thesis_User, thesisUser => thesisUser.thesis, {nullable : false})
+  @OneToMany(() => Thesis_User, thesisUser => thesisUser.thesis, { nullable: false })
   registrations: Thesis_User[];
 
   /**

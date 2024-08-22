@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDa
 import { User } from './User';
 import { Internship } from './Internship';
 import { Project } from './Project';
+import { Thesis } from './Thesis';
 
 /**
  * Thực thể Đính kèm
@@ -33,10 +34,10 @@ export class Attach {
   link: string;
 
   /**
-   * ID thực tập (tham chiếu đến thực thể Internship, có thể rỗng)
+   * ID khóa luận (tham chiếu đến thực thể Thesis, có thể rỗng)
    */
-  @ManyToOne(() => Internship, data => data.id, { nullable: true })
-  internship: Internship;
+  @ManyToOne(() => Thesis, data => data.id, { nullable: true })
+  thesis: Thesis;
 
   /**
    * ID dự án (tham chiếu đến thực thể Project, có thể rỗng)
