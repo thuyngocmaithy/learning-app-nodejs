@@ -8,6 +8,7 @@ const featureRouter = Router();
 const featureController = new FeatureController(AppDataSource);
 
 featureRouter.get('/', featureController.getAllFeatures);
+featureRouter.get('/getFeatureByStructure', featureController.GetFeatureByStructure);
 featureRouter.get('/:id', featureController.getFeatureById);
 featureRouter.post('/', featureController.createFeature);
 featureRouter.put('/:id', featureController.updateFeature);

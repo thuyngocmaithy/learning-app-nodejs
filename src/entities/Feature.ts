@@ -25,11 +25,16 @@ export class Feature {
   url: string;
 
   /**
-   * keyRoute => cấu hình route FE (không rỗng)
+   * keyRoute => cấu hình route FE (có thể rỗng)
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   keyRoute: string;
 
+  /**
+   * icon (có thể rỗng)
+   */
+  @Column({ nullable: true })
+  icon: string;
 
   /**
    * ID tính năng cha (tham chiếu đến thực thể Feature, có thể rỗng)

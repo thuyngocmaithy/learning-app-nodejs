@@ -42,6 +42,25 @@ export class RequestHandler {
     }
   }
 
+  static async getWhere<T>(
+    req: Request,
+    res: Response,
+    service: { getWhere: (condition: Partial<T>) => Promise<T[]> }
+  ) {
+    try {
+      const condition = req.query as Partial<T>;
+      const result = await service.getWhere(condition);
+      if (result.length > 0) {
+        return RequestHandler.sendResponse(res, StatusCodes.OK, "success", result);
+      }
+      return RequestHandler.sendResponse(res, StatusCodes.NOT_FOUND, "error", [], "No entities found matching the criteria");
+    } catch (error) {
+      console.error("Get Where Error:", error);
+      return RequestHandler.sendResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, "error", [], (error as Error).message);
+    }
+  }
+
+
   static async update<T>(req: Request, res: Response, service: { update: (id: string, data: any) => Promise<T | null> }) {
     try {
       const id = req.params.id;
