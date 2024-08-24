@@ -22,6 +22,28 @@ export class UserService {
     return this.userRepository.findOne({ where: { id }, relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'] });
   }
 
+  // Phương thức mới để lấy người dùng với isStudent = 0 và isActive = 1
+  async getActiveNonStudents(): Promise<User[]> {
+    return this.userRepository.find({
+      where: {
+        isStudent: false, // Tìm người dùng không phải là sinh viên
+        isActive: true,   // Tìm người dùng đang hoạt động
+      },
+      relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
+    });
+  }
+
+  // Phương thức mới để lấy danh sách người dùng là sinh viên và đang hoạt động
+  async getActiveStudents(): Promise<User[]> {
+    return this.userRepository.find({
+      where: {
+        isStudent: true,
+        isActive: true,
+      },
+      relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
+    });
+  }
+  
   async update(id: string, data: Partial<User>): Promise<User | null> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
@@ -34,5 +56,16 @@ export class UserService {
   async delete(id: string): Promise<boolean> {
     const result = await this.userRepository.delete({ id });
     return result.affected !== 0;
+  }
+
+  async getUsersByFaculty(facultyId: string): Promise<User[]> {
+    return this.userRepository.find({
+      where: {
+        isStudent: false,
+        isActive: true,
+        faculty: { facultyId } // Giả sử bạn đã thiết lập mối quan hệ đúng với entity User
+      },
+      relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
+    });
   }
 }

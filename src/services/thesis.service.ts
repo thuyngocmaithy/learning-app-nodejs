@@ -9,8 +9,11 @@ export class ThesisService {
   }
 
   public getAll = async (): Promise<Thesis[]> => {
-    return await this.thesisRepository.find();
+    return await this.thesisRepository.find({
+      relations: ['supervisor', 'faculty', 'status', 'createUser', 'lastModifyUser', 'registrations']
+    });
   }
+  
 
   public getById = async (id: string): Promise<Thesis | null> => {
     const options: FindOneOptions<Thesis> = { where: { id } };

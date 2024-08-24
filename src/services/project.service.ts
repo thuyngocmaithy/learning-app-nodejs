@@ -15,7 +15,7 @@ export class ProjectService {
   }
 
   async getAll(): Promise<Project[]> {
-    return this.projectRepository.find({ relations: ['status', 'instructor', 'createUser', 'lastModifyUser'] });
+    return this.projectRepository.find({ relations: ['status','faculty', 'instructor', 'createUser', 'lastModifyUser'] });
   }
 
   async getById(projectId: string): Promise<Project | null> {

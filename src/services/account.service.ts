@@ -24,6 +24,10 @@ export class AccountService {
     return this.accountRepository.findOne({ where: { id }, relations: ['permission'] });
   }
 
+  async getByUsername(username: string): Promise<Account | null> {
+    return this.accountRepository.findOne({ where: { username }, relations: ['permission'] });
+  }
+
   async update(id: string, data: Partial<Account>): Promise<Account | null> {
     const account = await this.accountRepository.findOne({ where: { id }, relations: ['permission'] });
     if (!account) {
