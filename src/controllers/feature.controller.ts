@@ -14,7 +14,24 @@ export class FeatureController {
 
   public getAllFeatures = (req: Request, res: Response) => RequestHandler.getAll<Feature>(req, res, this.featureService);
   public getFeatureById = (req: Request, res: Response) => RequestHandler.getById<Feature>(req, res, this.featureService);
+  public getFeatureWhere = (req: Request, res: Response) => RequestHandler.getWhere<Feature>(req, res, this.featureService);
   public createFeature = (req: Request, res: Response) => RequestHandler.create<Feature>(req, res, this.featureService);
   public updateFeature = (req: Request, res: Response) => RequestHandler.update<Feature>(req, res, this.featureService);
   public deleteFeature = (req: Request, res: Response) => RequestHandler.delete(req, res, this.featureService);
+
+  public GetFeatureByStructure = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const result = await this.featureService.GetFeatureByStructure();
+      if (!result || result.length === 0) {
+        res.status(404).json({ message: 'No data found for GetFeatureByStructure' });
+        return;
+      }
+      res.json(result);
+    } catch (error) {
+      console.error('Error in GetFeatureByStructure:', error);
+      res.status(500).json({
+        error: 'Error executing stored procedure GetFeatureByStructure',
+      });
+    }
+  }
 }

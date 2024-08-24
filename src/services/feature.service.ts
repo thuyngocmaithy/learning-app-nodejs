@@ -4,9 +4,11 @@ import { Feature } from '../entities/Feature';
 
 export class FeatureService {
   private featureRepository: Repository<Feature>;
+  private dataSource: DataSource;
 
   constructor(dataSource: DataSource) {
     this.featureRepository = dataSource.getRepository(Feature);
+    this.dataSource = dataSource;
   }
 
   async create(data: Partial<Feature>): Promise<Feature> {
@@ -22,6 +24,10 @@ export class FeatureService {
     return this.featureRepository.findOne({ where: { featureId }, relations: ['parent'] });
   }
 
+  async getWhere(condition: Partial<Feature>): Promise<Feature[]> {
+    return this.featureRepository.find({ where: condition, relations: ['parent'] });
+  }
+
   async update(featureId: string, data: Partial<Feature>): Promise<Feature | null> {
     const feature = await this.featureRepository.findOne({ where: { featureId }, relations: ['parent'] });
     if (!feature) {
@@ -35,4 +41,18 @@ export class FeatureService {
     const result = await this.featureRepository.delete({ featureId });
     return result.affected !== 0;
   }
+
+  // Store lấy feature theo cấu trúc parent - children
+  async GetFeatureByStructure(): Promise<any> {
+    try {
+      const query = 'CALL GetFeatureByStructure()';
+      return await this.dataSource.query(query);
+    } catch (error) {
+      console.error('Lỗi khi gọi stored GetFeatureByStructure', error);
+      throw new Error('Lỗi khi gọi stored GetFeatureByStructure');
+    }
+  }
+
+
 }
+
