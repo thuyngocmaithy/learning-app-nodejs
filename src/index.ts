@@ -35,6 +35,7 @@ import conversationRouter from './routes/conversation.route';
 import messageRouter from './routes/message.route';
 import participantRouter from './routes/participant.route';
 import featureRouter from './routes/feature.route';
+import sguAuthRouter from './routes/sguAuth.route';
 
 
 // Nạp các biến môi trường từ file .env
@@ -73,6 +74,7 @@ app.get('/', (req, res) => {
 });
 
 // Sử dụng router auth
+app.use('/api/authSGU', sguAuthRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/accounts', accountRoutes);

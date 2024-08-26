@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, OneToMany, BeforeInsert, DataSource } from 'typeorm';
 import { User } from './User';
 import { Faculty } from './Faculty';
 import { Status } from './Status';
@@ -12,7 +12,7 @@ export class Thesis {
   /**
    * Khóa chính
    */
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn()
   id: string;
 
   /**
@@ -42,7 +42,8 @@ export class Thesis {
   /**
    * ID người hướng dẫn (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'supervisor' })
   supervisor: User;
 
   /**
@@ -52,8 +53,8 @@ export class Thesis {
   faculty: Faculty;
 
   /**
- * Số lượng người đăng ký
- */
+   * Số lượng người đăng ký
+   */
   @Column({ default: 0, nullable: true })
   registrationCount: number;
 
@@ -72,7 +73,8 @@ export class Thesis {
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, user => user.id, { nullable: false })
+  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @JoinColumn({ name: 'createUser' })
   createUser: User;
 
   /**
@@ -84,7 +86,8 @@ export class Thesis {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, user => user.id, { nullable: false })
+  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @JoinColumn({ name: 'lastModifyUser' })
   lastModifyUser: User;
 
   /**
@@ -92,4 +95,5 @@ export class Thesis {
    */
   @UpdateDateColumn()
   lastModifyDate: Date;
+
 }

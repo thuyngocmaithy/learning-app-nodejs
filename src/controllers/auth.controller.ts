@@ -8,8 +8,8 @@ export const loginController = async (req: Request, res: Response): Promise<void
     const { username, password } = req.body;
 
     try {
-        const { accessToken, refreshToken, expiresIn } = await login(username, password);
-        await response(res, 200, 'success', { accessToken, refreshToken, expiresIn }, 'Đăng nhập thành công');
+        const { accessToken, refreshToken, expiresIn , accountId , userId } = await login(username, password);
+        await response(res, 200, 'success', { accessToken, refreshToken, expiresIn , accountId , userId  }, 'Đăng nhập thành công');
     } catch (error) {
         await response(res, 401, 'error', null, error instanceof Error ? error.message : 'Đăng nhập không thành công');
     }
