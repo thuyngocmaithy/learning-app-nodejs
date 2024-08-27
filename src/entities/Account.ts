@@ -36,6 +36,13 @@ export class Account {
   @Column({ nullable: true })
   refreshToken: string;
 
+
+    /**
+   * access_token (có thể rỗng)
+   */
+    @Column({ nullable: true, length: 2048 })  
+    access_token: string;
+
   /**
    * Quyền (tham chiếu đến thực thể Permission)
    */

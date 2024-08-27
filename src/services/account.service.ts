@@ -12,7 +12,6 @@ export class AccountService {
 
   async create(data: Partial<Account>): Promise<Account> {
     const account = this.accountRepository.create(data);
-    account.password = await bcrypt.hash(account.password, 10); // Hash the password
     return this.accountRepository.save(account);
   }
 

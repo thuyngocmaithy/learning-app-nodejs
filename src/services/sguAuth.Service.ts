@@ -9,7 +9,7 @@ import { Permission } from '../entities/Permission';
 import { Repository } from 'typeorm';
 
 const SGU_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/auth/login';
-const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/public/api/dkmh/w-locsinhvieninfo/';
+const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/dkmh/w-locsinhvieninfo';
 
 export class SguAuthService {
   private accountService: AccountService;
@@ -26,7 +26,7 @@ export class SguAuthService {
     try {
       const loginData = await this.performSguLogin(username, password);
       const account = await this.createOrUpdateAccount(loginData, password);
-      const studentInfo = await this.fetchStudentInfo(loginData.access_token);
+      const studentInfo = await this.fetchStudentInfo(account.access_token);
       const user = await this.createOrUpdateUser(loginData, studentInfo, account);
 
       return this.generateAuthResponse(loginData, user);
@@ -60,14 +60,19 @@ export class SguAuthService {
   }
 
   private async createOrUpdateAccount(loginData: any, password: string): Promise<Account> {
-    const { userName, principal, refresh_token, roles } = loginData;
+    const { userName, principal, refresh_token, roles , access_token } = loginData;
     let account = await this.accountService.getByUsername(userName);
   
     if (!account) {
       account = new Account();
       account.username = userName;
       account.email = principal;
+      account.access_token = access_token;
+      account.password = await bcrypt.hash(password, 10);
       
+      account.refreshToken = refresh_token;
+
+
       if (roles === 'SINHVIEN') {
         const studentPermission = await this.permissionRepository.findOne({ where: { permissionId: 'student' } });
         if (!studentPermission) {
@@ -77,8 +82,6 @@ export class SguAuthService {
       }
     }
   
-    account.refreshToken = refresh_token;
-    account.password = await bcrypt.hash(password, 10);
     
     if (account.id) {
       return await this.accountService.update(account.id, account) as Account;
@@ -89,6 +92,8 @@ export class SguAuthService {
 
   private async fetchStudentInfo(accessToken: string) {
     try {
+      console.log('test token: ', accessToken);
+
       const response = await axios.post(SGU_INFO_API_URL, {}, {
         headers: {
           "Content-Type": "application/json",
@@ -100,6 +105,7 @@ export class SguAuthService {
         throw new Error('Invalid student info response');
       }
 
+      console.log('response data test: ', response);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching student info:', error);
@@ -130,7 +136,26 @@ export class SguAuthService {
     user.isStudent = studentInfo.hien_dien_sv === 'Đang học';
     user.class = studentInfo.lop;
     user.faculty = { facultyId: studentInfo.khoi.substring(0, 3) } as any;
-    user.major = studentInfo.chuyen_nganh ? { majorId: studentInfo.chuyen_nganh } as any : null;
+    if (studentInfo.chuyen_nganh) {
+      switch (studentInfo.chuyen_nganh) {
+        case "Kỹ thuật phần mềm":
+          user.major = { majorId: "KTPM" } as any;
+          break;
+        case "Hệ thống thông tin":
+          user.major = { majorId: "HTTT" } as any;
+          break;
+        case "Khoa học máy tính":
+          user.major = { majorId: "KHMT" } as any;
+          break;
+        case "Kỹ thuật máy tính":
+          user.major = { majorId: "KTMT" } as any;
+          break;
+        default:
+          user.major = { majorId: '' } as any;
+          break;
+      }
+    }
+    
     user.stillStudy = user.isStudent;
     user.firstAcademicYear = parseInt(studentInfo.nhhk_vao.toString().substring(0, 4));
     user.lastAcademicYear = parseInt(studentInfo.nhhk_ra.toString().substring(0, 4));

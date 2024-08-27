@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { Thesis_UserController } from '../controllers/thesis_faculty.controller';
+import { Thesis_UserController } from '../controllers/thesis_user.controller';
 import { AppDataSource } from '../data-source';
 
 
