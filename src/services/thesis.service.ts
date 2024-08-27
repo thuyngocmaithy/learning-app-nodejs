@@ -24,7 +24,7 @@ export class ThesisService {
   }
 
   public getById = async (id: string): Promise<Thesis | null> => {
-    const options: FindOneOptions<Thesis> = { 
+    const options: FindOneOptions<Thesis> = {
       where: { id },
       relations: ['supervisor', 'faculty', 'status', 'createUser', 'lastModifyUser', 'registrations']
     };
@@ -38,24 +38,24 @@ export class ThesisService {
     if (!thesisData.facultyId) {
       throw new Error('Faculty ID is required');
     }
-  
+
     const faculty = await this.facultyRepository.findOne({ where: { facultyId: thesisData.facultyId } });
     if (!faculty) {
       throw new Error('Invalid Faculty ID');
     }
-  
+
     const supervisor = await this.userRepository.findOne({ where: { id: thesisData.supervisor } });
     if (!supervisor) {
       throw new Error('Invalid Supervisor ID');
     }
-  
+
     const status = await this.statusRepository.findOne({ where: { statusId: thesisData.statusId } });
     if (!status) {
       throw new Error('Invalid Status ID');
     }
-  
+
     const newId = await this.generateNewId(thesisData.facultyId);
-  
+
     const thesis = this.thesisRepository.create({
       id: newId,
       title: thesisData.title,
@@ -69,10 +69,10 @@ export class ThesisService {
       createUser: thesisData.createUserId,
       lastModifyUser: thesisData.lastModifyUserId,
     });
-  
+
     return await this.thesisRepository.save(thesis);
   }
-  
+
 
   private generateNewId = async (facultyId: string): Promise<string> => {
     // Find the last thesis for this faculty
@@ -97,7 +97,7 @@ export class ThesisService {
     if (!existingThesis) {
       throw new Error('Thesis not found');
     }
-  
+
     if (thesisData.facultyId) {
       const faculty = await this.facultyRepository.findOne({ where: { facultyId: thesisData.facultyId } });
       if (!faculty) {
@@ -105,7 +105,7 @@ export class ThesisService {
       }
       existingThesis.faculty = faculty;
     }
-  
+
     if (thesisData.supervisorId) {
       const supervisor = await this.userRepository.findOne({ where: { id: thesisData.supervisorId } });
       if (!supervisor) {
@@ -113,7 +113,7 @@ export class ThesisService {
       }
       existingThesis.supervisor = supervisor;
     }
-  
+
     if (thesisData.statusId) {
       const status = await this.statusRepository.findOne({ where: { statusId: thesisData.statusId } });
       if (!status) {
@@ -121,7 +121,7 @@ export class ThesisService {
       }
       existingThesis.status = status;
     }
-  
+
     Object.assign(existingThesis, {
       title: thesisData.title,
       description: thesisData.description,
@@ -130,10 +130,10 @@ export class ThesisService {
       registrationCount: thesisData.registrationCount,
       lastModifyUser: thesisData.lastModifyUserId
     });
-  
+
     return await this.thesisRepository.save(existingThesis);
   }
-  
+
 
   public delete = async (id: string): Promise<boolean> => {
     const result = await this.thesisRepository.delete(id);
