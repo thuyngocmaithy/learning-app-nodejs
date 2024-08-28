@@ -17,4 +17,17 @@ export class AccountController {
   public createAccount = (req: Request, res: Response) => RequestHandler.create<Account>(req, res, this.accountService);
   public updateAccount = (req: Request, res: Response) => RequestHandler.update<Account>(req, res, this.accountService);
   public deleteAccount = (req: Request, res: Response) => RequestHandler.delete(req, res, this.accountService);
+
+  public getAccountByUsername = (req: Request, res: Response) => {
+    const { username } = req.params;
+    this.accountService.getByUsername(username)
+      .then(account => {
+        if (account) {
+          res.json(account);
+        } else {
+          res.status(404).json({ message: 'Account not found' });
+        }
+      })
+      .catch(error => res.status(500).json({ message: error.message }));
+  };
 }

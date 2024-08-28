@@ -33,12 +33,15 @@ export class Subject {
   @JoinColumn({ name: 'subjectBeforeId' })
   subjectBefore: Subject;
 
+
   /**
     * Môn học tương đương (có thể rỗng)
     */
   @ManyToOne(() => Subject, data => data.subjectId, { nullable: true })
+
   @JoinColumn({ name: 'subjectEqualId' })
   subjectEqual: string | null;
+
 
   /**
     * Có bắt buộc không (không rỗng)

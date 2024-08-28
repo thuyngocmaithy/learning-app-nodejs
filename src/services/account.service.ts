@@ -12,7 +12,6 @@ export class AccountService {
 
   async create(data: Partial<Account>): Promise<Account> {
     const account = this.accountRepository.create(data);
-    account.password = await bcrypt.hash(account.password, 10); // Hash the password
     return this.accountRepository.save(account);
   }
 
@@ -22,6 +21,10 @@ export class AccountService {
 
   async getById(id: string): Promise<Account | null> {
     return this.accountRepository.findOne({ where: { id }, relations: ['permission'] });
+  }
+
+  async getByUsername(username: string): Promise<Account | null> {
+    return this.accountRepository.findOne({ where: { username }, relations: ['permission'] });
   }
 
   async update(id: string, data: Partial<Account>): Promise<Account | null> {

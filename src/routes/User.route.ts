@@ -7,11 +7,14 @@ import { AppDataSource } from '../data-source';
 const userRouter = Router();
 const userController = new UserController(AppDataSource);
 
+userRouter.get('/teachers', userController.getActiveNonStudents);
+userRouter.get('/students', userController.getActiveStudents);
+userRouter.get('/users-by-faculty/:facultyId', userController.getUsersByFaculty)
 userRouter.get('/', userController.getAllUsers);
 userRouter.get('/:id', userController.getUserById);
+
 userRouter.post('/', userController.createUser);
 userRouter.put('/:id', userController.updateUser);
 userRouter.delete('/:id', userController.deleteUser);
-userRouter.get('/allUser', userController.getAllUsers);
 
 export default userRouter;

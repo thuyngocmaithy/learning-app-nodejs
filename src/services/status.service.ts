@@ -35,4 +35,8 @@ export class StatusService {
     const result = await this.statusRepository.delete({ statusId });
     return result.affected !== 0;
   }
+
+  async getByType(type: 'Tiến độ dự án nghiên cứu' | 'Tiến độ khóa luận' | 'Tiến độ thực tập'): Promise<Status[]> {
+    return this.statusRepository.find({ where: { type } });
+  }
 }

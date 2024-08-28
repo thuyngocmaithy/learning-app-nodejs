@@ -19,7 +19,7 @@ import followerRoutes from './routes/follower.route';
 import followerDetailRoutes from './routes/followerDetail.route';
 import internshipUserRoutes from './routes/internship_user.route';
 import internshipRoutes from './routes/internship.route';
-import thesisUserRoutes from './routes/internship_user.route';
+import thesisUserRoutes from './routes/thesis_user.route';
 import thesisRoute from './routes/thesis.route';
 import subjectRoute from './routes/subject.route';
 import subject_SemesteRouter from './routes/subject_semester.route';
@@ -37,6 +37,7 @@ import participantRouter from './routes/participant.route';
 import featureRouter from './routes/feature.route';
 import fs from 'fs/promises';
 import uploadRouter from './routes/upload.routes';
+import sguAuthRouter from './routes/sguAuth.route';
 
 
 // Nạp các biến môi trường từ file .env
@@ -90,6 +91,7 @@ app.get('/', (req, res) => {
 });
 
 // Sử dụng router auth
+app.use('/api/authSGU', sguAuthRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/accounts', accountRoutes);
