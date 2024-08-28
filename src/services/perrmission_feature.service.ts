@@ -15,7 +15,7 @@ export class PermissionFeatureService {
   }
 
   public getById = async (id: string): Promise<PermissionFeature | null> => {
-    const options: FindOneOptions<PermissionFeature> = { 
+    const options: FindOneOptions<PermissionFeature> = {
       where: { id },
       relations: ['permission', 'feature']
     };
@@ -23,13 +23,15 @@ export class PermissionFeatureService {
   }
 
   public create = async (permissionFeatureData: Partial<PermissionFeature>): Promise<PermissionFeature> => {
+    console.log(permissionFeatureData)
     const permissionFeature = this.permissionFeatureRepository.create(permissionFeatureData);
+    console.log(permissionFeature);
     return this.permissionFeatureRepository.save(permissionFeature);
   }
 
   public update = async (id: string, permissionFeatureData: Partial<PermissionFeature>): Promise<PermissionFeature | null> => {
     await this.permissionFeatureRepository.update(id, permissionFeatureData);
-    const options: FindOneOptions<PermissionFeature> = { 
+    const options: FindOneOptions<PermissionFeature> = {
       where: { id },
       relations: ['permission', 'feature']
     };
@@ -40,4 +42,26 @@ export class PermissionFeatureService {
     const result = await this.permissionFeatureRepository.delete(id);
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
+
+  // async getWhere(condition: Partial<PermissionFeature>): Promise<PermissionFeature[]> {
+  //   return this.permissionFeatureRepository.find({ where: condition, relations: ['permission', 'feature'] });
+  // }
+
+  async getWhere(condition: Partial<PermissionFeature>): Promise<PermissionFeature[]> {
+    const whereCondition: any = {};
+
+    if (condition.permission) {
+      whereCondition.permission = { permissionId: condition.permission };
+    }
+
+    if (condition.feature) {
+      whereCondition.feature = { featureId: condition.feature };
+    }
+
+    return this.permissionFeatureRepository.find({
+      where: whereCondition,
+      relations: ['permission', 'feature'],
+    });
+  }
+
 }

@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Unique } from 'typeorm';
 import { Permission } from './Permission';
 import { Feature } from './Feature';
 
@@ -6,6 +6,7 @@ import { Feature } from './Feature';
  * Thực thể quyền - Tính năng
  */
 @Entity()
+@Unique(["permission", "feature"])
 export class PermissionFeature {
     /**
      * Khóa chính
