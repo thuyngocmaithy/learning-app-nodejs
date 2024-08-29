@@ -1,12 +1,12 @@
-import axios, { AxiosError } from 'axios';
+import { Repository } from 'typeorm';
 import { AccountService } from './account.service';
 import { UserService } from './User.service';
 import { Account } from '../entities/Account';
 import { User } from '../entities/User';
 import { AppDataSource } from '../data-source';
 import * as bcrypt from 'bcrypt';
+import axios, { AxiosError } from 'axios';
 import { Permission } from '../entities/Permission';
-import { Repository } from 'typeorm';
 
 const SGU_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/auth/login';
 const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/dkmh/w-locsinhvieninfo';
@@ -15,7 +15,7 @@ export class SguAuthService {
   private accountService: AccountService;
   private userService: UserService;
   private permissionRepository: Repository<Permission>;
-  
+
   constructor() {
     this.accountService = new AccountService(AppDataSource);
     this.userService = new UserService(AppDataSource);
@@ -24,12 +24,34 @@ export class SguAuthService {
 
   async loginToSgu(username: string, password: string) {
     try {
-      const loginData = await this.performSguLogin(username, password);
-      const account = await this.createOrUpdateAccount(loginData, password);
-      const studentInfo = await this.fetchStudentInfo(account.access_token);
-      const user = await this.createOrUpdateUser(loginData, studentInfo, account);
+      // Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
+      let account = await this.accountService.getByUsername(username);
+      
+      if (!account) {
+        // Nếu tài khoản không tồn tại, đăng nhập qua SGU
+        const loginData = await this.performSguLogin(username, password);
 
-      return this.generateAuthResponse(loginData, user);
+        // Tạo tài khoản mới trong cơ sở dữ liệu
+        account = await this.createOrUpdateAccount(loginData, password);
+
+        // Lấy thông tin sinh viên từ SGU
+        const studentInfo = await this.fetchStudentInfo(loginData.access_token);
+
+        // Tạo hoặc cập nhật người dùng
+        const user = await this.createOrUpdateUser(loginData, studentInfo, account);
+
+        return this.generateAuthResponse(loginData, user);
+      } else {
+        // Tài khoản đã tồn tại, cần cập nhật token
+        const updatedTokens = await this.refreshSguTokens(account, username, password);
+        account.access_token = updatedTokens.access_token;
+        account.refreshToken = updatedTokens.refresh_token;
+        await this.accountService.update(account.id, account);
+
+        // Trả về phản hồi với token mới
+        const user = await this.userService.getById(account.id);
+        return this.generateAuthResponse(updatedTokens, user as User);
+      }
     } catch (error) {
       this.handleError(error);
     }
@@ -60,20 +82,18 @@ export class SguAuthService {
   }
 
   private async createOrUpdateAccount(loginData: any, password: string): Promise<Account> {
-    const { userName, principal, refresh_token, roles , access_token } = loginData;
+    const { userName, principal, access_token } = loginData;
     let account = await this.accountService.getByUsername(userName);
-  
+
     if (!account) {
       account = new Account();
       account.username = userName;
       account.email = principal;
-      account.access_token = access_token;
       account.password = await bcrypt.hash(password, 10);
-      
-      account.refreshToken = refresh_token;
+      account.access_token = access_token;
 
-
-      if (roles === 'SINHVIEN') {
+      // Thiết lập quyền
+      if (loginData.roles === 'SINHVIEN') {
         const studentPermission = await this.permissionRepository.findOne({ where: { permissionId: 'student' } });
         if (!studentPermission) {
           throw new Error('Permission not found');
@@ -81,8 +101,8 @@ export class SguAuthService {
         account.permission = studentPermission;
       }
     }
-  
     
+    // Cập nhật tài khoản mới
     if (account.id) {
       return await this.accountService.update(account.id, account) as Account;
     } else {
@@ -90,10 +110,36 @@ export class SguAuthService {
     }
   }
 
+  private async refreshSguTokens(account: Account, username: string, password: string) {
+    try {
+      const response = await axios.post(SGU_API_URL, {
+        username,
+        password,
+        grant_type: 'password',
+      }, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+      });
+
+      const data = response.data;
+      if (data.code !== '200') {
+        throw new Error('Lấy token SGU không thành công');
+      }
+
+      return {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_in: data.expires_in,
+      };
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      throw new Error('Không thể lấy token mới từ SGU. Vui lòng thử lại.');
+    }
+  }
+
   private async fetchStudentInfo(accessToken: string) {
     try {
-      console.log('test token: ', accessToken);
-
       const response = await axios.post(SGU_INFO_API_URL, {}, {
         headers: {
           "Content-Type": "application/json",
@@ -105,7 +151,6 @@ export class SguAuthService {
         throw new Error('Invalid student info response');
       }
 
-      console.log('response data test: ', response);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching student info:', error);
@@ -120,55 +165,32 @@ export class SguAuthService {
     const studentId = studentInfo.ma_sv;
     let user = await this.userService.getById(studentId);
 
-    if (user) {
-      return user;
+    if (!user) {
+      user = new User();
+      user.userId = studentId;
+      user.createDate = new Date();
+      user.fullname = studentInfo.ten_day_du;
+      user.dateOfBirth = new Date(studentInfo.ngay_sinh.split('/').reverse().join('-'));
+      user.placeOfBirth = studentInfo.noi_sinh;
+      user.phone = studentInfo.dien_thoai;
+      user.email = studentInfo.email || loginData.principal;
+      user.isStudent = studentInfo.hien_dien_sv === 'Đang học';
+      user.class = studentInfo.lop;
+      user.faculty = { facultyId: studentInfo.khoi.substring(0, 3) } as any;
+      user.stillStudy = user.isStudent;
+      user.firstAcademicYear = parseInt(studentInfo.nhhk_vao.toString().substring(0, 4));
+      user.lastAcademicYear = parseInt(studentInfo.nhhk_ra.toString().substring(0, 4));
+      user.isActive = true;
+      user.account = account;
+      user.lastModifyDate = new Date();
     }
-
-    // Update user information
-    user = new User();
-    user.userId = studentId;
-    user.createDate = new Date();
-    user.fullname = studentInfo.ten_day_du;
-    user.dateOfBirth = new Date(studentInfo.ngay_sinh.split('/').reverse().join('-'));
-    user.placeOfBirth = studentInfo.noi_sinh;
-    user.phone = studentInfo.dien_thoai;
-    user.email = studentInfo.email || loginData.principal;
-    user.isStudent = studentInfo.hien_dien_sv === 'Đang học';
-    user.class = studentInfo.lop;
-    user.faculty = { facultyId: studentInfo.khoi.substring(0, 3) } as any;
-    if (studentInfo.chuyen_nganh) {
-      switch (studentInfo.chuyen_nganh) {
-        case "Kỹ thuật phần mềm":
-          user.major = { majorId: "KTPM" } as any;
-          break;
-        case "Hệ thống thông tin":
-          user.major = { majorId: "HTTT" } as any;
-          break;
-        case "Khoa học máy tính":
-          user.major = { majorId: "KHMT" } as any;
-          break;
-        case "Kỹ thuật máy tính":
-          user.major = { majorId: "KTMT" } as any;
-          break;
-        default:
-          user.major = { majorId: '' } as any;
-          break;
-      }
-    }
-    
-    user.stillStudy = user.isStudent;
-    user.firstAcademicYear = parseInt(studentInfo.nhhk_vao.toString().substring(0, 4));
-    user.lastAcademicYear = parseInt(studentInfo.nhhk_ra.toString().substring(0, 4));
-    user.isActive = true;
-    user.account = account;
-    user.lastModifyDate = new Date();
 
     return await this.userService.create(user) as User;
   }
 
   private generateAuthResponse(loginData: any, user: User) {
     return {
-      status : loginData.code,
+      status: loginData.code,
       accessToken: loginData.access_token,
       refreshToken: loginData.refresh_token,
       expiresIn: loginData.expires_in,
