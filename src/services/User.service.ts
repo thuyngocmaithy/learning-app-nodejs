@@ -22,6 +22,12 @@ export class UserService {
     return this.userRepository.findOne({ where: { id }, relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'] });
   }
 
+
+  async getByUserId(userId: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { userId }, relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'] });
+  }
+
+
   // Phương thức mới để lấy người dùng với isStudent = 0 và isActive = 1
   async getActiveNonStudents(): Promise<User[]> {
     return this.userRepository.find({

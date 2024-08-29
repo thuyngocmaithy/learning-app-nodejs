@@ -45,6 +45,24 @@ export class UserController {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "error", error: (error as Error).message });
       }
     };
+
+
+    public getUserByUserId = async (req: Request, res: Response) => {
+      const userId = req.params.userId;
+      try {
+        const user = await this.userService.getByUserId(userId);
+        if (!user) {
+          return res.status(StatusCodes.NOT_FOUND).json({ message: "User not found" });
+        }
+        res.status(StatusCodes.OK).json({ message: "success", data: user });
+      } catch (error) {
+        console.error("Get User By UserId Error:", error);
+        res
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .json({ message: "error", error: (error as Error).message });
+      }
+    };
+
     public createUser = (req: Request, res: Response) => RequestHandler.create<User>(req, res, this.userService);
     public updateUser = (req: Request, res: Response) => RequestHandler.update<User>(req, res, this.userService);
     public deleteUser = (req: Request, res: Response) => RequestHandler.delete(req, res, this.userService);
