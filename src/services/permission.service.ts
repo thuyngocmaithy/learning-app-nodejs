@@ -12,10 +12,10 @@ export class PermissionService {
     return this.permissionRepository.find();
   }
 
-  public getByPermissionId = async (permissionId: string): Promise<Permission | null> => {
-    const options: FindOneOptions<Permission> = { where: { permissionId } };
-    return this.permissionRepository.findOne(options);
+  async getById(permissionId: string): Promise<Permission | null> {
+    return this.permissionRepository.findOne({ where: { permissionId: permissionId } });
   }
+
 
   public create = async (permissionData: Partial<Permission>): Promise<Permission> => {
     const permission = this.permissionRepository.create(permissionData);

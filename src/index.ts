@@ -35,6 +35,8 @@ import conversationRouter from './routes/conversation.route';
 import messageRouter from './routes/message.route';
 import participantRouter from './routes/participant.route';
 import featureRouter from './routes/feature.route';
+import fs from 'fs/promises';
+import uploadRouter from './routes/upload.routes';
 import sguAuthRouter from './routes/sguAuth.route';
 
 
@@ -48,6 +50,7 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 5000;
 
+
 // Kết nối cơ sở dữ liệu với TypeORM
 connectDB().then(() => {
     // Chỉ khởi động server sau khi kết nối cơ sở dữ liệu thành công
@@ -59,6 +62,20 @@ connectDB().then(() => {
 });
 
 app.use(express.static(getPublicDir()));
+
+
+// Tạo thư mục uploads nếu chưa tồn tại
+const uploadDir = path.join(__dirname, '..', 'public', 'uploads');
+
+async function createUploadDir() {
+    try {
+        await fs.mkdir(uploadDir, { recursive: true });
+    } catch (error) {
+        console.error('Error creating upload directory:', error);
+    }
+}
+
+createUploadDir();
 
 // Sử dụng router xác thực
 // app.use('/api', authRouter);
@@ -103,6 +120,7 @@ app.use('/api/conversations', conversationRouter);
 app.use('/api/messages', messageRouter);
 app.use('/api/participants', participantRouter);
 app.use('/api/features', featureRouter);
+app.use('/api/upload', uploadRouter);
 
 
 export default app;

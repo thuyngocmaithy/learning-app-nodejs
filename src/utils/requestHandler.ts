@@ -53,12 +53,13 @@ export class RequestHandler {
       if (result.length > 0) {
         return RequestHandler.sendResponse(res, StatusCodes.OK, "success", result);
       }
-      return RequestHandler.sendResponse(res, StatusCodes.NOT_FOUND, "error", [], "No entities found matching the criteria");
+      return RequestHandler.sendResponse(res, StatusCodes.NO_CONTENT, "success", null, "No entities found matching the criteria");
     } catch (error) {
       console.error("Get Where Error:", error);
-      return RequestHandler.sendResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, "error", [], (error as Error).message);
+      return RequestHandler.sendResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, "error", null, (error as Error).message);
     }
   }
+
 
 
   static async update<T>(req: Request, res: Response, service: { update: (id: string, data: any) => Promise<T | null> }) {
