@@ -84,6 +84,7 @@ export class FeatureService {
   async GetFeatureByPermission(permissionId: string): Promise<any> {
     try {
       const query = `CALL GetMenuUser('${permissionId}')`;
+      console.log(permissionId)
       return await this.dataSource.query(query);
     } catch (error) {
       console.error('Lỗi khi gọi stored GetMenuUser', error);

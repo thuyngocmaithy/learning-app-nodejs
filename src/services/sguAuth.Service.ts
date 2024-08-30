@@ -26,7 +26,7 @@ export class SguAuthService {
     try {
       // Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
       let account = await this.accountService.getByUsername(username);
-      
+
       console.log(account);
 
       if (!account) {
@@ -48,8 +48,7 @@ export class SguAuthService {
         const updatedTokens = await this.refreshSguTokens(account, username, password);
         account.access_token = updatedTokens.access_token;
         account.refreshToken = updatedTokens.refresh_token;
-        if(updatedTokens.roles === 'SINHVIEN')
-          account.permission.permissionId == 'student';
+        account.permission.permissionId == updatedTokens.roles;
 
 
         await this.accountService.update(account.id, account);
@@ -91,7 +90,7 @@ export class SguAuthService {
   }
 
   private async createOrUpdateAccount(loginData: any, password: string): Promise<Account> {
-    const { userName, principal, access_token , roles } = loginData;
+    const { userName, principal, access_token, roles } = loginData;
     let account = await this.accountService.getByUsername(userName);
 
     console.log(loginData);
@@ -104,15 +103,13 @@ export class SguAuthService {
       account.access_token = access_token;
 
       // Thiết lập quyền
-      if (loginData.roles === 'SINHVIEN') {
-        const studentPermission = await this.permissionRepository.findOne({ where: { permissionId: 'student' } });
-        if (!studentPermission) {
-          throw new Error('Permission not found');
-        }
-        account.permission = studentPermission;
+      const permisison = await this.permissionRepository.findOne({ where: { permissionId: loginData.roles } });
+      if (!permisison) {
+        throw new Error('Permission not found');
       }
+      account.permission = permisison;
     }
-    
+
     // Cập nhật tài khoản mới
     if (account.id) {
       return await this.accountService.update(account.id, account) as Account;
@@ -142,7 +139,7 @@ export class SguAuthService {
         access_token: data.access_token,
         refresh_token: data.refresh_token,
         expires_in: data.expires_in,
-        roles : data.roles,
+        roles: data.roles,
       };
     } catch (error) {
       console.error('Token refresh error:', error);
@@ -213,7 +210,7 @@ export class SguAuthService {
         username: user.account.username,
         fullname: user.fullname,
         email: user.email,
-        roles : loginData.roles
+        roles: loginData.roles
       },
     };
   }
