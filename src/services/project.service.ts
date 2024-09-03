@@ -26,45 +26,42 @@ export class ProjectService {
     return this.projectRepository.findOne({ where: { projectId }, relations: ['status', 'faculty', 'instructor', 'createUser', 'lastModifyUser'] });
   }
 
-  public create = async (projetcData: any): Promise<Project> => {
-    if (!projetcData.instructor) {
+  public create = async (projectData: any): Promise<Project> => {
+    if (!projectData.instructorId) {
       throw new Error('instructor ID is required');
     }
-    if (!projetcData.facultyId) {
+    if (!projectData.facultyId) {
       throw new Error('Faculty ID is required');
     }
 
-    const faculty = await this.facultyRepository.findOne({ where: { facultyId: projetcData.facultyId } });
+    const faculty = await this.facultyRepository.findOne({ where: { facultyId: projectData.facultyId } });
     if (!faculty) {
       throw new Error('Invalid Faculty ID');
     }
 
-    const instructor = await this.userRepository.findOne({ where: { id: projetcData.instructor } });
+    const instructor = await this.userRepository.findOne({ where: { userId: projectData.instructorId } });
     if (!instructor) {
       throw new Error('Invalid instructor ID');
     }
 
-    const status = await this.statusRepository.findOne({ where: { statusId: projetcData.statusId } });
+    const status = await this.statusRepository.findOne({ where: { statusId: projectData.statusId } });
     if (!status) {
       throw new Error('Invalid Status ID');
     }
 
-    const newId = await this.generateNewId(projetcData.facultyId);
+    const newId = await this.generateNewId(projectData.facultyId);
 
     const project = this.projectRepository.create({
       projectId: newId,
-      projectName: projetcData.projectName,
-      description: projetcData.description,
-      startDate: projetcData.startDate,
-      finishDate: projetcData.finishDate,
-      completionTime: projetcData.completionTime,
-      numberOfMember: projetcData.numberOfMember,
-      numberOfRegister: projetcData.numberOfRegister,
+      projectName: projectData.projectName,
+      description: projectData.description,
+      executionTime: projectData.executionTime,
+      numberOfMember: projectData.numberOfMember,
       faculty: faculty,
       instructor: instructor,
       status: status,
-      createUser: projetcData.createUserId,
-      lastModifyUser: projetcData.lastModifyUserId,
+      createUser: projectData.createUserId,
+      lastModifyUser: projectData.lastModifyUserId,
     });
 
     return await this.projectRepository.save(project);

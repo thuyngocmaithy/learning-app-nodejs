@@ -49,7 +49,7 @@ export class UserService {
       relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
     });
   }
-  
+
   async update(id: string, data: Partial<User>): Promise<User | null> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {

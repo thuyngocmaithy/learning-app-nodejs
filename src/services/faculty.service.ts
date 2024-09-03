@@ -19,6 +19,8 @@ export class FacultyService {
   }
 
   async getByFacultyId(facultyId: string): Promise<Faculty | null> {
+    console.log(facultyId);
+
     return this.facultyRepository.findOneBy({ facultyId });
   }
 

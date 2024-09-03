@@ -14,7 +14,7 @@ export class FacultyController {
 
   public getAllFaculties = (req: Request, res: Response) => RequestHandler.getAll<Faculty>(req, res, this.facultyService);
   public getFacultyByFacultyId = (req: Request, res: Response) => {
-    const facultyId = req.params.facultyId;
+    const facultyId = req.params.id;
     this.facultyService.getByFacultyId(facultyId)
       .then((faculty) => {
         if (faculty) {

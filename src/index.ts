@@ -6,6 +6,12 @@ import bodyParser from 'body-parser';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { response } from './utils/responseHelper';
 import { connectDB } from './config/connectDB'; // Import kết nối TypeORM
+
+import http from 'http';
+import { Server } from 'socket.io';
+import { setupSockets } from './socket';
+
+
 import path from 'path';
 import authRoutes from './routes/auth.route';
 import majorRoute from './routes/major.route';
@@ -45,6 +51,20 @@ dotenv.config();
 
 // Khởi tạo ứng dụng Express
 const app = express();
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    path: '/socket.io',
+    cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"]
+    }
+});
+
+// Thiết lập các sự kiện socket
+setupSockets(io);
+
+
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -54,7 +74,7 @@ const PORT = process.env.PORT || 5000;
 // Kết nối cơ sở dữ liệu với TypeORM
 connectDB().then(() => {
     // Chỉ khởi động server sau khi kết nối cơ sở dữ liệu thành công
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
         console.log(`Server đang chạy trên cổng ${PORT}`);
     });
 }).catch((error) => {
@@ -76,9 +96,6 @@ async function createUploadDir() {
 }
 
 createUploadDir();
-
-// Sử dụng router xác thực
-// app.use('/api', authRouter);
 
 // Route được bảo vệ để kiểm tra xác thực
 app.get('/api/protected', authMiddleware, async (req, res) => {
@@ -121,6 +138,8 @@ app.use('/api/messages', messageRouter);
 app.use('/api/participants', participantRouter);
 app.use('/api/features', featureRouter);
 app.use('/api/upload', uploadRouter);
+
+
 
 
 export default app;

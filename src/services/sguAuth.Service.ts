@@ -7,9 +7,12 @@ import { AppDataSource } from '../data-source';
 import * as bcrypt from 'bcrypt';
 import axios, { AxiosError } from 'axios';
 import { Permission } from '../entities/Permission';
+import jwt from 'jsonwebtoken';
 
 const SGU_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/auth/login';
 const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/dkmh/w-locsinhvieninfo';
+const SGU_IMAGE_ACCOUNT_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/sms/w-locthongtinimagesinhvien';
+const SGU_DIEM_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/srm/w-locdsdiemsinhvien';
 
 export class SguAuthService {
   private accountService: AccountService;
@@ -43,18 +46,30 @@ export class SguAuthService {
         const user = await this.createOrUpdateUser(loginData, studentInfo, account);
 
         return this.generateAuthResponse(loginData, user as User);
-      } else {
-        // Tài khoản đã tồn tại, cần cập nhật token
-        const updatedTokens = await this.refreshSguTokens(account, username, password);
+      } else { // Tài khoản đã tồn tại, cần cập nhật token    
+        let updatedTokens;
+
+        if (account.permission.permissionId === "ADMIN") {
+          //nếu tài khoản có quyền ADMIN
+          //refreshToken mà không lấy token từ SGU
+          updatedTokens = {
+            access_token: jwt.sign(
+              { id: account.id, role: 'ADMIN' },
+              'TokenADMIN',
+              { expiresIn: '2h' }
+            ),
+            refresh_token: account.refreshToken,
+            roles: 'ADMIN',
+          };
+        }
+        else {
+          updatedTokens = await this.refreshSguTokens(account, username, password);
+        }
         account.access_token = updatedTokens.access_token;
         account.refreshToken = updatedTokens.refresh_token;
         account.permission.permissionId == updatedTokens.roles;
 
-
         await this.accountService.update(account.id, account);
-
-        console.log('updatedTokens', updatedTokens, account.id);
-
 
         // Trả về phản hồi với token mới
         const user = await this.userService.getByUserId(account.username);
@@ -174,8 +189,6 @@ export class SguAuthService {
     const studentId = studentInfo.ma_sv;
     let user = await this.userService.getByUserId(studentId);
 
-
-
     if (!user) {
       user = new User();
       user.userId = studentId;
@@ -221,6 +234,36 @@ export class SguAuthService {
       throw error;
     } else {
       throw new Error('An unexpected error occurred. Please try again later.');
+    }
+  }
+
+  async getImageAccount(access_token: string, ma_sv: string) {
+    try {
+      const response = await axios.post(`${SGU_IMAGE_ACCOUNT_API_URL}?MaSV=${ma_sv}`, {}, {
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      // console.error('Error fetching image account:', error);
+      // throw error;
+    }
+  }
+
+  async getScore(access_token: string, ma_sv: string) { //Lấy điểm theo access token
+    try {
+      const response = await axios.post(`${SGU_DIEM_API_URL}?hien_thi_mon_theo_hkdk=false`, {}, {
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      // console.error('Error fetching image account:', error);
+      // throw error;
     }
   }
 }

@@ -6,6 +6,8 @@ const sguAuthRouter = express.Router();
 const sguAuthController = new SguAuthController();
 
 sguAuthRouter.post('/login-sgu', sguAuthController.loginToSgu);
+sguAuthRouter.post('/getImageAccount', sguAuthController.getImageAccount);
+sguAuthRouter.post('/getScore', sguAuthController.getScore);
 
 export default sguAuthRouter;
 

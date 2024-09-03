@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Unique } from 'typeorm';
 import { User } from './User';
 
 
@@ -6,6 +6,7 @@ import { User } from './User';
  * Thực thể Thông báo
  */
 @Entity()
+@Unique(["toUser", "createUser", "content"])
 export class Notification {
   /**
    * Khóa chính
@@ -16,8 +17,11 @@ export class Notification {
   /**
    * Loại thông báo (không rỗng)
    */
-  @Column({ nullable: false })
-  type: string;
+  @Column({
+    type: 'enum',
+    enum: ['success', 'error', 'warning'],
+  })
+  type: 'success' | 'error' | 'warning' = "warning";
 
   /**
    * Nội dung thông báo (không rỗng)
