@@ -1,5 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn, PrimaryColumn } from 'typeorm';
-import { Follower } from './Follower';
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { User } from './User';
 import { Status } from './Status';
 import { Faculty } from './Faculty';
@@ -24,7 +23,7 @@ export class Project {
   /**
    * Mô tả (không rỗng)
    */
-  @Column({ nullable: false })
+  @Column({ nullable: false, length: 999 })
   description: string;
 
   /**
@@ -34,34 +33,28 @@ export class Project {
   numberOfMember: number;
 
   /**
-   * Số lượng đã đăng ký (không rỗng)
-   */
-  @Column('int', { nullable: false })
-  numberOfRegister: number;
-
-  /**
    * Trạng thái (tham chiếu đến thực thể Status, không rỗng)
    */
   @ManyToOne(() => Status, data => data.statusId, { nullable: false })
   status: Status;
 
   /**
+   * Thời gian thực hiện (có thể rỗng)
+   */
+  @Column({ nullable: true })
+  executionTime: String;
+
+  /**
    * Ngày bắt đầu (không rỗng)
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   startDate: Date;
 
   /**
-   * Ngày kết thúc (không rỗng)
+   * Ngày kết thúc (có thể rỗng)
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   finishDate: Date;
-
-  /**
-   * Thời gian hoàn thành (không rỗng)
-   */
-  @Column({ nullable: false })
-  completionTime: Date;
 
   /**
    * Người hướng dẫn (tham chiếu đến thực thể User, không rỗng)
@@ -74,6 +67,23 @@ export class Project {
    */
   @ManyToOne(() => Faculty, data => data.facultyId, { nullable: false })
   faculty: Faculty;
+
+
+  /**
+   * Cấp dự án (không rỗng)
+   */
+  @Column({
+    type: 'enum',
+    enum: ['Cơ sở', 'Thành phố', 'Bộ', 'Quốc gia', 'Quốc tế'],
+  })
+  level: 'Cơ sở' | 'Thành phố' | 'Bộ' | 'Quốc gia' | 'Quốc tế' = "Cơ sở";
+
+
+  /**
+   * Số lượng đã đăng ký (có thể rỗng)
+   */
+  @Column('decimal', { precision: 15, scale: 2, nullable: true })
+  budget: number;
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)

@@ -22,4 +22,28 @@ export class SguAuthController {
       await response(res, 400, 'error', null, error.message);
     }
   };
+
+  public getImageAccount = async (req: Request, res: Response) => {
+    const { access_token, username } = req.body;
+
+    try {
+      const result = await this.sguAuthService.getImageAccount(access_token, username);
+      await response(res, 200, 'success', result);
+    } catch (error: any) {
+      console.error('Error logging in:', error.message);
+      await response(res, 400, 'error', null, error.message);
+    }
+  };
+
+  public getScore = async (req: Request, res: Response) => {
+    const { access_token, username } = req.body;
+
+    try {
+      const result = await this.sguAuthService.getScore(access_token, username);
+      await response(res, 200, 'success', result);
+    } catch (error: any) {
+      console.error('Error logging in:', error.message);
+      await response(res, 400, 'error', null, error.message);
+    }
+  };
 }
