@@ -36,10 +36,10 @@ export class SguAuthController {
   };
 
   public getScore = async (req: Request, res: Response) => {
-    const { access_token, username } = req.body;
+    const { access_token } = req.body;
 
     try {
-      const result = await this.sguAuthService.getScore(access_token, username);
+      const result = await this.sguAuthService.getScore(access_token);
       await response(res, 200, 'success', result);
     } catch (error: any) {
       console.error('Error logging in:', error.message);

@@ -13,7 +13,7 @@ const SGU_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/auth/login';
 const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/dkmh/w-locsinhvieninfo';
 const SGU_IMAGE_ACCOUNT_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/sms/w-locthongtinimagesinhvien';
 const SGU_DIEM_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/srm/w-locdsdiemsinhvien';
-
+                          // https://thongtindaotao.sgu.edu.vn/api/srm/w-locdsdiemsinhvien?hien_thi_mon_theo_hkdk=false
 export class SguAuthService {
   private accountService: AccountService;
   private userService: UserService;
@@ -29,29 +29,27 @@ export class SguAuthService {
     try {
       // Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
       let account = await this.accountService.getByUsername(username);
-
-      console.log(account);
-
+  
       if (!account) {
         // Nếu tài khoản không tồn tại, đăng nhập qua SGU
         const loginData = await this.performSguLogin(username, password);
-
+  
         // Tạo tài khoản mới trong cơ sở dữ liệu
         account = await this.createOrUpdateAccount(loginData, password);
-
+  
         // Lấy thông tin sinh viên từ SGU
         const studentInfo = await this.fetchStudentInfo(loginData.access_token);
-
+  
         // Tạo hoặc cập nhật người dùng
         const user = await this.createOrUpdateUser(loginData, studentInfo, account);
-
+  
         return this.generateAuthResponse(loginData, user as User);
-      } else { // Tài khoản đã tồn tại, cần cập nhật token    
+      } else {
+        // Tài khoản đã tồn tại, xóa access_token cũ và cập nhật token mới
+        account.access_token = ''; // Xóa access_token cũ
+        
         let updatedTokens;
-
         if (account.permission.permissionId === "ADMIN") {
-          //nếu tài khoản có quyền ADMIN
-          //refreshToken mà không lấy token từ SGU
           updatedTokens = {
             access_token: jwt.sign(
               { id: account.id, role: 'ADMIN' },
@@ -61,17 +59,20 @@ export class SguAuthService {
             refresh_token: account.refreshToken,
             roles: 'ADMIN',
           };
-        }
-        else {
+        } else {
+          // Đăng nhập và lấy token mới từ SGU
           updatedTokens = await this.refreshSguTokens(account, username, password);
         }
+        
+        // Cập nhật access_token và refreshToken
         account.access_token = updatedTokens.access_token;
         account.refreshToken = updatedTokens.refresh_token;
-        account.permission.permissionId == updatedTokens.roles;
-
+        account.permission.permissionId = updatedTokens.roles;
+  
+        // Lưu lại thay đổi
         await this.accountService.update(account.id, account);
-
-        // Trả về phản hồi với token mới
+  
+        // Lấy thông tin người dùng từ cơ sở dữ liệu và trả về phản hồi
         const user = await this.userService.getByUserId(account.username);
         return this.generateAuthResponse(updatedTokens, user as User);
       }
@@ -79,6 +80,7 @@ export class SguAuthService {
       this.handleError(error);
     }
   }
+  
 
   private async performSguLogin(username: string, password: string) {
     try {
@@ -219,6 +221,7 @@ export class SguAuthService {
       refreshToken: loginData.refresh_token,
       expiresIn: loginData.expires_in,
       user: {
+        id : user.id,
         userId: user.userId,
         username: user.account.username,
         fullname: user.fullname,
@@ -247,23 +250,23 @@ export class SguAuthService {
       });
       return response.data;
     } catch (error) {
-      // console.error('Error fetching image account:', error);
-      // throw error;
+      console.error('Error fetching image account:', error);
+      throw error;
     }
   }
 
-  async getScore(access_token: string, ma_sv: string) { //Lấy điểm theo access token
+  async getScore(access_token: string) { //Lấy điểm theo access token
     try {
       const response = await axios.post(`${SGU_DIEM_API_URL}?hien_thi_mon_theo_hkdk=false`, {}, {
         headers: {
           'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8'
         }
       });
       return response.data;
     } catch (error) {
-      // console.error('Error fetching image account:', error);
-      // throw error;
+      console.error('Error fetching score :', error);
+      throw error;
     }
   }
 }
