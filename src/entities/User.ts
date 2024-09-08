@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
 import { Faculty } from './Faculty';
 import { Major } from './Major';
 import { Account } from './Account';
@@ -9,15 +9,9 @@ import { Account } from './Account';
 @Entity()
 export class User {
   /**
-   * Khóa chính
-   */
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  /**
    * Mã người dùng (duy nhất, không rỗng)
    */
-  @Column({ unique: true, nullable: false })
+  @PrimaryColumn({ type: 'varchar', length: 25 })
   userId: string;
 
   /**
@@ -110,7 +104,8 @@ export class User {
   /**
    * ID người tạo (tham chiếu đến thực thể User, có thể rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: true })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
+  @JoinColumn({ name: 'createUserId' })
   createUser: User;
 
   /**
@@ -122,7 +117,8 @@ export class User {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, có thể rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: true })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
+  @JoinColumn({ name: 'lastModifyUserId' })
   lastModifyUser: User;
 
   /**

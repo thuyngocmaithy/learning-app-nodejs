@@ -4,6 +4,9 @@ import { Project } from '../entities/Project';
 import { Faculty } from '../entities/Faculty';
 import { User } from '../entities/User';
 import { Status } from '../entities/Status';
+import { FollowerService } from './follower.service';
+import { AppDataSource } from '../data-source';
+import { FollowerDetailService } from './followerDetail.service';
 
 export class ProjectService {
   private projectRepository: Repository<Project>;
@@ -19,11 +22,11 @@ export class ProjectService {
   }
 
   async getAll(): Promise<Project[]> {
-    return this.projectRepository.find({ relations: ['status', 'faculty', 'instructor', 'createUser', 'lastModifyUser'] });
+    return this.projectRepository.find({ relations: ['status', 'faculty', 'instructor', 'createUser', 'lastModifyUser', 'follower'] });
   }
 
   async getById(projectId: string): Promise<Project | null> {
-    return this.projectRepository.findOne({ where: { projectId }, relations: ['status', 'faculty', 'instructor', 'createUser', 'lastModifyUser'] });
+    return this.projectRepository.findOne({ where: { projectId }, relations: ['status', 'faculty', 'instructor', 'createUser', 'lastModifyUser', 'follower'] });
   }
 
   public create = async (projectData: any): Promise<Project> => {
@@ -62,6 +65,9 @@ export class ProjectService {
       status: status,
       createUser: projectData.createUserId,
       lastModifyUser: projectData.lastModifyUserId,
+      follower: [
+        { followerDetails: [{ user: projectData.createUserId }] }
+      ]
     });
 
     return await this.projectRepository.save(project);

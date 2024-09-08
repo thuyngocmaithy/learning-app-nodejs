@@ -11,11 +11,8 @@ export class SguAuthController {
 
   public loginToSgu = async (req: Request, res: Response) => {
     const { username, password } = req.body;
-    console.log('Request body:', req.body);
-
     try {
       const result = await this.sguAuthService.loginToSgu(username, password);
-      console.log('Login result:', result);
       await response(res, 200, 'success', result, 'Đăng nhập SGU thành công');
     } catch (error: any) {
       console.error('Error logging in:', error.message);

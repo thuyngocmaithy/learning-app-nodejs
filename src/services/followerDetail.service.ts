@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm';
-import { FollowerDetail } from '../entities/Follower';
+import { Follower, FollowerDetail } from '../entities/Follower';
 import { DataSource } from 'typeorm';
+import { User } from '../entities/User';
 
 export class FollowerDetailService {
   private followerDetailRepository: Repository<FollowerDetail>;
@@ -33,4 +34,12 @@ export class FollowerDetailService {
     const result = await this.followerDetailRepository.delete({ id });
     return result.affected !== 0;
   }
+  public findByUserAndFollower = async (user: User, follower: Follower): Promise<FollowerDetail | null> => {
+    return this.followerDetailRepository.findOne({
+      where: {
+        user: user,
+        follower: follower
+      }
+    });
+  };
 }

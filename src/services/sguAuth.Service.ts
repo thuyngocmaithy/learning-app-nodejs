@@ -30,8 +30,6 @@ export class SguAuthService {
       // Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
       let account = await this.accountService.getByUsername(username);
 
-      console.log(account);
-
       if (!account) {
         // Nếu tài khoản không tồn tại, đăng nhập qua SGU
         const loginData = await this.performSguLogin(username, password);
@@ -107,8 +105,6 @@ export class SguAuthService {
   private async createOrUpdateAccount(loginData: any, password: string): Promise<Account> {
     const { userName, principal, access_token, roles } = loginData;
     let account = await this.accountService.getByUsername(userName);
-
-    console.log(loginData);
 
     if (!account) {
       account = new Account();

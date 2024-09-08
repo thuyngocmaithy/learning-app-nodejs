@@ -23,6 +23,7 @@ export class Permission {
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
   @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'createUserId' })
   createUser: User;
 
   /**
@@ -35,6 +36,7 @@ export class Permission {
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
   @ManyToOne(() => User, data => data.userId, { nullable: true })
+  @JoinColumn({ name: 'lastModifyUserId' })
   lastModifyUser: User;
 
   /**

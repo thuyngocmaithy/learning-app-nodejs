@@ -50,11 +50,11 @@ export class NotificationService {
 
 
     if (condition.toUser) {
-      whereCondition.toUser = { id: condition.toUser.id };
+      whereCondition.toUser = { id: condition.toUser.userId };
     }
 
     if (condition.createUser) {
-      whereCondition.createUser = { id: condition.createUser.id };
+      whereCondition.createUser = { id: condition.createUser.userId };
     }
 
     if (condition.content) {
@@ -76,7 +76,7 @@ export class NotificationService {
 
     const options: FindOneOptions<Notification> = {
       order: { createDate: 'DESC' },
-      where: { toUser: { id: toUser.id } },
+      where: { toUser: { userId: toUser.userId } },
       relations: ['toUser', 'createUser']
     };
     const notifications = await this.notificationRepository.find(options);

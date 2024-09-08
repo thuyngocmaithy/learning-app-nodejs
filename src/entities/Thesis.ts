@@ -42,7 +42,7 @@ export class Thesis {
   /**
    * ID người hướng dẫn (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
   @JoinColumn({ name: 'supervisor' })
   supervisor: User;
 
@@ -50,6 +50,7 @@ export class Thesis {
    * ID khoa (tham chiếu đến thực thể Faculty, không rỗng)
    */
   @ManyToOne(() => Faculty, faculty => faculty.facultyId, { nullable: false })
+  @JoinColumn({ name: 'facultyId' })
   faculty: Faculty;
 
   /**
@@ -68,13 +69,14 @@ export class Thesis {
    * Trạng thái (tham chiếu đến thực thể Status, không rỗng)
    */
   @ManyToOne(() => Status, status => status.statusId, { nullable: false })
+  @JoinColumn({ name: 'statusId' })
   status: Status;
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
-  @JoinColumn({ name: 'createUser' })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'createUserId' })
   createUser: User;
 
   /**
@@ -86,8 +88,8 @@ export class Thesis {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
-  @JoinColumn({ name: 'lastModifyUser' })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'lastModifyUserId' })
   lastModifyUser: User;
 
   /**
