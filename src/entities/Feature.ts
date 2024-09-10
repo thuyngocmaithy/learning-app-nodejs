@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn, PrimaryColumn } from 'typeorm';
-import { Permission } from './Permission';
+import { PermissionFeature } from './Permission_Feature';
 
 /**
  * Thực thể Tính năng
@@ -41,4 +41,8 @@ export class Feature {
    */
   @ManyToOne(() => Feature, data => data.featureId, { nullable: true })
   parent: Feature;
+
+  // Thêm cascade: true để xóa liên quan đến PermissionFeature khi xóa Follower
+  @OneToMany(() => PermissionFeature, permissionFeature => permissionFeature.feature, { cascade: ['insert', 'update', 'remove'] })
+  permissionFeature: PermissionFeature[];
 }

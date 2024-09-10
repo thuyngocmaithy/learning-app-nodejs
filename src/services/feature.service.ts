@@ -91,5 +91,21 @@ export class FeatureService {
     }
   }
 
+  private generateNewId = async (): Promise<string> => {
+    const lastFeatures = await this.featureRepository.find({
+      order: { featureId: 'DESC' },
+      take: 1
+    });
+
+    let numericPart = 1;
+    const prefix = 'FT';
+    if (lastFeatures) {
+      const lastfeature = lastFeatures[0];
+      const lastNumericPart = parseInt(lastfeature.featureId.slice(prefix.length), 10);
+      numericPart = lastNumericPart + 1;
+    }
+    return `${prefix}${numericPart.toString().padStart(3, '0')}`;
+  }
+
 }
 
