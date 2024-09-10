@@ -1,7 +1,8 @@
 // src/services/follower.service.ts
-import { Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { Follower } from '../entities/Follower';
 import { DataSource } from 'typeorm';
+import { Project } from '../entities/Project';
 
 export class FollowerService {
   private followerRepository: Repository<Follower>;
@@ -33,5 +34,21 @@ export class FollowerService {
   async delete(id: string): Promise<boolean> {
     const result = await this.followerRepository.delete({ id });
     return result.affected !== 0;
+  }
+
+  public getByProject = async (project: Project): Promise<Follower | null> => {
+    const options: FindOneOptions<Follower> = {
+      where: { project: { projectId: project.projectId } },
+      relations: ['project']
+    };
+    return this.followerRepository.findOne(options);
+  }
+
+  public getByProjectId = async (projectId: string): Promise<Follower | null> => {
+    const options: FindOneOptions<Follower> = {
+      where: { project: { projectId } },
+      relations: ['project', 'followerDetails']
+    };
+    return this.followerRepository.findOne(options);
   }
 }

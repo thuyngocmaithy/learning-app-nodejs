@@ -19,7 +19,7 @@ export class UserService {
   }
 
   async getById(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { id }, relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'] });
+    return this.userRepository.findOne({ where: { userId: id }, relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'] });
   }
 
 
@@ -51,7 +51,7 @@ export class UserService {
   }
 
   async update(id: string, data: Partial<User>): Promise<User | null> {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({ where: { userId: id } });
     if (!user) {
       return null;
     }
@@ -60,7 +60,7 @@ export class UserService {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.userRepository.delete({ id });
+    const result = await this.userRepository.delete({ userId: id });
     return result.affected !== 0;
   }
 

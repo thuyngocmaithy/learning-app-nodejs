@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, OneToOne, UpdateDateColumn, CreateDateColumn } from 'typeorm';
 import { Subject } from './Subject';
 import { User } from './User';
-
+import { Semester } from './Semester';
 /**
  * Thực thể Điểm
  */
@@ -26,6 +26,13 @@ export class Score {
   @ManyToOne(() => User, data => data.userId, { nullable: false })
   @JoinColumn({ name: 'studentId' })
   student: User;
+
+    /**
+   * Học kỳ (tham chiếu đến thực thể Semester, không rỗng)
+   */
+    @ManyToOne(() => Semester, data => data.id, { nullable: false })
+    @JoinColumn({ name: 'semesterId' })  // Add this relation
+    semester: Semester;
 
   /**
    * Điểm thi (không rỗng)

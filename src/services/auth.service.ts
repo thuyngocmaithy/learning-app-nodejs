@@ -15,6 +15,7 @@ export const login = async (username: string, password: string) => {
     const account = await accountRepository.findOne({ where: { username } });
 
     if (account) {
+
         // Account tồn tại, kiểm tra mật khẩu
         const isPasswordValid = await bcrypt.compare(password, account.password);
         if (!isPasswordValid) {
@@ -29,7 +30,7 @@ export const login = async (username: string, password: string) => {
         const refreshToken = jwt.sign({ accountId: account.id }, JWT_SECRET, { expiresIn: '7d' });
 
         // Trả về token và thông tin tài khoản
-        return { accessToken, refreshToken, expiresIn: '1h', accountId: account.id, userId: user?.id };
+        return { accessToken, refreshToken, expiresIn: '1h', accountId: account.id, userId: user?.userId };
     } else {
         // Account không tồn tại, thực hiện đăng nhập qua SGU
         const sguAuthService = new SguAuthService();

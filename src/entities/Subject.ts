@@ -71,7 +71,8 @@ export class Subject {
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'createUserId' })
   createUser: User;
 
   /**
@@ -83,7 +84,8 @@ export class Subject {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.id, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'lastModifyUserId' })
   lastModifyUser: User;
 
   /**

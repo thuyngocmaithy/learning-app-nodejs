@@ -44,7 +44,7 @@ export class ThesisService {
       throw new Error('Invalid Faculty ID');
     }
 
-    const supervisor = await this.userRepository.findOne({ where: { id: thesisData.supervisor } });
+    const supervisor = await this.userRepository.findOne({ where: { userId: thesisData.supervisor } });
     if (!supervisor) {
       throw new Error('Invalid Supervisor ID');
     }
@@ -107,7 +107,7 @@ export class ThesisService {
     }
 
     if (thesisData.supervisorId) {
-      const supervisor = await this.userRepository.findOne({ where: { id: thesisData.supervisorId } });
+      const supervisor = await this.userRepository.findOne({ where: { userId: thesisData.supervisorId } });
       if (!supervisor) {
         throw new Error('Invalid Supervisor ID');
       }

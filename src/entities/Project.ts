@@ -1,7 +1,8 @@
-import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn, OneToMany } from 'typeorm';
 import { User } from './User';
 import { Status } from './Status';
 import { Faculty } from './Faculty';
+import { Follower } from './Follower';
 
 /**
  * Thực thể Dự án
@@ -59,7 +60,7 @@ export class Project {
   /**
    * Người hướng dẫn (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
   instructor: User;
 
   /**
@@ -108,4 +109,9 @@ export class Project {
    */
   @UpdateDateColumn()
   lastModifyDate: Date;
+
+  // Thêm cascade: true để xóa liên quan đến Follower khi xóa Project
+  @OneToMany(() => Follower, follower => follower.project, { cascade: ['insert', 'update', 'remove'] })
+  follower: Follower[];
+
 }

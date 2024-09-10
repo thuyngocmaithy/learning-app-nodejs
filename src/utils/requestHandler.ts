@@ -50,9 +50,7 @@ export class RequestHandler {
     try {
       const condition = req.query as Partial<T>;
       const result = await service.getWhere(condition);
-      console.log(result.length)
       if (result !== null && result.length > 0) {
-        console.log(result.length)
         return RequestHandler.sendResponse(res, StatusCodes.OK, "success", result);
       }
       return RequestHandler.sendResponse(res, StatusCodes.OK, "NoContent", null, "No entities found matching the criteria");

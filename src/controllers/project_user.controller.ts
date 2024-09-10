@@ -79,7 +79,6 @@ export class Project_UserController {
   // Delete Project_User by user and project
   public deleteProjectUserByUserAndProject = async (req: Request, res: Response) => {
     try {
-      console.log(req.query)
       const userId = req.query.user as string | undefined;
       const projectId = req.query.project as string | undefined;
 

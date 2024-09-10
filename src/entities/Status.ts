@@ -34,6 +34,7 @@ export class Status {
      * ID người tạo (tham chiếu đến thực thể User, không rỗng)
      */
     @ManyToOne(() => User, data => data.userId, { nullable: false })
+    @JoinColumn({ name: 'createUserId' })
     createUser: User;
 
     /**
@@ -46,6 +47,7 @@ export class Status {
      * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
      */
     @ManyToOne(() => User, data => data.userId, { nullable: true })
+    @JoinColumn({ name: 'lastModifyUserId' })
     lastModifyUser: User;
 
     /**

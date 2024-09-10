@@ -23,9 +23,7 @@ export class PermissionFeatureService {
   }
 
   public create = async (permissionFeatureData: Partial<PermissionFeature>): Promise<PermissionFeature> => {
-    console.log(permissionFeatureData)
     const permissionFeature = this.permissionFeatureRepository.create(permissionFeatureData);
-    console.log(permissionFeature);
     return this.permissionFeatureRepository.save(permissionFeature);
   }
 
