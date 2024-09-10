@@ -43,7 +43,7 @@ export class SubjectService {
       const query = 'CALL KhungCTDT()';
       return await this.dataSource.query(query);
     } catch (error) {
-      console.error('Lỗi khi gọi stored procedure', error);
+      console.error('Lỗi khi gọi stored procedure callKhungCTDT', error);
       throw new Error('Lỗi khi gọi stored procedure');
     }
   }

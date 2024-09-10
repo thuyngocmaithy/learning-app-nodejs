@@ -77,6 +77,146 @@ export class User {
   stillStudy: boolean;
 
   /**
+* niên khoá 
+*/
+  @Column({ nullable: true })
+  nien_khoa: string;
+
+  /**
+ * giới tính
+ */
+  @Column({ nullable: true })
+  sex: string;
+
+  /**
+* dan_toc
+*/
+  @Column({ nullable: true })
+  dan_toc: string;
+
+  /**
+ * ton_giao
+ */
+  @Column({ nullable: true })
+  ton_giao: string;
+
+  /**
+* quoc_tich
+*/
+  @Column({ nullable: true })
+  quoc_tich: string;
+
+  /**
+* cccd
+*/
+  @Column({ nullable: true })
+  cccd: string;
+
+  /**
+* hộ khẩu
+*/
+  @Column({ nullable: true })
+  ho_khau_thuong_tru: string;
+
+  /**
+ * khu vuc
+ */
+  @Column({ nullable: true })
+  khu_vuc: string;
+
+  /**
+  * khoi
+  */
+  @Column({ nullable: true })
+  khoi: string;
+
+
+  /**
+  * bậc hệ đào tạo
+  */
+  @Column({ nullable: true })
+  bac_he_dao_tao: string;
+
+
+  /**
+  * mã cố vấn học tập
+  */
+  @Column({ nullable: true })
+  ma_cvht: string;
+
+  /**
+  * ho ten cố vấn học tập
+  */
+  @Column({ nullable: true })
+  ho_ten_cvht: string;
+
+
+  /**
+  * email_cvht
+  */
+  @Column({ nullable: true })
+  email_cvht: string;
+
+
+  /**
+  * email_cvht
+  */
+  @Column({ nullable: true })
+  dien_thoai_cvht: string;
+
+
+  /**
+* mã cố vấn học tập 2
+*/
+  @Column({ nullable: true })
+  ma_cvht_ng2: string;
+
+  /**
+  * ho ten cố vấn học tập 2
+  */
+  @Column({ nullable: true })
+  ho_ten_cvht_ng2: string;
+
+
+  /**
+  * email_cvht 2
+  */
+  @Column({ nullable: true })
+  email_cvht_ng2: string;
+
+
+  /**
+  * dien_thoai_cvht_ng2  
+  */
+  @Column({ nullable: true })
+  dien_thoai_cvht_ng2: string;
+
+
+  /**
+  * ma-truong 
+  */
+  @Column({ nullable: true })
+  ma_truong: string;
+
+  /**
+  * ten_truong
+  */
+  @Column({ nullable: true })
+  ten_truong: string;
+
+  /**
+  * hoc_vi (giảng viên)
+  */
+  @Column({ nullable: true })
+  hoc_vi: string;
+
+  /**
+  * bo_mon (giảng viên)
+  */
+  @Column({ nullable: true })
+  bo_mon: string;
+
+  /**
    * Năm học đầu tiên (có thể rỗng)
    */
   @Column({ nullable: true })
@@ -93,6 +233,12 @@ export class User {
    */
   @Column({ default: false, nullable: false })
   isActive: boolean;
+
+  /**
+   * Ảnh đại diện (base64)
+   */
+  @Column({ type: 'longtext', nullable: true })
+  avatar: string;
 
   /**
    * ID tài khoản (tham chiếu đến thực thể Account, không rỗng)
