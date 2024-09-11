@@ -50,3 +50,5 @@ export class Account {
   @JoinColumn({ name: 'permissionId' })
   permission: Permission;
 }
+
+

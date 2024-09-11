@@ -33,28 +33,36 @@ export class SguAuthService {
     try {
       // Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
       let account = await this.accountService.getByUsername(username);
+      let user = await this.userService.getByUserId(username);
+  
       if (!account) {
         // Nếu tài khoản không tồn tại, đăng nhập qua SGU
         const loginData = await this.performSguLogin(username, password);
-
+  
         // Tạo tài khoản mới trong cơ sở dữ liệu
         account = await this.createOrUpdateAccount(loginData, password);
-
+  
         // Lấy thông tin sinh viên từ SGU
         const studentInfo = await this.fetchStudentInfo(loginData.access_token);
-
         const imageData = await this.getImageAccount(loginData.access_token, username);
-
-        // Tạo hoặc cập nhật người dùng
-        const user = await this.createOrUpdateUser(loginData, studentInfo, imageData, account);
-
+  
+        if (user) {
+          // Nếu user đã tồn tại, cập nhật thông tin
+          user = await this.updateExistingUser(user, loginData, studentInfo, imageData, account);
+        } else {
+          // Nếu user chưa tồn tại, tạo mới
+          user = await this.createNewUser(loginData, studentInfo, imageData, account);
+        }
+  
+        await this.saveScoresForUserFromSgu(account.username, account.access_token);
+  
         return this.generateAuthResponse(loginData, user as User);
       } else {
         console.log("tài khoản đã tồn tại\n");
         // Tài khoản đã tồn tại, xóa access_token cũ và cập nhật token mới
         account.access_token = ''; // Xóa access_token cũ
         console.log('token của account :', account.access_token);
-
+  
         let updatedTokens;
         if (account.permission.permissionId === "ADMIN") {
           updatedTokens = {
@@ -70,28 +78,68 @@ export class SguAuthService {
           // Đăng nhập và lấy token mới từ SGU
           updatedTokens = await this.refreshSguTokens(account, username, password);
         }
-
+  
         // Cập nhật access_token và refreshToken
         account.access_token = updatedTokens.access_token;
         account.refreshToken = updatedTokens.refresh_token;
         account.permission.permissionId = updatedTokens.roles;
-
+  
         console.log('token của mới account :', account.access_token);
-
-
-      await this.saveScoresForUserFromSgu(account.username,account.access_token);
-
-
+  
+        await this.saveScoresForUserFromSgu(account.username, account.access_token);
+  
         // Lưu lại thay đổi
         await this.accountService.update(account.id, account);
-
+  
         // Lấy thông tin người dùng từ cơ sở dữ liệu và trả về phản hồi
-        const user = await this.userService.getByUserId(account.username);
+        user = await this.userService.getByUserId(account.username);
         return this.generateAuthResponse(updatedTokens, user as User);
       }
     } catch (error) {
       this.handleError(error);
     }
+  }
+  
+  private async updateExistingUser(user: User, loginData: any, studentInfo: any, imageData: any, account: Account): Promise<User> {
+    user.fullname = studentInfo.ten_day_du;
+    user.dateOfBirth = new Date(studentInfo.ngay_sinh.split('/').reverse().join('-'));
+    user.placeOfBirth = studentInfo.noi_sinh;
+    user.phone = studentInfo.dien_thoai;
+    user.email = studentInfo.email || loginData.principal;
+    user.isStudent = studentInfo.hien_dien_sv === 'Đang học';
+    user.class = studentInfo.lop;
+    user.faculty = { facultyId: studentInfo.khoi.substring(0, 3) } as any;
+    user.stillStudy = user.isStudent;
+    user.firstAcademicYear = parseInt(studentInfo.nhhk_vao.toString().substring(0, 4));
+    user.lastAcademicYear = parseInt(studentInfo.nhhk_ra.toString().substring(0, 4));
+    user.isActive = true;
+    user.avatar = imageData;
+    user.account = account;
+    user.lastModifyDate = new Date();
+    user.nien_khoa = studentInfo.nien_khoa;
+    user.sex = studentInfo.gioi_tinh;
+    user.dan_toc = studentInfo.dan_toc;
+    user.ton_giao = studentInfo.ton_giao;
+    user.quoc_tich = studentInfo.quoc_tich;
+    user.cccd = studentInfo.so_cmnd;
+    user.ho_khau_thuong_tru = studentInfo.ho_khau_thuong_tru;
+    user.khu_vuc = studentInfo.khu_vuc;
+    user.khoi = studentInfo.khoi;
+    user.bac_he_dao_tao = studentInfo.bac_he_dao_tao;
+    user.ma_cvht = studentInfo.ma_cvht;
+    user.ho_ten_cvht = studentInfo.ho_ten_cvht;
+    user.email_cvht = studentInfo.email_cvht;
+    user.dien_thoai_cvht = studentInfo.dien_thoai_cvht;
+    user.ma_cvht_ng2 = studentInfo.ma_cvht_ng2;
+    user.ho_ten_cvht_ng2 = studentInfo.ho_ten_cvht_ng2;
+    user.email_cvht_ng2 = studentInfo.email_cvht_ng2;
+    user.dien_thoai_cvht_ng2 = studentInfo.dien_thoai_cvht_ng2;
+    user.ma_truong = studentInfo.ma_truong;
+    user.ten_truong = studentInfo.ten_truong;
+    user.hoc_vi = studentInfo.hoc_vi;
+    user.bo_mon = studentInfo.bo_mon;
+  
+    return await this.userService.update(user.userId, user) as User;
   }
 
 
@@ -198,7 +246,7 @@ export class SguAuthService {
     }
   }
 
-  private async createOrUpdateUser(loginData: any, studentInfo: any, imageData: any, account: Account): Promise<User> {
+  private async createNewUser(loginData: any, studentInfo: any, imageData: any, account: Account): Promise<User> {
     const studentId = studentInfo.ma_sv;
     let user = await this.userService.getByUserId(studentId);
 

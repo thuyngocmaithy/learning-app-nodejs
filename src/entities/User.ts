@@ -243,7 +243,7 @@ export class User {
   /**
    * ID tài khoản (tham chiếu đến thực thể Account, không rỗng)
    */
-  @ManyToOne(() => Account, data => data.id, { nullable: false })
+  @ManyToOne(() => Account, data => data.id, { nullable: true })
   @JoinColumn({ name: 'accountId' })
   account: Account;
 
