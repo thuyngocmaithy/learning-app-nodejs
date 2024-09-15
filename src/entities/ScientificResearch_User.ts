@@ -1,13 +1,13 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
-import { Project } from "./Project";
+import { ScientificResearch } from "./ScientificResearch";
 import { User } from "./User";
 
 /**
  * Thực thể user đăng ký dự án
  */
 @Entity()
-@Unique(["project", "user"])
-export class Project_User {
+@Unique(["scientificResearch", "user"])
+export class ScientificResearch_User {
     /**
      * Khóa chính
      */
@@ -15,11 +15,11 @@ export class Project_User {
     id: string;
 
     /**
-     * ID dự án (tham chiếu đến thực thể Project, không rỗng)
+     * ID dự án (tham chiếu đến thực thể ScientificResearch, không rỗng)
      */
-    @ManyToOne(() => Project, data => data.projectId, { nullable: false })
-    @JoinColumn({ name: 'projectId' })
-    project: Project;
+    @ManyToOne(() => ScientificResearch, data => data.scientificResearchId, { nullable: false })
+    @JoinColumn({ name: 'scientificResearchId' })
+    scientificResearch: ScientificResearch;
 
     /**
      * ID user (tham chiếu đến thực thể User, không rỗng)

@@ -28,8 +28,8 @@ export class NotificationController {
         return res.status(400).json({ message: 'Invalid user ID' });
       }
 
-      const projectUser = await this.notificationService.getByUserId(userId);
-      return res.status(200).json({ message: 'success', data: projectUser });
+      const scientificResearchUser = await this.notificationService.getByUserId(userId);
+      return res.status(200).json({ message: 'success', data: scientificResearchUser });
     } catch (error) {
       const err = error as Error;
       return res.status(500).json({ message: 'error', error: err.message });

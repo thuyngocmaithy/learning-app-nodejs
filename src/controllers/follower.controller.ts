@@ -3,7 +3,7 @@ import { FollowerService } from '../services/follower.service';
 import { DataSource } from 'typeorm';
 import { RequestHandler } from '../utils/requestHandler';
 import { Follower } from '../entities/Follower';
-import { ProjectService } from '../services/project.service';
+import { ScientificResearchService } from '../services/scientificResearch.service';
 export class FollowerController {
   private followerService: FollowerService;
 
@@ -17,11 +17,11 @@ export class FollowerController {
   public updateFollower = (req: Request, res: Response) => RequestHandler.update<Follower>(req, res, this.followerService);
   public deleteFollower = (req: Request, res: Response) => RequestHandler.delete(req, res, this.followerService);
 
-  public getFollowerByProjectId = async (req: Request, res: Response) => {
+  public getFollowerByScientificResearchId = async (req: Request, res: Response) => {
     try {
-      const projectId = req.query.project as string;
+      const scientificResearchId = req.query.scientificResearch as string;
 
-      const follower = await this.followerService.getByProjectId(projectId);
+      const follower = await this.followerService.getByScientificResearchId(scientificResearchId);
 
       return res.status(200).json({ message: 'success', data: follower });
     } catch (error) {

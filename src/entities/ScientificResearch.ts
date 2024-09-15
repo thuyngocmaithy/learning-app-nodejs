@@ -8,18 +8,18 @@ import { Follower } from './Follower';
  * Thực thể Dự án
  */
 @Entity()
-export class Project {
+export class ScientificResearch {
   /**
    * Mã dự án (duy nhất, không rỗng)
    */
   @PrimaryColumn({ type: 'varchar', length: 25 })
-  projectId: string;
+  scientificResearchId: string;
 
   /**
    * Tên dự án (không rỗng)
    */
   @Column({ nullable: false })
-  projectName: string;
+  scientificResearchName: string;
 
   /**
    * Mô tả (không rỗng)
@@ -110,8 +110,8 @@ export class Project {
   @UpdateDateColumn()
   lastModifyDate: Date;
 
-  // Thêm cascade: true để xóa liên quan đến Follower khi xóa Project
-  @OneToMany(() => Follower, follower => follower.project, { cascade: ['insert', 'update', 'remove'] })
+  // Thêm cascade: true để xóa liên quan đến Follower khi xóa ScientificResearch
+  @OneToMany(() => Follower, follower => follower.scientificResearch, { cascade: ['insert', 'update', 'remove'] })
   follower: Follower[];
 
 }

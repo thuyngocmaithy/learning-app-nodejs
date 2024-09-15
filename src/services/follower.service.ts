@@ -2,7 +2,7 @@
 import { FindOneOptions, Repository } from 'typeorm';
 import { Follower } from '../entities/Follower';
 import { DataSource } from 'typeorm';
-import { Project } from '../entities/Project';
+import { ScientificResearch } from '../entities/ScientificResearch';
 
 export class FollowerService {
   private followerRepository: Repository<Follower>;
@@ -17,11 +17,11 @@ export class FollowerService {
   }
 
   async getAll(): Promise<Follower[]> {
-    return this.followerRepository.find({ relations: ['internship', 'project'] });
+    return this.followerRepository.find({ relations: ['internship', 'scientificResearch'] });
   }
 
   async getById(id: string): Promise<Follower | null> {
-    return this.followerRepository.findOne({ where: { id }, relations: ['internship', 'project'] });
+    return this.followerRepository.findOne({ where: { id }, relations: ['internship', 'scientificResearch'] });
   }
 
   async update(id: string, data: Partial<Follower>): Promise<Follower | null> {
@@ -36,18 +36,18 @@ export class FollowerService {
     return result.affected !== 0;
   }
 
-  public getByProject = async (project: Project): Promise<Follower | null> => {
+  public getByScientificResearch = async (scientificResearch: ScientificResearch): Promise<Follower | null> => {
     const options: FindOneOptions<Follower> = {
-      where: { project: { projectId: project.projectId } },
-      relations: ['project']
+      where: { scientificResearch: { scientificResearchId: scientificResearch.scientificResearchId } },
+      relations: ['scientificResearch']
     };
     return this.followerRepository.findOne(options);
   }
 
-  public getByProjectId = async (projectId: string): Promise<Follower | null> => {
+  public getByScientificResearchId = async (scientificResearchId: string): Promise<Follower | null> => {
     const options: FindOneOptions<Follower> = {
-      where: { project: { projectId } },
-      relations: ['project', 'followerDetails']
+      where: { scientificResearch: { scientificResearchId } },
+      relations: ['scientificResearch', 'followerDetails']
     };
     return this.followerRepository.findOne(options);
   }
