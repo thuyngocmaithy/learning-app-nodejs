@@ -19,12 +19,6 @@ export class Feature {
   featureName: string;
 
   /**
-   * URL (không rỗng)
-   */
-  @Column({ nullable: false })
-  url: string;
-
-  /**
    * keyRoute => cấu hình route FE (có thể rỗng)
    */
   @Column({ nullable: true })
@@ -45,4 +39,10 @@ export class Feature {
   // Thêm cascade: true để xóa liên quan đến PermissionFeature khi xóa Follower
   @OneToMany(() => PermissionFeature, permissionFeature => permissionFeature.feature, { cascade: ['insert', 'update', 'remove'] })
   permissionFeature: PermissionFeature[];
+
+  /**
+   * Số thứ tự (không rỗng)
+   */
+  @Column('int', { default: 0, nullable: false })
+  orderNo: number;
 }

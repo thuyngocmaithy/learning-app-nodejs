@@ -241,9 +241,9 @@ export class User {
   avatar: string;
 
   /**
-   * ID tài khoản (tham chiếu đến thực thể Account, không rỗng)
+   * ID tài khoản (tham chiếu đến thực thể Account, rỗng)
    */
-  @ManyToOne(() => Account, data => data.id, { nullable: false })
+  @ManyToOne(() => Account, data => data.id, { nullable: true })
   @JoinColumn({ name: 'accountId' })
   account: Account;
 

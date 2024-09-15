@@ -29,9 +29,4 @@ export class PermissionFeature {
     @JoinColumn({ name: 'featureId' })
     feature: Feature;
 
-    /**
-     * Số thứ tự (không rỗng)
-     */
-    @Column('int', { nullable: false })
-    orderNo: number;
 }

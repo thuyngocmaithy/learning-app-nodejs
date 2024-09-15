@@ -8,8 +8,7 @@ const featureRouter = Router();
 const featureController = new FeatureController(AppDataSource);
 
 featureRouter.get('/', featureController.getAllFeatures);
-featureRouter.get('/getFeatureByStructure', featureController.GetFeatureByStructure);
-featureRouter.get('/getFeatureByPermission', featureController.GetFeatureByPermisison);
+featureRouter.post('/saveTreeFeature', featureController.saveTreeDataController);
 featureRouter.get('/getFeatureWhereParentAndKeyRoute', featureController.getFeatureWhereParentAndKeyRoute);
 featureRouter.get('/:id', featureController.getFeatureById);
 featureRouter.post('/', featureController.createFeature);

@@ -1,6 +1,7 @@
 // feature.service.ts
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, DeleteResult, Repository } from 'typeorm';
 import { Feature } from '../entities/Feature';
+import { Permission } from '../entities/Permission';
 
 export class FeatureService {
   private featureRepository: Repository<Feature>;
@@ -52,6 +53,8 @@ export class FeatureService {
         console.error('Điều kiện parent không hợp lệ');
       }
     }
+
+
     // Thực thi truy vấn và trả về kết quả
     return queryBuilder.getMany();
   }
@@ -65,33 +68,23 @@ export class FeatureService {
     return this.featureRepository.save(feature);
   }
 
+  private readonly restrictedIds = ['FT012', 'FT013']; // Danh sách ID không được phép xóa
+
   async delete(featureId: string): Promise<boolean> {
-    const result = await this.featureRepository.delete({ featureId });
+    let result: DeleteResult = {
+      affected: 0,
+      raw: undefined
+    };
+
+    // Nếu không nằm trong danh sách ID bị cấm, thực hiện xóa
+    if (!this.restrictedIds.includes(featureId)) {
+      // Nếu không nằm trong danh sách ID bị cấm, thực hiện xóa
+      result = await this.featureRepository.delete({ featureId });
+    }
     return result.affected !== 0;
   }
 
-  // Store lấy feature theo cấu trúc parent - children
-  async GetFeatureByStructure(): Promise<any> {
-    try {
-      const query = 'CALL GetFeatureByStructure()';
-      return await this.dataSource.query(query);
-    } catch (error) {
-      console.error('Lỗi khi gọi stored GetFeatureByStructure', error);
-      throw new Error('Lỗi khi gọi stored GetFeatureByStructure');
-    }
-  }
-  // Store lấy feature theo permission
-  async GetFeatureByPermission(permissionId: string): Promise<any> {
-    try {
-      const query = `CALL GetMenuUser('${permissionId}')`;
-      return await this.dataSource.query(query);
-    } catch (error) {
-      console.error('Lỗi khi gọi stored GetMenuUser', error);
-      throw new Error('Lỗi khi gọi stored GetMenuUser');
-    }
-  }
-
-  private generateNewId = async (): Promise<string> => {
+  async generateNewId(): Promise<string> {
     const lastFeatures = await this.featureRepository.find({
       order: { featureId: 'DESC' },
       take: 1
@@ -107,5 +100,60 @@ export class FeatureService {
     return `${prefix}${numericPart.toString().padStart(3, '0')}`;
   }
 
+  private flattenTreeData = (data: any[]) => {
+    const result: any[] = [];
+
+    const traverse = (nodes: any[], parentId: string | null) => {
+      nodes.forEach(node => {
+        // Thêm vào danh sách kết quả
+        result.push({
+          ...node,
+          parentFeatureId: parentId, // Gán parentFeatureId cho phần tử
+          children: [] // Xóa thuộc tính children
+        });
+
+        // Nếu có các phần tử con, tiếp tục duyệt
+        if (node.children && node.children.length > 0) {
+          traverse(node.children, node.featureId);
+        }
+      });
+    };
+
+    traverse(data, null);
+    return result;
+  };
+
+  async saveTreeData(treeData: any[]) {
+    try {
+      // Chuyển đổi cấu trúc cây thành danh sách phẳng
+      const flattenedData = this.flattenTreeData(treeData);
+
+      // Lưu đối tượng cha và các phần tử con
+      await Promise.all(
+        flattenedData.map(async (item) => {
+          // Nếu có parentFeatureId, tìm đối tượng cha từ parentFeatureId
+          let parent = null;
+          if (item.parentFeatureId) {
+            parent = await this.featureRepository.findOne({ where: { featureId: item.parentFeatureId } });
+            if (!parent) {
+              throw new Error(`Không tìm thấy đối tượng cha với parentFeatureId: ${item.parentFeatureId}`);
+            }
+          }
+
+          const featureToSave = {
+            ...item,
+            parent, // Gán đối tượng cha cho item
+          };
+          // Lưu phần tử (bao gồm đối tượng cha đã được gán)
+          await this.featureRepository.save(featureToSave);
+        })
+      );
+
+      return { success: true, message: 'Cấu trúc chức năng được lưu thành công' };
+    } catch (error) {
+      console.error('Cấu trúc chức năng lưu thất bại', error);
+      throw new Error('Cấu trúc chức năng lưu thất bại');
+    }
+  }
 }
 

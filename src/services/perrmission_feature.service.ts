@@ -58,7 +58,7 @@ export class PermissionFeatureService {
 
     return this.permissionFeatureRepository.find({
       where: whereCondition,
-      relations: ['permission', 'feature'],
+      relations: ['permission', 'feature', 'feature.parent'],
     });
   }
 
