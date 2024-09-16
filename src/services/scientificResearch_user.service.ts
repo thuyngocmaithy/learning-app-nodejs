@@ -37,7 +37,6 @@ export class ScientificResearch_UserService {
         'scientificResearch.createUser',
         'scientificResearch.instructor',
         'scientificResearch.lastModifyUser',
-        'scientificResearch.faculty',
         'scientificResearch.follower',
         'scientificResearch.follower.followerDetails',
         'scientificResearch.follower.followerDetails.user'
@@ -129,7 +128,7 @@ export class ScientificResearch_UserService {
   public getByUserId = async (user: User): Promise<ScientificResearch_User[]> => {
     const options: FindOneOptions<ScientificResearch_User> = {
       where: { user },
-      relations: ['scientificResearch', 'user', 'scientificResearch.createUser', 'scientificResearch.instructor', 'scientificResearch.lastModifyUser', 'scientificResearch.faculty']
+      relations: ['scientificResearch', 'user', 'scientificResearch.createUser', 'scientificResearch.instructor', 'scientificResearch.lastModifyUser']
     };
     return this.scientificResearchUserRepository.find(options);
   }
@@ -137,7 +136,7 @@ export class ScientificResearch_UserService {
   public getByScientificResearchId = async (scientificResearch: ScientificResearch): Promise<ScientificResearch_User[]> => {
     const options: FindOneOptions<ScientificResearch_User> = {
       where: { scientificResearch: { scientificResearchId: scientificResearch.scientificResearchId } },
-      relations: ['scientificResearch', 'user', 'scientificResearch.createUser', 'scientificResearch.instructor', 'scientificResearch.lastModifyUser', 'scientificResearch.faculty']
+      relations: ['scientificResearch', 'user', 'scientificResearch.createUser', 'scientificResearch.instructor', 'scientificResearch.lastModifyUser']
     };
     return this.scientificResearchUserRepository.find(options);
   }

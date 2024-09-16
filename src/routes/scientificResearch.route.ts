@@ -8,6 +8,7 @@ const scientificResearchRouter = Router();
 const scientificResearchController = new ScientificResearchController(AppDataSource);
 
 scientificResearchRouter.get('/', scientificResearchController.getAllScientificResearchs);
+scientificResearchRouter.get('/getByScientificResearchGroupId', scientificResearchController.getByScientificResearchIGroupId);
 scientificResearchRouter.get('/:id', scientificResearchController.getScientificResearchById);
 scientificResearchRouter.post('/', scientificResearchController.createScientificResearch);
 scientificResearchRouter.put('/:id', scientificResearchController.updateScientificResearch);

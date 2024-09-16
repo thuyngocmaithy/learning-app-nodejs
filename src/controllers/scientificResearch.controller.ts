@@ -17,4 +17,17 @@ export class ScientificResearchController {
   public createScientificResearch = (req: Request, res: Response) => RequestHandler.create<ScientificResearch>(req, res, this.scientificResearchService);
   public updateScientificResearch = (req: Request, res: Response) => RequestHandler.update<ScientificResearch>(req, res, this.scientificResearchService);
   public deleteScientificResearch = (req: Request, res: Response) => RequestHandler.delete(req, res, this.scientificResearchService);
+
+  public getByScientificResearchIGroupId = async (req: Request, res: Response) => {
+    try {
+      const scientificResearchGroupId = req.query.scientificResearchGroupId as string;
+
+      const data = await this.scientificResearchService.getByScientificResearchGroupId(scientificResearchGroupId);
+
+      return res.status(200).json({ message: 'success', data: data });
+    } catch (error) {
+      const err = error as Error;
+      return res.status(500).json({ message: 'error', error: err.message });
+    }
+  };
 }

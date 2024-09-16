@@ -4,14 +4,14 @@ import { ScientificResearchGroupController } from '../controllers/scientificRese
 import { AppDataSource } from '../data-source';
 
 
-const scientificResearchGroupRouter = Router();
+const scientificResearchGroupRoute = Router();
 const scientificResearchGroupController = new ScientificResearchGroupController(AppDataSource);
 
-scientificResearchGroupRouter.get('/', scientificResearchGroupController.getAllScientificResearchGroups);
-scientificResearchGroupRouter.get('/:id', scientificResearchGroupController.getScientificResearchGroupById);
-scientificResearchGroupRouter.post('/', scientificResearchGroupController.createScientificResearchGroup);
-scientificResearchGroupRouter.put('/:id', scientificResearchGroupController.updateScientificResearchGroup);
-scientificResearchGroupRouter.delete('/:id', scientificResearchGroupController.deleteScientificResearchGroup);
+scientificResearchGroupRoute.get('/', scientificResearchGroupController.getAllScientificResearchGroups);
+scientificResearchGroupRoute.get('/:id', scientificResearchGroupController.getScientificResearchGroupById);
+scientificResearchGroupRoute.post('/', scientificResearchGroupController.createScientificResearchGroup);
+scientificResearchGroupRoute.put('/:id', scientificResearchGroupController.updateScientificResearchGroup);
+scientificResearchGroupRoute.delete('/:id', scientificResearchGroupController.deleteScientificResearchGroup);
 
-export default scientificResearchGroupRouter;
+export default scientificResearchGroupRoute;
 

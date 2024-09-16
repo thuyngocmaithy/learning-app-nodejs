@@ -44,8 +44,7 @@ import featureRouter from './routes/feature.route';
 import fs from 'fs/promises';
 import uploadRouter from './routes/upload.routes';
 import sguAuthRouter from './routes/sguAuth.route';
-import scientificResearchGroupRouter from './routes/scientificResearchGroup.route';
-
+import scientificResearchGroupRoute from './routes/scientificResearchGroup.route';
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
@@ -126,7 +125,7 @@ app.use('/api/permission-features', permissionFeatureRouter);
 app.use('/api/permissions', permissionRoute);
 app.use('/api/scientificResearch-user', scientificResearchUserRoute);
 app.use('/api/scientificResearchs', scientificResearchRoute);
-app.use('/api/scientificResearchGroups', scientificResearchGroupRouter);
+app.use('/api/scientificResearchGroups', scientificResearchGroupRoute);
 app.use('/api/scores', scoreRoute);
 app.use('/api/semesters', semesterRoute);
 app.use('/api/statuses', statusRoute);

@@ -1,5 +1,5 @@
 // scientificResearch.service.ts
-import { DataSource, Repository, FindOneOptions, Like, CreateDateColumn } from 'typeorm';
+import { DataSource, Repository, FindOneOptions, Like, CreateDateColumn, FindManyOptions } from 'typeorm';
 import { ScientificResearch } from '../entities/ScientificResearch';
 import { Faculty } from '../entities/Faculty';
 import { User } from '../entities/User';
@@ -7,41 +7,30 @@ import { Status } from '../entities/Status';
 import { FollowerService } from './follower.service';
 import { AppDataSource } from '../data-source';
 import { FollowerDetailService } from './followerDetail.service';
+import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 
 export class ScientificResearchService {
   private scientificResearchRepository: Repository<ScientificResearch>;
-  private facultyRepository: Repository<Faculty>;
   private userRepository: Repository<User>;
   private statusRepository: Repository<Status>;
+  private scientificResearchGroupRepository: Repository<ScientificResearchGroup>;
 
   constructor(dataSource: DataSource) {
     this.scientificResearchRepository = dataSource.getRepository(ScientificResearch);
-    this.facultyRepository = dataSource.getRepository(Faculty);
     this.userRepository = dataSource.getRepository(User);
     this.statusRepository = dataSource.getRepository(Status);
+    this.scientificResearchGroupRepository = dataSource.getRepository(ScientificResearchGroup);
   }
 
   async getAll(): Promise<ScientificResearch[]> {
-    return this.scientificResearchRepository.find({ relations: ['status', 'faculty', 'instructor', 'createUser', 'lastModifyUser', 'follower'] });
+    return this.scientificResearchRepository.find({ relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'] });
   }
 
   async getById(scientificResearchId: string): Promise<ScientificResearch | null> {
-    return this.scientificResearchRepository.findOne({ where: { scientificResearchId }, relations: ['status', 'faculty', 'instructor', 'createUser', 'lastModifyUser', 'follower'] });
+    return this.scientificResearchRepository.findOne({ where: { scientificResearchId }, relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'] });
   }
 
   public create = async (scientificResearchData: any): Promise<ScientificResearch> => {
-    if (!scientificResearchData.instructorId) {
-      throw new Error('instructor ID is required');
-    }
-    if (!scientificResearchData.facultyId) {
-      throw new Error('Faculty ID is required');
-    }
-
-    const faculty = await this.facultyRepository.findOne({ where: { facultyId: scientificResearchData.facultyId } });
-    if (!faculty) {
-      throw new Error('Invalid Faculty ID');
-    }
-
     const instructor = await this.userRepository.findOne({ where: { userId: scientificResearchData.instructorId } });
     if (!instructor) {
       throw new Error('Invalid instructor ID');
@@ -52,6 +41,11 @@ export class ScientificResearchService {
       throw new Error('Invalid Status ID');
     }
 
+    const scientificResearchGroup = await this.scientificResearchGroupRepository.findOne({ where: { scientificResearchGroupId: scientificResearchData.scientificResearchGroup } });
+    if (!scientificResearchGroup) {
+      throw new Error('Invalid ScientificResearchGroups ID');
+    }
+
     const newId = await this.generateNewId(scientificResearchData.facultyId);
 
     const scientificResearch = this.scientificResearchRepository.create({
@@ -60,14 +54,14 @@ export class ScientificResearchService {
       description: scientificResearchData.description,
       executionTime: scientificResearchData.executionTime,
       numberOfMember: scientificResearchData.numberOfMember,
-      faculty: faculty,
       instructor: instructor,
       status: status,
       createUser: scientificResearchData.createUserId,
       lastModifyUser: scientificResearchData.lastModifyUserId,
       follower: [
         { followerDetails: [{ user: scientificResearchData.createUserId }] }
-      ]
+      ],
+      scientificResearchGroup: scientificResearchGroup
     });
 
     return await this.scientificResearchRepository.save(scientificResearch);
@@ -99,13 +93,18 @@ export class ScientificResearchService {
     if (lastTScientificResearch) {
       const match = lastTScientificResearch.scientificResearchId.match(/\d+$/); // Regex lấy phần số cuối cùng của chuỗi
       const lastNumericPart = match ? parseInt(match[0], 10) : 0; // Nếu có kết quả, chuyển đổi thành số
-      console.log('Last numeric part:', lastNumericPart);
 
       numericPart = lastNumericPart + 1;
     }
-
     // Format the new ID
     return `${facultyId}PROJECT${numericPart.toString().padStart(3, '0')}`;
   }
 
+  public getByScientificResearchGroupId = async (scientificResearchGroupId: string): Promise<ScientificResearch[]> => {
+    const options: FindManyOptions<ScientificResearch> = {
+      where: { scientificResearchGroup: { scientificResearchGroupId } },
+      relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower']
+    };
+    return this.scientificResearchRepository.find(options);
+  }
 }
