@@ -1,4 +1,4 @@
-import { Repository, DataSource, FindOneOptions } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, Like } from 'typeorm';
 import { Permission } from '../entities/Permission';
 
 export class PermissionService {

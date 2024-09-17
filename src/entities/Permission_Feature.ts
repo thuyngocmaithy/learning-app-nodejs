@@ -23,14 +23,10 @@ export class PermissionFeature {
 
     /**
      * ID tính năng (tham chiếu đến thực thể Feature, không rỗng)
+     * Khi xóa Feature, tự động xóa các bản ghi PermissionFeature liên quan.
      */
-    @ManyToOne(() => Feature, data => data.featureId, { nullable: false })
+    @ManyToOne(() => Feature, data => data.featureId, { nullable: false, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'featureId' })
     feature: Feature;
 
-    /**
-     * Số thứ tự (không rỗng)
-     */
-    @Column('int', { nullable: false })
-    orderNo: number;
 }

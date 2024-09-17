@@ -1,0 +1,18 @@
+import { Router } from 'express';
+import { ScientificResearch_UserController } from '../controllers/scientificResearch_user.controller';
+import { AppDataSource } from '../data-source';
+
+const scientificResearchUserRouter = Router();
+const scientificResearchUserController = new ScientificResearch_UserController(AppDataSource);
+
+scientificResearchUserRouter.get('/', scientificResearchUserController.getAllScientificResearchUser);
+scientificResearchUserRouter.get('/highestGroup', scientificResearchUserController.getHighestGroupScientificResearchUser);
+scientificResearchUserRouter.get('/getByUserId', scientificResearchUserController.getScientificResearchUserByUserId);
+scientificResearchUserRouter.get('/getByScientificResearchId', scientificResearchUserController.getScientificResearchUserByScientificResearchId);
+scientificResearchUserRouter.get('/:id', scientificResearchUserController.getScientificResearchUserById);
+scientificResearchUserRouter.post('/', scientificResearchUserController.createScientificResearchUser);
+scientificResearchUserRouter.put('/:id', scientificResearchUserController.updateScientificResearchUser);
+scientificResearchUserRouter.delete('/deleteByUserAndScientificResearch', scientificResearchUserController.deleteScientificResearchUserByUserAndScientificResearch);
+scientificResearchUserRouter.delete('/:id', scientificResearchUserController.deleteScientificResearchUser);
+
+export default scientificResearchUserRouter;

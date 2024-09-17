@@ -2,12 +2,15 @@
 import { DataSource, Repository } from 'typeorm';
 import { Account } from '../entities/Account';
 import * as bcrypt from 'bcrypt';
+import { Permission } from '../entities/Permission';
 
 export class AccountService {
   private accountRepository: Repository<Account>;
+  private permissionRepository: Repository<Permission>;
 
   constructor(dataSource: DataSource) {
     this.accountRepository = dataSource.getRepository(Account);
+    this.permissionRepository = dataSource.getRepository(Permission);
   }
 
   async create(data: Partial<Account>): Promise<Account> {
@@ -28,10 +31,11 @@ export class AccountService {
   }
 
   async update(id: string, data: Partial<Account>): Promise<Account | null> {
-    const account = await this.accountRepository.findOne({ where: { id }, relations: ['permission'] });
+    const account = await this.accountRepository.findOne({ where: { id } });
     if (!account) {
       return null;
     }
+
     this.accountRepository.merge(account, data);
     return this.accountRepository.save(account);
   }
@@ -40,4 +44,6 @@ export class AccountService {
     const result = await this.accountRepository.delete({ id });
     return result.affected !== 0;
   }
+
+
 }

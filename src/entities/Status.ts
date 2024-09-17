@@ -20,9 +20,9 @@ export class Status {
 
     @Column({
         type: 'enum',
-        enum: ['Tiến độ dự án nghiên cứu', 'Tiến độ khóa luận', 'Tiến độ thực tập'],
+        enum: ['Tiến độ đề tài NCKH', 'Tiến độ khóa luận', 'Tiến độ thực tập', 'Tiến độ nhóm đề tài NCKH'],
     })
-    type: 'Tiến độ dự án nghiên cứu' | 'Tiến độ khóa luận' | 'Tiến độ thực tập' = "Tiến độ dự án nghiên cứu";
+    type: 'Tiến độ đề tài NCKH' | 'Tiến độ khóa luận' | 'Tiến độ thực tập' | 'Tiến độ nhóm đề tài NCKH' = "Tiến độ đề tài NCKH";
 
     /**
      * Số thứ tự (không rỗng)

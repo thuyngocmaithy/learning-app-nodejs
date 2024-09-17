@@ -35,8 +35,8 @@ import semesterRoute from './routes/semeter.route';
 import scoreRoute from './routes/score.route';
 import permissionFeatureRouter from './routes/permission_feature.route';
 import permissionRoute from './routes/permission.route';
-import projectUserRoute from './routes/project_user.route';
-import projectRoute from './routes/project.route';
+import scientificResearchUserRoute from './routes/scientificResearch_user.route';
+import scientificResearchRoute from './routes/scientificResearch.route';
 import conversationRouter from './routes/conversation.route';
 import messageRouter from './routes/message.route';
 import participantRouter from './routes/participant.route';
@@ -44,7 +44,7 @@ import featureRouter from './routes/feature.route';
 import fs from 'fs/promises';
 import uploadRouter from './routes/upload.routes';
 import sguAuthRouter from './routes/sguAuth.route';
-
+import scientificResearchGroupRoute from './routes/scientificResearchGroup.route';
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
@@ -123,8 +123,9 @@ app.use('/api/majors', majorRoute);
 app.use('/api/notifications', notificationRoute);
 app.use('/api/permission-features', permissionFeatureRouter);
 app.use('/api/permissions', permissionRoute);
-app.use('/api/project-user', projectUserRoute);
-app.use('/api/projects', projectRoute);
+app.use('/api/scientificResearch-user', scientificResearchUserRoute);
+app.use('/api/scientificResearchs', scientificResearchRoute);
+app.use('/api/scientificResearchGroups', scientificResearchGroupRoute);
 app.use('/api/scores', scoreRoute);
 app.use('/api/semesters', semesterRoute);
 app.use('/api/statuses', statusRoute);

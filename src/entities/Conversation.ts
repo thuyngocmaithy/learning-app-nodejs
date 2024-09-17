@@ -1,6 +1,6 @@
 import { Entity, Column, ManyToOne, JoinColumn, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Thesis } from './Thesis';
-import { Project } from './Project';
+import { ScientificResearch } from './ScientificResearch';
 
 /**
  * Thực thể cuộc hội thoại
@@ -20,11 +20,11 @@ export class Conversation {
     thesis: Thesis;
 
     /**
-     * ID dự án (tham chiếu đến thực thể Project, có thể rỗng)
+     * ID dự án (tham chiếu đến thực thể ScientificResearch, có thể rỗng)
      */
-    @ManyToOne(() => Project, data => data.projectId, { nullable: true })
-    @JoinColumn({ name: 'projectId' })
-    project: Project;
+    @ManyToOne(() => ScientificResearch, data => data.scientificResearchId, { nullable: true })
+    @JoinColumn({ name: 'scientificResearchId' })
+    scientificResearch: ScientificResearch;
 
     /**
      * Ngày tạo (không rỗng)

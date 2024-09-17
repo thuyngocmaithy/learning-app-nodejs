@@ -30,7 +30,7 @@ export class Subject {
     * Môn học trước (có thể rỗng)
     */
   @ManyToOne(() => Subject, data => data.subjectId, { nullable: true })
-  @JoinColumn({ name: 'subjectBeforeId' })
+  @JoinColumn({ name: 'subjectBefore' })
   subjectBefore: Subject;
 
 
@@ -84,7 +84,7 @@ export class Subject {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
   @JoinColumn({ name: 'lastModifyUserId' })
   lastModifyUser: User;
 

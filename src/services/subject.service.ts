@@ -17,7 +17,7 @@ export class SubjectService {
   }
 
   async getAll(): Promise<Subject[]> {
-    return this.subjectRepository.find({ relations: ['frame', 'createUser', 'lastModifyUser'] });
+    return this.subjectRepository.find({ relations: ['frame', 'createUser', 'lastModifyUser', 'subjectBefore'] });
   }
 
   async getById(subjectId: string): Promise<Subject | null> {

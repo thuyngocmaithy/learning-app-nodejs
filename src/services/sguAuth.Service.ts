@@ -34,34 +34,27 @@ export class SguAuthService {
       // Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
       let account = await this.accountService.getByUsername(username);
       let user = await this.userService.getByUserId(username);
-  
-      if (!account) {
-        // Nếu tài khoản không tồn tại, đăng nhập qua SGU
-        const loginData = await this.performSguLogin(username, password);
-  
-        // Tạo tài khoản mới trong cơ sở dữ liệu
-        account = await this.createOrUpdateAccount(loginData, password);
-  
-        // Lấy thông tin sinh viên từ SGU
-        const studentInfo = await this.fetchStudentInfo(loginData.access_token);
-        const imageData = await this.getImageAccount(loginData.access_token, username);
-  
-        if (user) {
-          // Nếu user đã tồn tại, cập nhật thông tin
-          user = await this.updateExistingUser(user, loginData, studentInfo, imageData, account);
-        } else {
-          // Nếu user chưa tồn tại, tạo mới
-          user = await this.createNewUser(loginData, studentInfo, imageData, account);
-        }
-  
-        await this.saveScoresForUserFromSgu(account.username, account.access_token);
-  
-        return this.generateAuthResponse(loginData, user as User);
-      } else {
-        console.log("tài khoản đã tồn tại\n", account);
+      // if (!account) {
+      //   // Nếu tài khoản không tồn tại, đăng nhập qua SGU
+      //   const loginData = await this.performSguLogin(username, password);
+
+      //   // Tạo tài khoản mới trong cơ sở dữ liệu
+      //   account = await this.createOrUpdateAccount(loginData, password);
+
+      //   // Lấy thông tin sinh viên từ SGU
+      //   const studentInfo = await this.fetchStudentInfo(loginData.access_token);
+
+      //   const imageData = await this.getImageAccount(loginData.access_token, username);
+
+      //   // Tạo hoặc cập nhật người dùng
+      //   const user = await this.createNewUser(loginData, studentInfo, imageData, account);
+
+      //   return this.generateAuthResponse(loginData, user as User);
+      // } else {
+      if (account) {
+        console.log("tài khoản đã tồn tại\n");
         // Tài khoản đã tồn tại, xóa access_token cũ và cập nhật token mới
 
-  
         let updatedTokens;
         if (account.permission.permissionId === "ADMIN") {
           updatedTokens = {
@@ -73,30 +66,46 @@ export class SguAuthService {
             refresh_token: account.refreshToken,
             roles: 'ADMIN',
           };
-        } else {
-          // Đăng nhập và lấy token mới từ SGU
-          account.access_token = ''; // Xóa access_token cũ
-          account.refreshToken = '';
-          console.log('token của account :', account.access_token);
-          console.log("đăng nhập tài khoản mới : \n", account);
-
-          updatedTokens = await this.refreshSguTokens(username, password);
-
-                  // Cập nhật access_token và refreshToken
-        account.access_token = updatedTokens.access_token;
-        account.refreshToken = updatedTokens.refresh_token;
-        account.permission.permissionId = updatedTokens.roles;
-  
-        console.log('token của mới account :', account.access_token);
         }
-  
 
-  
-        await this.saveScoresForUserFromSgu(account.username, account.access_token);
-  
+        else {
+          if (account.permission.permissionId === "SINHVIEN") {
+            updatedTokens = {
+              access_token: jwt.sign(
+                { id: account.id, role: 'SINHVIEN' },
+                'TokenSINHVIEN',
+                { expiresIn: '2h' }
+              ),
+              refresh_token: account.refreshToken,
+              roles: 'SINHVIEN',
+            };
+          }
+        }
+        // else {
+        //   // Đăng nhập và lấy token mới từ SGU
+        //   account.access_token = ''; // Xóa access_token cũ
+        //   account.refreshToken = '';
+        //   console.log('token của account :', account.access_token);
+        //   console.log("đăng nhập tài khoản mới : \n", account);
+
+        //   updatedTokens = await this.refreshSguTokens(username, password);
+
+        // // Cập nhật access_token và refreshToken
+        // account.access_token = updatedTokens.access_token;
+        // account.refreshToken = updatedTokens.refresh_token;
+        // account.permission.permissionId = updatedTokens.roles;
+
+        // console.log('token của mới account :', account.access_token);
+        // }
+
+
+
+        // await this.saveScoresForUserFromSgu(account.username, account.access_token);
+
+
         // Lưu lại thay đổi
         await this.accountService.update(account.id, account);
-  
+
         // Lấy thông tin người dùng từ cơ sở dữ liệu và trả về phản hồi
         user = await this.userService.getByUserId(account.username);
         return this.generateAuthResponse(updatedTokens, user as User);
@@ -105,7 +114,7 @@ export class SguAuthService {
       this.handleError(error);
     }
   }
-  
+
   private async updateExistingUser(user: User, loginData: any, studentInfo: any, imageData: any, account: Account): Promise<User> {
     user.fullname = studentInfo.ten_day_du;
     user.dateOfBirth = new Date(studentInfo.ngay_sinh.split('/').reverse().join('-'));
@@ -144,7 +153,7 @@ export class SguAuthService {
     user.ten_truong = studentInfo.ten_truong;
     user.hoc_vi = studentInfo.hoc_vi;
     user.bo_mon = studentInfo.bo_mon;
-  
+
     return await this.userService.update(user.userId, user) as User;
   }
 
@@ -212,12 +221,12 @@ export class SguAuthService {
           "Content-Type": "application/x-www-form-urlencoded"
         },
       });
-  
+
       const data = response.data;
       if (data.code !== '200') {
         throw new Error('Đăng nhập SGU không thành công');
       }
-  
+
       return {
         access_token: data.access_token,
         refresh_token: data.refresh_token,
@@ -305,13 +314,13 @@ export class SguAuthService {
       user.bo_mon = studentInfo.bo_mon;
     }
 
-    
+
     return await this.userService.create(user) as User;
   }
 
   private generateAuthResponse(loginData: any, user: User) {
     return {
-      status: loginData.code,
+      // status: loginData.code,
       accessToken: loginData.access_token,
       refreshToken: loginData.refresh_token,
       expiresIn: loginData.expires_in,
@@ -351,7 +360,7 @@ export class SguAuthService {
     }
   }
 
-  async getScore(access_token: string) { //Lấy điểm theo access token
+  async getScoreFromSGU(access_token: string) { //Lấy điểm theo access token
     try {
       const response = await axios.post(`${SGU_DIEM_API_URL}?hien_thi_mon_theo_hkdk=false`, {}, {
         headers: {
@@ -368,27 +377,27 @@ export class SguAuthService {
 
   async saveScoresForUserFromSgu(userId: string, accessToken: string) {
     try {
-      const sguAuthService = new SguAuthService();  
-      const jsonResponse = await sguAuthService.getScore(accessToken);
-  
+      const sguAuthService = new SguAuthService();
+      const jsonResponse = await sguAuthService.getScoreFromSGU(accessToken);
+
       if (!jsonResponse || !jsonResponse.data || jsonResponse.data.ds_diem_hocky.length === 0) {
         throw new Error('No scores found for the user.');
       }
-  
+
       const scoreRepository = AppDataSource.getRepository(Score);
       const componentScoreRepository = AppDataSource.getRepository(ComponentScore);
       const subjectRepository = AppDataSource.getRepository(Subject);
       const semesterRepository = AppDataSource.getRepository(Semester);
       const academicYearRepository = AppDataSource.getRepository(AcademicYear);
       const userRepository = AppDataSource.getRepository(User);
-  
+
       // Loop through each semester in the response
       const semesters = jsonResponse.data.ds_diem_hocky;
       for (const semesterData of semesters) {
         const semesterCode = semesterData.hoc_ky;
-        const yearString = semesterCode.substring(0, 4);  
-        const semesterNumber = parseInt(semesterCode.substring(4)); 
-  
+        const yearString = semesterCode.substring(0, 4);
+        const semesterNumber = parseInt(semesterCode.substring(4));
+
         // Find or create the academic year
         let academicYear = await academicYearRepository.findOne({ where: { year: yearString } });
         if (!academicYear) {
@@ -396,7 +405,7 @@ export class SguAuthService {
           academicYear.year = yearString;
           await academicYearRepository.save(academicYear);
         }
-  
+
         // Find or create the semester
         let semester = await semesterRepository.findOne({
           where: {
@@ -404,14 +413,14 @@ export class SguAuthService {
             academicYear: academicYear
           }
         });
-  
+
         if (!semester) {
           semester = new Semester();
           semester.semesterName = semesterNumber;
           semester.academicYear = academicYear;
           await semesterRepository.save(semester);
         }
-  
+
         // Process each subject in the semester
         for (const subjectData of semesterData.ds_diem_mon_hoc) {
           let subject = await subjectRepository.findOne({ where: { subjectId: subjectData.ma_mon } });
@@ -424,20 +433,20 @@ export class SguAuthService {
             subject.listFrame = '';
             subject.createDate = new Date();
             subject.lastModifyDate = new Date();
-  
+
             const userSubject = await userRepository.findOne({ where: { userId: userId } }) as User;
             subject.createUser = userSubject as User;
             subject.lastModifyUser = userSubject as User;
-  
+
             await subjectRepository.save(subject);
           }
-  
+
           // Fetch the User entity based on the userId
           const user = await userRepository.findOne({ where: { userId: userId } });
           if (!user) {
             throw new Error(`User with ID ${userId} not found.`);
           }
-  
+
           // Find the existing Score entry with the correct relationships
           let score = await scoreRepository.findOne({
             where: {
@@ -446,7 +455,7 @@ export class SguAuthService {
               semester: semester // Pass the Semester entity
             }
           });
-  
+
           if (!score) {
             score = new Score();
             score.student = user;
@@ -456,7 +465,7 @@ export class SguAuthService {
             // Delete the existing ComponentScore records
             await componentScoreRepository.delete({ score: score });
           }
-  
+
           // Replace NaN values with 0
           score.examScore = isNaN(parseFloat(subjectData.diem_thi)) ? 0 : parseFloat(subjectData.diem_thi);
           score.testScore = isNaN(parseFloat(subjectData.diem_giua_ky)) ? 0 : parseFloat(subjectData.diem_giua_ky);
@@ -464,9 +473,9 @@ export class SguAuthService {
           score.finalScore4 = isNaN(parseFloat(subjectData.diem_tk_so)) ? 0 : parseFloat(subjectData.diem_tk_so);
           score.finalScoreLetter = subjectData.diem_tk_chu || '';
           score.result = subjectData.ket_qua === 1;
-  
+
           await scoreRepository.save(score);
-  
+
           // Save component scores
           if (subjectData.ds_diem_thanh_phan && subjectData.ds_diem_thanh_phan.length > 0) {
             for (const component of subjectData.ds_diem_thanh_phan) {
@@ -475,13 +484,13 @@ export class SguAuthService {
               componentScore.componentName = component.ten_thanh_phan;
               componentScore.weight = parseInt(component.trong_so);
               componentScore.weightScore = isNaN(parseFloat(component.diem_thanh_phan)) ? 0 : parseFloat(component.diem_thanh_phan);
-  
+
               await componentScoreRepository.save(componentScore);
             }
           }
         }
       }
-  
+
       console.log('User scores successfully saved.');
     } catch (error) {
       console.error('Error saving user scores:', error);

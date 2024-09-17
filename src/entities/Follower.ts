@@ -1,14 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn, Unique } from 'typeorm';
 import { User } from './User'; // Replace with your User entity
 import { Internship } from './Internship';
-import { Project } from './Project';
+import { ScientificResearch } from './ScientificResearch';
 import { Thesis } from './Thesis';
 
 /**
  * Thực thể Người theo dõi
  */
 @Entity()
-@Unique(["internship", "project", "thesis"])
+@Unique(["internship", "scientificResearch", "thesis"])
 export class Follower {
   /**
    * Khóa chính
@@ -23,15 +23,15 @@ export class Follower {
   internship: Internship;
 
   /**
-   * ID dự án (tham chiếu đến thực thể Project, có thể rỗng)
+   * ID dự án (tham chiếu đến thực thể ScientificResearch, có thể rỗng)
    */
-  // @ManyToOne(() => Project, data => data.projectId, { nullable: true })
-  // @JoinColumn({ name: 'projectId' })
-  // project: Project;
+  // @ManyToOne(() => ScientificResearch, data => data.scientificResearchId, { nullable: true })
+  // @JoinColumn({ name: 'scientificResearchId' })
+  // scientificResearch: ScientificResearch;
 
-  @ManyToOne(() => Project, project => project.follower, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'projectId' })
-  project: Project;
+  @ManyToOne(() => ScientificResearch, scientificResearch => scientificResearch.follower, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'scientificResearchId' })
+  scientificResearch: ScientificResearch;
 
 
   /**

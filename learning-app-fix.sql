@@ -35,15 +35,15 @@ CREATE TABLE `attach` (
   `createDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `lastModifyDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `internshipId` varchar(36) DEFAULT NULL,
-  `projectId` varchar(25) DEFAULT NULL,
+  `scientificResearchId` varchar(25) DEFAULT NULL,
   `createUserId` varchar(36) NOT NULL,
   `lastModifyUserId` varchar(36) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FK_324f490bd4d87ae4dbbc8e6c359` (`internshipId`),
   KEY `FK_d03c78d5b8861ebe514450996fb` (`createUserId`),
   KEY `FK_b6dd174abbb5d902686c4a49acf` (`lastModifyUserId`),
-  KEY `FK_2f933d032eeffa85a40523afdc5` (`projectId`),
-  CONSTRAINT `FK_2f933d032eeffa85a40523afdc5` FOREIGN KEY (`projectId`) REFERENCES `project` (`projectId`),
+  KEY `FK_2f933d032eeffa85a40523afdc5` (`scientificResearchId`),
+  CONSTRAINT `FK_2f933d032eeffa85a40523afdc5` FOREIGN KEY (`scientificResearchId`) REFERENCES `scientificResearch` (`scientificResearchId`),
   CONSTRAINT `FK_324f490bd4d87ae4dbbc8e6c359` FOREIGN KEY (`internshipId`) REFERENCES `internship` (`id`),
   CONSTRAINT `FK_b6dd174abbb5d902686c4a49acf` FOREIGN KEY (`lastModifyUserId`) REFERENCES `user` (`id`),
   CONSTRAINT `FK_d03c78d5b8861ebe514450996fb` FOREIGN KEY (`createUserId`) REFERENCES `user` (`id`)
@@ -79,13 +79,13 @@ CREATE TABLE `feature` (
 CREATE TABLE `follower` (
   `id` varchar(36) NOT NULL,
   `internshipId` varchar(36) DEFAULT NULL,
-  `projectId` varchar(25) DEFAULT NULL,
+  `scientificResearchId` varchar(25) DEFAULT NULL,
   `thesisId` varchar(36) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FK_d732b17aabfb3ddf8cafd3b9a1b` (`internshipId`),
-  KEY `FK_8a0dd3d0ee2c0a194b2de025101` (`projectId`),
+  KEY `FK_8a0dd3d0ee2c0a194b2de025101` (`scientificResearchId`),
   KEY `FK_a7f831ef260ad257b7ac4d47fb7` (`thesisId`),
-  CONSTRAINT `FK_8a0dd3d0ee2c0a194b2de025101` FOREIGN KEY (`projectId`) REFERENCES `project` (`projectId`),
+  CONSTRAINT `FK_8a0dd3d0ee2c0a194b2de025101` FOREIGN KEY (`scientificResearchId`) REFERENCES `scientificResearch` (`scientificResearchId`),
   CONSTRAINT `FK_a7f831ef260ad257b7ac4d47fb7` FOREIGN KEY (`thesisId`) REFERENCES `thesis` (`id`),
   CONSTRAINT `FK_d732b17aabfb3ddf8cafd3b9a1b` FOREIGN KEY (`internshipId`) REFERENCES `internship` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -200,9 +200,9 @@ CREATE TABLE `permission_feature` (
   CONSTRAINT `FK_e64f7cde233f9b9771446972591` FOREIGN KEY (`featureFeatureId`) REFERENCES `feature` (`featureId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `project` (
-  `projectId` varchar(25) NOT NULL,
-  `projectName` varchar(255) NOT NULL,
+CREATE TABLE `scientificResearch` (
+  `scientificResearchId` varchar(25) NOT NULL,
+  `scientificResearchName` varchar(255) NOT NULL,
   `description` varchar(255) NOT NULL,
   `numberOfMember` int NOT NULL,
   `numberOfRegister` int NOT NULL,
@@ -216,7 +216,7 @@ CREATE TABLE `project` (
   `createUserId` varchar(36) NOT NULL,
   `lastModifyUserId` varchar(36) NOT NULL,
   `facultyFacultyId` varchar(25) NOT NULL,
-  PRIMARY KEY (`projectId`),
+  PRIMARY KEY (`scientificResearchId`),
   KEY `FK_7d17ba5929d836acd6b024c59ec` (`statusStatusId`),
   KEY `FK_87e97fd8b07351fb1bbaa991337` (`instructorId`),
   KEY `FK_4209771a8cf1967c2f4aba4e44e` (`createUserId`),
@@ -229,26 +229,26 @@ CREATE TABLE `project` (
   CONSTRAINT `FK_c47317ff4aedb811580b0c308fa` FOREIGN KEY (`lastModifyUserId`) REFERENCES `user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `project_faculty` (
+CREATE TABLE `scientificResearch_faculty` (
   `id` varchar(36) NOT NULL,
-  `projectProjectId` varchar(25) NOT NULL,
+  `scientificResearchScientificResearchId` varchar(25) NOT NULL,
   `facultyFacultyId` varchar(25) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `FK_8318533ca8c4dc552366939b676` (`projectProjectId`),
+  KEY `FK_8318533ca8c4dc552366939b676` (`scientificResearchScientificResearchId`),
   KEY `FK_bb0d302e67713f0463a310e9e5b` (`facultyFacultyId`),
-  CONSTRAINT `FK_8318533ca8c4dc552366939b676` FOREIGN KEY (`projectProjectId`) REFERENCES `project` (`projectId`),
+  CONSTRAINT `FK_8318533ca8c4dc552366939b676` FOREIGN KEY (`scientificResearchScientificResearchId`) REFERENCES `scientificResearch` (`scientificResearchId`),
   CONSTRAINT `FK_bb0d302e67713f0463a310e9e5b` FOREIGN KEY (`facultyFacultyId`) REFERENCES `faculty` (`facultyId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `project_user` (
+CREATE TABLE `scientificResearch_user` (
   `id` varchar(36) NOT NULL,
   `isApprove` tinyint NOT NULL DEFAULT '0',
-  `projectProjectId` varchar(25) NOT NULL,
+  `scientificResearchScientificResearchId` varchar(25) NOT NULL,
   `userId` varchar(36) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `FK_37822b425128986d85cfb4681c3` (`projectProjectId`),
+  KEY `FK_37822b425128986d85cfb4681c3` (`scientificResearchScientificResearchId`),
   KEY `FK_8d75193a81f827ba8d58575e637` (`userId`),
-  CONSTRAINT `FK_37822b425128986d85cfb4681c3` FOREIGN KEY (`projectProjectId`) REFERENCES `project` (`projectId`),
+  CONSTRAINT `FK_37822b425128986d85cfb4681c3` FOREIGN KEY (`scientificResearchScientificResearchId`) REFERENCES `scientificResearch` (`scientificResearchId`),
   CONSTRAINT `FK_8d75193a81f827ba8d58575e637` FOREIGN KEY (`userId`) REFERENCES `user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

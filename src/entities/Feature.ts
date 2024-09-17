@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn, PrimaryColumn } from 'typeorm';
-import { Permission } from './Permission';
+import { PermissionFeature } from './Permission_Feature';
 
 /**
  * Thực thể Tính năng
@@ -19,12 +19,6 @@ export class Feature {
   featureName: string;
 
   /**
-   * URL (không rỗng)
-   */
-  @Column({ nullable: false })
-  url: string;
-
-  /**
    * keyRoute => cấu hình route FE (có thể rỗng)
    */
   @Column({ nullable: true })
@@ -41,4 +35,14 @@ export class Feature {
    */
   @ManyToOne(() => Feature, data => data.featureId, { nullable: true })
   parent: Feature;
+
+  // Thêm cascade: true để xóa liên quan đến PermissionFeature khi xóa Follower
+  @OneToMany(() => PermissionFeature, permissionFeature => permissionFeature.feature, { cascade: ['insert', 'update', 'remove'] })
+  permissionFeature: PermissionFeature[];
+
+  /**
+   * Số thứ tự (không rỗng)
+   */
+  @Column('int', { default: 0, nullable: false })
+  orderNo: number;
 }

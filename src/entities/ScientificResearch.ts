@@ -1,25 +1,26 @@
-import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn, OneToMany } from 'typeorm';
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn, OneToMany, JoinColumn } from 'typeorm';
 import { User } from './User';
 import { Status } from './Status';
 import { Faculty } from './Faculty';
 import { Follower } from './Follower';
+import { ScientificResearchGroup } from './ScientificResearchGroup';
 
 /**
  * Thực thể Dự án
  */
 @Entity()
-export class Project {
+export class ScientificResearch {
   /**
    * Mã dự án (duy nhất, không rỗng)
    */
   @PrimaryColumn({ type: 'varchar', length: 25 })
-  projectId: string;
+  scientificResearchId: string;
 
   /**
    * Tên dự án (không rỗng)
    */
   @Column({ nullable: false })
-  projectName: string;
+  scientificResearchName: string;
 
   /**
    * Mô tả (không rỗng)
@@ -37,6 +38,7 @@ export class Project {
    * Trạng thái (tham chiếu đến thực thể Status, không rỗng)
    */
   @ManyToOne(() => Status, data => data.statusId, { nullable: false })
+  @JoinColumn({ name: 'statusId' })
   status: Status;
 
   /**
@@ -61,14 +63,8 @@ export class Project {
    * Người hướng dẫn (tham chiếu đến thực thể User, không rỗng)
    */
   @ManyToOne(() => User, data => data.userId, { nullable: true })
+  @JoinColumn({ name: 'instructorId' })
   instructor: User;
-
-  /**
-   * ID khoa (tham chiếu đến thực thể Faculty, không rỗng)
-   */
-  @ManyToOne(() => Faculty, data => data.facultyId, { nullable: false })
-  faculty: Faculty;
-
 
   /**
    * Cấp dự án (không rỗng)
@@ -90,6 +86,7 @@ export class Project {
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
   @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'createUserId' })
   createUser: User;
 
   /**
@@ -102,6 +99,7 @@ export class Project {
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
   @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'lastModifyUserId' })
   lastModifyUser: User;
 
   /**
@@ -110,8 +108,14 @@ export class Project {
   @UpdateDateColumn()
   lastModifyDate: Date;
 
-  // Thêm cascade: true để xóa liên quan đến Follower khi xóa Project
-  @OneToMany(() => Follower, follower => follower.project, { cascade: ['insert', 'update', 'remove'] })
+  // Thêm cascade: true để xóa liên quan đến Follower khi xóa ScientificResearch
+  @OneToMany(() => Follower, follower => follower.scientificResearch, { cascade: ['insert', 'update', 'remove'] })
   follower: Follower[];
 
+  /**
+   * Nhóm đề tài NCKH
+   */
+  @ManyToOne(() => ScientificResearchGroup, data => data.scientificResearchGroupId, { nullable: true })
+  @JoinColumn({ name: 'scientificResearchGroupId' })
+  scientificResearchGroup: ScientificResearchGroup;
 }

@@ -18,42 +18,15 @@ export class FeatureController {
   public createFeature = (req: Request, res: Response) => RequestHandler.create<Feature>(req, res, this.featureService);
   public updateFeature = (req: Request, res: Response) => RequestHandler.update<Feature>(req, res, this.featureService);
   public deleteFeature = (req: Request, res: Response) => RequestHandler.delete(req, res, this.featureService);
-
-  public GetFeatureByStructure = async (req: Request, res: Response): Promise<void> => {
+  public saveTreeDataController = (req: Request, res: Response) => {
+    const treeData = req.body;
     try {
-      const result = await this.featureService.GetFeatureByStructure();
-      if (!result || result.length === 0) {
-        res.status(404).json({ message: 'No data found for GetFeatureByStructure' });
-        return;
-      }
-      res.json(result);
+      const result = this.featureService.saveTreeData(treeData);
+      res.status(200).json(result);
     } catch (error) {
-      console.error('Error in GetFeatureByStructure:', error);
-      res.status(500).json({
-        error: 'Error executing stored procedure GetFeatureByStructure',
-      });
+      res.status(500).json({ message: 'Failed to save data' });
     }
-  }
+  };
 
-  public GetFeatureByPermisison = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const permissionId = req.query.permission as string;
-      if (!permissionId) {
-        res.status(400).json({ message: 'Permission ID is required' });
-        return;
-      }
 
-      const result = await this.featureService.GetFeatureByPermission(permissionId);
-      if (!result || result.length === 0) {
-        res.status(404).json({ message: 'No data found for GetFeatureByPermission' });
-        return;
-      }
-      res.json(result);
-    } catch (error) {
-      console.error('Error in GetFeatureByPermission:', error);
-      res.status(500).json({
-        error: 'Error executing stored procedure GetMenuUser',
-      });
-    }
-  }
 }
