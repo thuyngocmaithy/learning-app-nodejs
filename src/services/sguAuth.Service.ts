@@ -58,10 +58,9 @@ export class SguAuthService {
   
         return this.generateAuthResponse(loginData, user as User);
       } else {
-        console.log("tài khoản đã tồn tại\n");
+        console.log("tài khoản đã tồn tại\n", account);
         // Tài khoản đã tồn tại, xóa access_token cũ và cập nhật token mới
-        account.access_token = ''; // Xóa access_token cũ
-        console.log('token của account :', account.access_token);
+
   
         let updatedTokens;
         if (account.permission.permissionId === "ADMIN") {
@@ -76,15 +75,22 @@ export class SguAuthService {
           };
         } else {
           // Đăng nhập và lấy token mới từ SGU
-          updatedTokens = await this.refreshSguTokens(account, username, password);
-        }
-  
-        // Cập nhật access_token và refreshToken
+          account.access_token = ''; // Xóa access_token cũ
+          account.refreshToken = '';
+          console.log('token của account :', account.access_token);
+          console.log("đăng nhập tài khoản mới : \n", account);
+
+          updatedTokens = await this.refreshSguTokens(username, password);
+
+                  // Cập nhật access_token và refreshToken
         account.access_token = updatedTokens.access_token;
         account.refreshToken = updatedTokens.refresh_token;
         account.permission.permissionId = updatedTokens.roles;
   
         console.log('token của mới account :', account.access_token);
+        }
+  
+
   
         await this.saveScoresForUserFromSgu(account.username, account.access_token);
   
@@ -194,8 +200,9 @@ export class SguAuthService {
     }
   }
 
-  private async refreshSguTokens(account: Account, username: string, password: string) {
+  private async refreshSguTokens(username: string, password: string) {
     try {
+      console.log('Attempting re-login to SGU');
       const response = await axios.post(SGU_API_URL, {
         username,
         password,
@@ -205,12 +212,12 @@ export class SguAuthService {
           "Content-Type": "application/x-www-form-urlencoded"
         },
       });
-
+  
       const data = response.data;
       if (data.code !== '200') {
-        throw new Error('Lấy token SGU không thành công');
+        throw new Error('Đăng nhập SGU không thành công');
       }
-
+  
       return {
         access_token: data.access_token,
         refresh_token: data.refresh_token,
@@ -218,7 +225,12 @@ export class SguAuthService {
         roles: data.roles,
       };
     } catch (error) {
-      console.error('Token refresh error:', error);
+      console.error('SGU re-login failed:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+      }
       throw new Error('Không thể lấy token mới từ SGU. Vui lòng thử lại.');
     }
   }
