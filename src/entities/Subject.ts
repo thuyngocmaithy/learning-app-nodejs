@@ -30,7 +30,7 @@ export class Subject {
     * Môn học trước (có thể rỗng)
     */
   @ManyToOne(() => Subject, data => data.subjectId, { nullable: true })
-  @JoinColumn({ name: 'subjectBeforeId' })
+  @JoinColumn({ name: 'subjectBefore' })
   subjectBefore: Subject;
 
 

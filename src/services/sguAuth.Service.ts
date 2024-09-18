@@ -33,6 +33,7 @@ export class SguAuthService {
     try {
       // Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
       let account = await this.accountService.getByUsername(username);
+      let user = await this.userService.getByUserId(username);
       // if (!account) {
       //   // Nếu tài khoản không tồn tại, đăng nhập qua SGU
       //   const loginData = await this.performSguLogin(username, password);
@@ -46,53 +47,114 @@ export class SguAuthService {
       //   const imageData = await this.getImageAccount(loginData.access_token, username);
 
       //   // Tạo hoặc cập nhật người dùng
-      //   const user = await this.createOrUpdateUser(loginData, studentInfo, imageData, account);
+      //   const user = await this.createNewUser(loginData, studentInfo, imageData, account);
 
       //   return this.generateAuthResponse(loginData, user as User);
       // } else {
       if (account) {
         console.log("tài khoản đã tồn tại\n");
         // Tài khoản đã tồn tại, xóa access_token cũ và cập nhật token mới
-        account.access_token = ''; // Xóa access_token cũ
-        console.log('token của account :', account.access_token);
 
         let updatedTokens;
-        //if (account.permission.permissionId === "ADMIN") {
-        updatedTokens = {
-          access_token: jwt.sign(
-            { id: account.id, role: 'ADMIN' },
-            'TokenADMIN',
-            { expiresIn: '2h' }
-          ),
-          refresh_token: account.refreshToken,
-          roles: account.permission.permissionId,
-        };
-        //} else {
-        // Đăng nhập và lấy token mới từ SGU
-        //updatedTokens = await this.refreshSguTokens(account, username, password);
-        //}
+        if (account.permission.permissionId === "ADMIN") {
+          updatedTokens = {
+            access_token: jwt.sign(
+              { id: account.id, role: 'ADMIN' },
+              'TokenADMIN',
+              { expiresIn: '2h' }
+            ),
+            refresh_token: account.refreshToken,
+            roles: 'ADMIN',
+          };
+        }
 
-        // Cập nhật access_token và refreshToken
-        account.access_token = updatedTokens.access_token;
-        account.refreshToken = updatedTokens.refresh_token;
-        account.permission.permissionId = updatedTokens.roles;
+        else {
+          if (account.permission.permissionId === "SINHVIEN") {
+            updatedTokens = {
+              access_token: jwt.sign(
+                { id: account.id, role: 'SINHVIEN' },
+                'TokenSINHVIEN',
+                { expiresIn: '2h' }
+              ),
+              refresh_token: account.refreshToken,
+              roles: 'SINHVIEN',
+            };
+          }
+        }
+        // else {
+        //   // Đăng nhập và lấy token mới từ SGU
+        //   account.access_token = ''; // Xóa access_token cũ
+        //   account.refreshToken = '';
+        //   console.log('token của account :', account.access_token);
+        //   console.log("đăng nhập tài khoản mới : \n", account);
 
-        console.log('token của mới account :', account.access_token);
+        //   updatedTokens = await this.refreshSguTokens(username, password);
+
+        // // Cập nhật access_token và refreshToken
+        // account.access_token = updatedTokens.access_token;
+        // account.refreshToken = updatedTokens.refresh_token;
+        // account.permission.permissionId = updatedTokens.roles;
+
+        // console.log('token của mới account :', account.access_token);
+        // }
 
 
-        await this.saveScoresForUserFromSgu(account.username, account.access_token);
+
+        // await this.saveScoresForUserFromSgu(account.username, account.access_token);
 
 
         // Lưu lại thay đổi
         await this.accountService.update(account.id, account);
 
         // Lấy thông tin người dùng từ cơ sở dữ liệu và trả về phản hồi
-        const user = await this.userService.getByUserId(account.username);
+        user = await this.userService.getByUserId(account.username);
         return this.generateAuthResponse(updatedTokens, user as User);
       }
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  private async updateExistingUser(user: User, loginData: any, studentInfo: any, imageData: any, account: Account): Promise<User> {
+    user.fullname = studentInfo.ten_day_du;
+    user.dateOfBirth = new Date(studentInfo.ngay_sinh.split('/').reverse().join('-'));
+    user.placeOfBirth = studentInfo.noi_sinh;
+    user.phone = studentInfo.dien_thoai;
+    user.email = studentInfo.email || loginData.principal;
+    user.isStudent = studentInfo.hien_dien_sv === 'Đang học';
+    user.class = studentInfo.lop;
+    user.faculty = { facultyId: studentInfo.khoi.substring(0, 3) } as any;
+    user.stillStudy = user.isStudent;
+    user.firstAcademicYear = parseInt(studentInfo.nhhk_vao.toString().substring(0, 4));
+    user.lastAcademicYear = parseInt(studentInfo.nhhk_ra.toString().substring(0, 4));
+    user.isActive = true;
+    user.avatar = imageData;
+    user.account = account;
+    user.lastModifyDate = new Date();
+    user.nien_khoa = studentInfo.nien_khoa;
+    user.sex = studentInfo.gioi_tinh;
+    user.dan_toc = studentInfo.dan_toc;
+    user.ton_giao = studentInfo.ton_giao;
+    user.quoc_tich = studentInfo.quoc_tich;
+    user.cccd = studentInfo.so_cmnd;
+    user.ho_khau_thuong_tru = studentInfo.ho_khau_thuong_tru;
+    user.khu_vuc = studentInfo.khu_vuc;
+    user.khoi = studentInfo.khoi;
+    user.bac_he_dao_tao = studentInfo.bac_he_dao_tao;
+    user.ma_cvht = studentInfo.ma_cvht;
+    user.ho_ten_cvht = studentInfo.ho_ten_cvht;
+    user.email_cvht = studentInfo.email_cvht;
+    user.dien_thoai_cvht = studentInfo.dien_thoai_cvht;
+    user.ma_cvht_ng2 = studentInfo.ma_cvht_ng2;
+    user.ho_ten_cvht_ng2 = studentInfo.ho_ten_cvht_ng2;
+    user.email_cvht_ng2 = studentInfo.email_cvht_ng2;
+    user.dien_thoai_cvht_ng2 = studentInfo.dien_thoai_cvht_ng2;
+    user.ma_truong = studentInfo.ma_truong;
+    user.ten_truong = studentInfo.ten_truong;
+    user.hoc_vi = studentInfo.hoc_vi;
+    user.bo_mon = studentInfo.bo_mon;
+
+    return await this.userService.update(user.userId, user) as User;
   }
 
 
@@ -147,8 +209,9 @@ export class SguAuthService {
     }
   }
 
-  private async refreshSguTokens(account: Account, username: string, password: string) {
+  private async refreshSguTokens(username: string, password: string) {
     try {
+      console.log('Attempting re-login to SGU');
       const response = await axios.post(SGU_API_URL, {
         username,
         password,
@@ -161,7 +224,7 @@ export class SguAuthService {
 
       const data = response.data;
       if (data.code !== '200') {
-        throw new Error('Lấy token SGU không thành công');
+        throw new Error('Đăng nhập SGU không thành công');
       }
 
       return {
@@ -171,7 +234,12 @@ export class SguAuthService {
         roles: data.roles,
       };
     } catch (error) {
-      console.error('Token refresh error:', error);
+      console.error('SGU re-login failed:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+      }
       throw new Error('Không thể lấy token mới từ SGU. Vui lòng thử lại.');
     }
   }
@@ -199,7 +267,7 @@ export class SguAuthService {
     }
   }
 
-  private async createOrUpdateUser(loginData: any, studentInfo: any, imageData: any, account: Account): Promise<User> {
+  private async createNewUser(loginData: any, studentInfo: any, imageData: any, account: Account): Promise<User> {
     const studentId = studentInfo.ma_sv;
     let user = await this.userService.getByUserId(studentId);
 
@@ -252,7 +320,7 @@ export class SguAuthService {
 
   private generateAuthResponse(loginData: any, user: User) {
     return {
-      status: loginData.code,
+      // status: loginData.code,
       accessToken: loginData.access_token,
       refreshToken: loginData.refresh_token,
       expiresIn: loginData.expires_in,
@@ -292,7 +360,7 @@ export class SguAuthService {
     }
   }
 
-  async getScore(access_token: string) { //Lấy điểm theo access token
+  async getScoreFromSGU(access_token: string) { //Lấy điểm theo access token
     try {
       const response = await axios.post(`${SGU_DIEM_API_URL}?hien_thi_mon_theo_hkdk=false`, {}, {
         headers: {
@@ -310,7 +378,7 @@ export class SguAuthService {
   async saveScoresForUserFromSgu(userId: string, accessToken: string) {
     try {
       const sguAuthService = new SguAuthService();
-      const jsonResponse = await sguAuthService.getScore(accessToken);
+      const jsonResponse = await sguAuthService.getScoreFromSGU(accessToken);
 
       if (!jsonResponse || !jsonResponse.data || jsonResponse.data.ds_diem_hocky.length === 0) {
         throw new Error('No scores found for the user.');

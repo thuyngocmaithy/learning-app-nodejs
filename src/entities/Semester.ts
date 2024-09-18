@@ -1,5 +1,4 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn } from 'typeorm';
-import { Subject } from './Subject';
 import { AcademicYear } from './AcademicYear'
 
 /**
