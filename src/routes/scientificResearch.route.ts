@@ -9,6 +9,7 @@ const scientificResearchController = new ScientificResearchController(AppDataSou
 
 scientificResearchRouter.get('/', scientificResearchController.getAllScientificResearchs);
 scientificResearchRouter.get('/getByScientificResearchGroupId', scientificResearchController.getByScientificResearchIGroupId);
+scientificResearchRouter.get('/getWhere', scientificResearchController.getPermissionFeatureWhere);
 scientificResearchRouter.get('/:id', scientificResearchController.getScientificResearchById);
 scientificResearchRouter.post('/', scientificResearchController.createScientificResearch);
 scientificResearchRouter.put('/:id', scientificResearchController.updateScientificResearch);

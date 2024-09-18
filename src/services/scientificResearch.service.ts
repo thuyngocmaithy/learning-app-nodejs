@@ -8,15 +8,18 @@ import { FollowerService } from './follower.service';
 import { AppDataSource } from '../data-source';
 import { FollowerDetailService } from './followerDetail.service';
 import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
+import { ScientificResearch_User } from '../entities/ScientificResearch_User';
 
 export class ScientificResearchService {
   private scientificResearchRepository: Repository<ScientificResearch>;
+  private scientificResearch_UserRepository: Repository<ScientificResearch_User>;
   private userRepository: Repository<User>;
   private statusRepository: Repository<Status>;
   private scientificResearchGroupRepository: Repository<ScientificResearchGroup>;
 
   constructor(dataSource: DataSource) {
     this.scientificResearchRepository = dataSource.getRepository(ScientificResearch);
+    this.scientificResearch_UserRepository = dataSource.getRepository(ScientificResearch_User);
     this.userRepository = dataSource.getRepository(User);
     this.statusRepository = dataSource.getRepository(Status);
     this.scientificResearchGroupRepository = dataSource.getRepository(ScientificResearchGroup);
@@ -47,7 +50,6 @@ export class ScientificResearchService {
     }
 
     const newId = await this.generateNewId(scientificResearchData.facultyId);
-
     const scientificResearch = this.scientificResearchRepository.create({
       scientificResearchId: newId,
       scientificResearchName: scientificResearchData.scientificResearchName,
@@ -58,20 +60,81 @@ export class ScientificResearchService {
       status: status,
       createUser: scientificResearchData.createUserId,
       lastModifyUser: scientificResearchData.lastModifyUserId,
+      scientificResearchGroup: scientificResearchGroup,
       follower: [
-        { followerDetails: [{ user: scientificResearchData.createUserId }] }
-      ],
-      scientificResearchGroup: scientificResearchGroup
+        {
+          followerDetails: [
+            { user: scientificResearchData.createUserId },
+            { user: instructor }
+          ]
+        }
+      ]
     });
 
-    return await this.scientificResearchRepository.save(scientificResearch);
+    const savedScientificResearch = await this.scientificResearchRepository.save(scientificResearch);
+
+    // Xác định người dùng cần chèn
+    const usersToInsert = [];
+    if (scientificResearchData.createUserId) {
+      const createUser = await this.userRepository.findOne({ where: { userId: scientificResearchData.createUserId.userId } });
+      if (createUser) {
+        usersToInsert.push({
+          userId: createUser.userId,
+          isLeader: true
+        });
+      }
+    }
+
+    if (scientificResearchData.lastModifyUserId) {
+      const lastModifyUser = await this.userRepository.findOne({ where: { userId: scientificResearchData.lastModifyUserId.userId } });
+      if (lastModifyUser) {
+        usersToInsert.push({
+          userId: lastModifyUser.userId,
+          isLeader: false
+        });
+      }
+    }
+
+    if (instructor) {
+      usersToInsert.push({
+        userId: instructor.userId,
+        isLeader: false
+      });
+    }
+
+
+    for (const userData of usersToInsert) {
+      const user = await this.userRepository.findOne({ where: { userId: userData.userId } });
+      if (user) {
+        const scientificResearchUser = this.scientificResearch_UserRepository.create({
+          scientificResearch: savedScientificResearch,
+          user: user,
+          isLeader: userData.isLeader,
+          isApprove: true
+        });
+        await this.scientificResearch_UserRepository.save(scientificResearchUser);
+      }
+    }
+
+    return savedScientificResearch;
   }
+
 
   async update(scientificResearchId: string, data: Partial<ScientificResearch>): Promise<ScientificResearch | null> {
     const scientificResearch = await this.scientificResearchRepository.findOne({ where: { scientificResearchId } });
     if (!scientificResearch) {
       return null;
     }
+
+    const status = await AppDataSource.getRepository(Status)
+      .createQueryBuilder("status")
+      .where("status.statusId = :statusId", { statusId: data.status })
+      .getOne();
+
+    if (status) {
+      scientificResearch.status = status;
+    }
+
     this.scientificResearchRepository.merge(scientificResearch, data);
     return this.scientificResearchRepository.save(scientificResearch);
   }
@@ -107,4 +170,19 @@ export class ScientificResearchService {
     };
     return this.scientificResearchRepository.find(options);
   }
+
+  async getWhere(condition: Partial<ScientificResearch>): Promise<ScientificResearch[]> {
+    const whereCondition: any = {};
+
+    if (condition.instructor) {
+      whereCondition.instructor = { instructorId: condition.instructor };
+    }
+
+    return this.scientificResearchRepository.find({
+      where: whereCondition,
+      relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'],
+    });
+  }
+
+
 }

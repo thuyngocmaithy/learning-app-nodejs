@@ -14,6 +14,7 @@ export class ScientificResearchController {
 
   public getAllScientificResearchs = (req: Request, res: Response) => RequestHandler.getAll<ScientificResearch>(req, res, this.scientificResearchService);
   public getScientificResearchById = (req: Request, res: Response) => RequestHandler.getById<ScientificResearch>(req, res, this.scientificResearchService);
+  public getPermissionFeatureWhere = (req: Request, res: Response) => RequestHandler.getWhere<ScientificResearch>(req, res, this.scientificResearchService);
   public createScientificResearch = (req: Request, res: Response) => RequestHandler.create<ScientificResearch>(req, res, this.scientificResearchService);
   public updateScientificResearch = (req: Request, res: Response) => RequestHandler.update<ScientificResearch>(req, res, this.scientificResearchService);
   public deleteScientificResearch = (req: Request, res: Response) => RequestHandler.delete(req, res, this.scientificResearchService);

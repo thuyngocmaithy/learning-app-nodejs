@@ -128,17 +128,36 @@ export class ScientificResearch_UserService {
   public getByUserId = async (user: User): Promise<ScientificResearch_User[]> => {
     const options: FindOneOptions<ScientificResearch_User> = {
       where: { user },
-      relations: ['scientificResearch', 'user', 'scientificResearch.createUser', 'scientificResearch.instructor', 'scientificResearch.lastModifyUser']
+      relations: [
+        'scientificResearch',
+        'user',
+        'scientificResearch.createUser',
+        'scientificResearch.instructor',
+        'scientificResearch.lastModifyUser',
+        'scientificResearch.follower',
+        'scientificResearch.follower.followerDetails'
+      ]
     };
     return this.scientificResearchUserRepository.find(options);
   }
 
-  public getByScientificResearchId = async (scientificResearch: ScientificResearch): Promise<ScientificResearch_User[]> => {
+  public getByScientificResearchId = async (scientificResearch: ScientificResearch): Promise<ScientificResearch_User | null> => {
     const options: FindOneOptions<ScientificResearch_User> = {
       where: { scientificResearch: { scientificResearchId: scientificResearch.scientificResearchId } },
-      relations: ['scientificResearch', 'user', 'scientificResearch.createUser', 'scientificResearch.instructor', 'scientificResearch.lastModifyUser']
+      relations: [
+        'scientificResearch',
+        'user',
+        'scientificResearch.createUser',
+        'scientificResearch.instructor',
+        'scientificResearch.lastModifyUser',
+        'scientificResearch.status',
+        'scientificResearch.follower',
+        'scientificResearch.follower.followerDetails',
+        'scientificResearch.follower.followerDetails.user',
+        'scientificResearch.scientificResearchGroup.faculty'
+      ]
     };
-    return this.scientificResearchUserRepository.find(options);
+    return this.scientificResearchUserRepository.findOne(options);
   }
 
   // Xóa bằng user và scientificResearch

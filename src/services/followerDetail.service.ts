@@ -42,4 +42,16 @@ export class FollowerDetailService {
       }
     });
   };
+
+  /**
+ * Lấy danh sách FollowerDetail theo user
+ */
+  public async getDetailsByUser(user: User): Promise<FollowerDetail[]> {
+    return this.followerDetailRepository.find({
+      where: {
+        user: { userId: user.userId }
+      },
+      relations: ['follower']
+    });
+  }
 }

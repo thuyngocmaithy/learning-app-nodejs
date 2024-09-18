@@ -8,11 +8,11 @@ const scientificResearchUserController = new ScientificResearch_UserController(A
 scientificResearchUserRouter.get('/', scientificResearchUserController.getAllScientificResearchUser);
 scientificResearchUserRouter.get('/highestGroup', scientificResearchUserController.getHighestGroupScientificResearchUser);
 scientificResearchUserRouter.get('/getByUserId', scientificResearchUserController.getScientificResearchUserByUserId);
-scientificResearchUserRouter.get('/getByScientificResearchId', scientificResearchUserController.getScientificResearchUserByScientificResearchId);
+scientificResearchUserRouter.get('/getByScientificResearchId', scientificResearchUserController.getByScientificResearchId);
 scientificResearchUserRouter.get('/:id', scientificResearchUserController.getScientificResearchUserById);
 scientificResearchUserRouter.post('/', scientificResearchUserController.createScientificResearchUser);
 scientificResearchUserRouter.put('/:id', scientificResearchUserController.updateScientificResearchUser);
-scientificResearchUserRouter.delete('/deleteByUserAndScientificResearch', scientificResearchUserController.deleteScientificResearchUserByUserAndScientificResearch);
+scientificResearchUserRouter.delete('/deleteByUserAndScientificResearch', scientificResearchUserController.deleteByUserAndScientificResearch);
 scientificResearchUserRouter.delete('/:id', scientificResearchUserController.deleteScientificResearchUser);
 
 export default scientificResearchUserRouter;

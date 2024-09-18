@@ -17,7 +17,7 @@ export class ScientificResearch_User {
     /**
      * ID dự án (tham chiếu đến thực thể ScientificResearch, không rỗng)
      */
-    @ManyToOne(() => ScientificResearch, data => data.scientificResearchId, { nullable: false })
+    @ManyToOne(() => ScientificResearch, data => data.scientificResearchId, { nullable: false, onDelete: 'CASCADE' })
     @JoinColumn({ name: 'scientificResearchId' })
     scientificResearch: ScientificResearch;
 
