@@ -45,6 +45,7 @@ import fs from 'fs/promises';
 import uploadRouter from './routes/upload.routes';
 import sguAuthRouter from './routes/sguAuth.route';
 import scientificResearchGroupRoute from './routes/scientificResearchGroup.route';
+import userRegisterSubjectRouter from './routes/userRegisterSubject.route';
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
@@ -139,6 +140,7 @@ app.use('/api/messages', messageRouter);
 app.use('/api/participants', participantRouter);
 app.use('/api/features', featureRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/user-register-subject', userRegisterSubjectRouter);
 
 
 
