@@ -46,6 +46,7 @@ import uploadRouter from './routes/upload.routes';
 import sguAuthRouter from './routes/sguAuth.route';
 import scientificResearchGroupRoute from './routes/scientificResearchGroup.route';
 import userRegisterSubjectRouter from './routes/userRegisterSubject.route';
+import academicYearRouter from './routes/academicYear.route';
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
@@ -112,6 +113,7 @@ app.get('/', (req, res) => {
 app.use('/api/authSGU', sguAuthRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/academic', academicYearRouter);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/attachments', attachRoutes);
 app.use('/api/component-scores', componentScoreRoutes);
