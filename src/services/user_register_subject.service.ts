@@ -20,32 +20,57 @@ export class UserRegisterSubjectService {
     this.semesterRepository = dataSource.getRepository(Semester);
   }
 
-  // Đăng ký môn học cho user
   async registerSubject(userId: string, subjectId: string, frameId: string, semesterId: string): Promise<UserRegisterSubject> {
-      const user = await this.userRepository.findOne({
-          where: { userId: userId },
-      });
-      const subject = await this.subjectRepository.findOne({
-          where: { subjectId: subjectId },
-      });
-      const studyFrame = await this.studyFrameRepository.findOneBy({ id: frameId });
-      const semester = await this.semesterRepository.findOneBy({ id: semesterId });
+    const user = await this.userRepository.findOne({
+      where: { userId: userId },
+    });
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
 
-      if (!user || !subject || !studyFrame || !semester) {
-          throw new Error('User, Subject, StudyFrame, or Semester not found');
-      }
+    const subject = await this.subjectRepository.findOne({
+      where: { subjectId: subjectId },
+    });
+    if (!subject) {
+      throw new Error(`Subject with ID ${subjectId} not found`);
+    }
 
-      const userRegisterSubject = this.userRegisterSubjectRepository.create({
-          user,
-          subject,
-          studyFrame,
-          semester,
-      });
+    const studyFrame = await this.studyFrameRepository.findOne({
+      where: { id: frameId },
+    });
+    if (!studyFrame) {
+      throw new Error(`StudyFrame with ID ${frameId} not found`);
+    }
 
-      return this.userRegisterSubjectRepository.save(userRegisterSubject);
+    const semester = await this.semesterRepository.findOne({
+      where: { id: semesterId },
+    });
+    if (!semester) {
+      throw new Error(`Semester with ID ${semesterId} not found`);
+    }
+
+    // Check if the user has already registered for this subject
+    const existingRegistration = await this.userRegisterSubjectRepository.findOne({
+      where: {
+        user: { userId: userId },
+        subject: { subjectId: subjectId },
+      },
+    });
+
+    if (existingRegistration) {
+      throw new Error(`User has already registered for subject ${subjectId}`);
+    }
+
+    const userRegisterSubject = this.userRegisterSubjectRepository.create({
+      user,
+      subject,
+      studyFrame,
+      semester,
+    });
+
+    return this.userRegisterSubjectRepository.save(userRegisterSubject);
   }
 
-  // Lấy danh sách môn học đã đăng ký của user
   async getUserRegisteredSubjects(userId: string): Promise<UserRegisterSubject[]> {
     return this.userRegisterSubjectRepository.find({
       where: { user: { userId: userId } },
