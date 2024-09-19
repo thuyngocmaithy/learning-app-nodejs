@@ -17,4 +17,6 @@ export class FollowerDetailController {
   public createFollowerDetail = (req: Request, res: Response) => RequestHandler.create<FollowerDetail>(req, res, this.followerDetailService);
   public updateFollowerDetail = (req: Request, res: Response) => RequestHandler.update<FollowerDetail>(req, res, this.followerDetailService);
   public deleteFollowerDetail = (req: Request, res: Response) => RequestHandler.delete(req, res, this.followerDetailService);
+
+
 }

@@ -1,8 +1,9 @@
 // src/services/follower.service.ts
-import { FindOneOptions, Repository } from 'typeorm';
+import { FindManyOptions, FindOneOptions, In, Repository } from 'typeorm';
 import { Follower } from '../entities/Follower';
 import { DataSource } from 'typeorm';
 import { ScientificResearch } from '../entities/ScientificResearch';
+import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 
 export class FollowerService {
   private followerRepository: Repository<Follower>;
@@ -24,6 +25,7 @@ export class FollowerService {
     return this.followerRepository.findOne({ where: { id }, relations: ['internship', 'scientificResearch'] });
   }
 
+
   async update(id: string, data: Partial<Follower>): Promise<Follower | null> {
     const follower = await this.followerRepository.findOne({ where: { id } });
     if (!follower) return null;
@@ -36,19 +38,24 @@ export class FollowerService {
     return result.affected !== 0;
   }
 
-  public getByScientificResearch = async (scientificResearch: ScientificResearch): Promise<Follower | null> => {
-    const options: FindOneOptions<Follower> = {
-      where: { scientificResearch: { scientificResearchId: scientificResearch.scientificResearchId } },
-      relations: ['scientificResearch']
-    };
-    return this.followerRepository.findOne(options);
-  }
-
   public getByScientificResearchId = async (scientificResearchId: string): Promise<Follower | null> => {
     const options: FindOneOptions<Follower> = {
       where: { scientificResearch: { scientificResearchId } },
       relations: ['scientificResearch', 'followerDetails']
     };
     return this.followerRepository.findOne(options);
+  }
+
+  public getFollowersByIdsAndSRGroupId = async (followerIds: string[], SRGroup: ScientificResearchGroup): Promise<Follower[] | null> => {
+    const options: FindManyOptions<Follower> = {
+      where: {
+        id: In(followerIds),
+        scientificResearch: {
+          scientificResearchGroup: { scientificResearchGroupId: SRGroup.scientificResearchGroupId }
+        }
+      },
+      relations: ['scientificResearch', 'followerDetails', 'scientificResearch.status']
+    };
+    return this.followerRepository.find(options);
   }
 }

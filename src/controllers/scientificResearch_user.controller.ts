@@ -53,7 +53,7 @@ export class ScientificResearch_UserController {
     }
   };
 
-  public getScientificResearchUserByScientificResearchId = async (req: Request, res: Response) => {
+  public getByScientificResearchId = async (req: Request, res: Response) => {
     try {
       const scientificResearchId = req.query.scientificResearch as string | undefined;
 
@@ -77,7 +77,7 @@ export class ScientificResearch_UserController {
   };
 
   // Delete ScientificResearch_User by user and scientificResearch
-  public deleteScientificResearchUserByUserAndScientificResearch = async (req: Request, res: Response) => {
+  public deleteByUserAndScientificResearch = async (req: Request, res: Response) => {
     try {
       const userId = req.query.user as string | undefined;
       const scientificResearchId = req.query.scientificResearch as string | undefined;

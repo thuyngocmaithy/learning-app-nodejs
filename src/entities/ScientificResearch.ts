@@ -4,6 +4,7 @@ import { Status } from './Status';
 import { Faculty } from './Faculty';
 import { Follower } from './Follower';
 import { ScientificResearchGroup } from './ScientificResearchGroup';
+import { ScientificResearch_User } from './ScientificResearch_User';
 
 /**
  * Thực thể Dự án
@@ -98,7 +99,7 @@ export class ScientificResearch {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
   @JoinColumn({ name: 'lastModifyUserId' })
   lastModifyUser: User;
 
@@ -111,6 +112,10 @@ export class ScientificResearch {
   // Thêm cascade: true để xóa liên quan đến Follower khi xóa ScientificResearch
   @OneToMany(() => Follower, follower => follower.scientificResearch, { cascade: ['insert', 'update', 'remove'] })
   follower: Follower[];
+
+  // Thêm cascade: true để xóa liên quan đến scientificResearch_user khi xóa ScientificResearch
+  @OneToMany(() => ScientificResearch_User, object => object.scientificResearch, { cascade: ['insert', 'update', 'remove'] })
+  scientificResearch_user: ScientificResearch_User[];
 
   /**
    * Nhóm đề tài NCKH
