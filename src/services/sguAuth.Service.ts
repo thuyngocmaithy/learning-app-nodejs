@@ -56,20 +56,20 @@ export class SguAuthService {
         // Tài khoản đã tồn tại, xóa access_token cũ và cập nhật token mới
 
         let updatedTokens;
-        if (account.permission.permissionId === "ADMIN") {
-          updatedTokens = {
-            access_token: jwt.sign(
-              { id: account.id, role: 'ADMIN' },
-              'TokenADMIN',
-              { expiresIn: '2h' }
-            ),
-            refresh_token: account.refreshToken,
-            roles: 'ADMIN',
-          };
-        }
-
-        else {
-          if (account.permission.permissionId === "SINHVIEN") {
+        switch (account.permission.permissionId) {
+          case "ADMIN":
+            updatedTokens = {
+              access_token: jwt.sign(
+                { id: account.id, role: 'ADMIN' },
+                'TokenADMIN',
+                { expiresIn: '2h' }
+              ),
+              refresh_token: account.refreshToken,
+              roles: 'ADMIN',
+            };
+            break;
+      
+          case "SINHVIEN":
             updatedTokens = {
               access_token: jwt.sign(
                 { id: account.id, role: 'SINHVIEN' },
@@ -79,8 +79,24 @@ export class SguAuthService {
               refresh_token: account.refreshToken,
               roles: 'SINHVIEN',
             };
-          }
+            break;
+      
+          case "GIANGVIEN":
+            updatedTokens = {
+              access_token: jwt.sign(
+                { id: account.id, role: 'GIANGVIEN' },
+                'TokenGIANGVIEN',
+                { expiresIn: '2h' }
+              ),
+              refresh_token: account.refreshToken,
+              roles: 'GIANGVIEN',
+            };
+            break;
+      
+          default:
+            throw new Error("Invalid permissionId");
         }
+
         // else {
         //   // Đăng nhập và lấy token mới từ SGU
         //   account.access_token = ''; // Xóa access_token cũ
@@ -326,7 +342,6 @@ export class SguAuthService {
       expiresIn: loginData.expires_in,
       user: {
         userId: user.userId,
-        username: user.account.username,
         fullname: user.fullname,
         avatar: user.avatar,
         email: user.email,
