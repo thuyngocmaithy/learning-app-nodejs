@@ -9,7 +9,7 @@ const followerController = new FollowerController(AppDataSource);
 
 followerRouter.get('/', followerController.getAllFollowers);
 followerRouter.get('/getByScientificResearchId', followerController.getFollowerByScientificResearchId);
-followerRouter.get('/getFollowersByIdsAndSRGroupId', followerController.getFollowersByIdsAndSRGroupId);
+followerRouter.get('/getFollowersByUserIdAndSRGroupId', followerController.getFollowersByUserIdAndSRGroupId);
 followerRouter.get('/:id', followerController.getFollowerById);
 followerRouter.post('/', followerController.createFollower);
 followerRouter.put('/:id', followerController.updateFollower);

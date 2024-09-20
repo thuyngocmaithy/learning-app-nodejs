@@ -73,27 +73,8 @@ export class ScientificResearchService {
 
     const savedScientificResearch = await this.scientificResearchRepository.save(scientificResearch);
 
-    // Xác định người dùng cần chèn
+    // Xác định người dùng thêm vào dự án
     const usersToInsert = [];
-    if (scientificResearchData.createUserId) {
-      const createUser = await this.userRepository.findOne({ where: { userId: scientificResearchData.createUserId.userId } });
-      if (createUser) {
-        usersToInsert.push({
-          userId: createUser.userId,
-          isLeader: true
-        });
-      }
-    }
-
-    if (scientificResearchData.lastModifyUserId) {
-      const lastModifyUser = await this.userRepository.findOne({ where: { userId: scientificResearchData.lastModifyUserId.userId } });
-      if (lastModifyUser) {
-        usersToInsert.push({
-          userId: lastModifyUser.userId,
-          isLeader: false
-        });
-      }
-    }
 
     if (instructor) {
       usersToInsert.push({

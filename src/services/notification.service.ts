@@ -50,11 +50,11 @@ export class NotificationService {
 
 
     if (condition.toUser) {
-      whereCondition.toUser = { id: condition.toUser.userId };
+      whereCondition.toUser = { userId: condition.toUser.userId };
     }
 
     if (condition.createUser) {
-      whereCondition.createUser = { id: condition.createUser.userId };
+      whereCondition.createUser = { userId: condition.createUser.userId };
     }
 
     if (condition.content) {

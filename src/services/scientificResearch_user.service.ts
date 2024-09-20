@@ -1,4 +1,4 @@
-import { Repository, DataSource, FindOneOptions, Int32 } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, Int32, FindManyOptions } from 'typeorm';
 import { ScientificResearch_User } from '../entities/ScientificResearch_User'
 import { User } from '../entities/User';
 import { ScientificResearch } from '../entities/ScientificResearch';
@@ -6,6 +6,7 @@ import { FollowerService } from './follower.service';
 import { FollowerDetailService } from './followerDetail.service';
 import { AppDataSource } from '../data-source';
 import { Follower, FollowerDetail } from '../entities/Follower';
+import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 
 export class ScientificResearch_UserService {
   private scientificResearchUserRepository: Repository<ScientificResearch_User>;
@@ -125,9 +126,16 @@ export class ScientificResearch_UserService {
     return scientificResearchUser.group || 0;
   }
 
-  public getByUserId = async (user: User): Promise<ScientificResearch_User[]> => {
-    const options: FindOneOptions<ScientificResearch_User> = {
-      where: { user },
+  public getByUserIdAndSRGroupId = async (userId: string, SRGroup: ScientificResearchGroup | null): Promise<ScientificResearch_User[]> => {
+    const options: FindManyOptions<ScientificResearch_User> = {
+      where: {
+        user: { userId: userId },
+        ...(SRGroup && {
+          scientificResearch: {
+            scientificResearchGroup: { scientificResearchGroupId: SRGroup.scientificResearchGroupId }
+          }
+        })
+      },
       relations: [
         'scientificResearch',
         'user',
@@ -135,7 +143,8 @@ export class ScientificResearch_UserService {
         'scientificResearch.instructor',
         'scientificResearch.lastModifyUser',
         'scientificResearch.follower',
-        'scientificResearch.follower.followerDetails'
+        'scientificResearch.follower.followerDetails',
+        'scientificResearch.status'
       ]
     };
     return this.scientificResearchUserRepository.find(options);

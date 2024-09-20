@@ -5,16 +5,19 @@ import { RequestHandler } from '../utils/requestHandler';
 import { ScientificResearch_User } from '../entities/ScientificResearch_User';
 import { UserService } from '../services/User.service';
 import { ScientificResearchService } from '../services/scientificResearch.service';
+import { ScientificResearchGroupService } from '../services/scientificResearchGroup.service';
 
 export class ScientificResearch_UserController {
   private scientificResearchUserService: ScientificResearch_UserService;
   private userService: UserService;
   private scientificResearchService: ScientificResearchService;
+  private scientificResearchGroupService: ScientificResearchGroupService;
 
   constructor(dataSource: DataSource) {
     this.scientificResearchUserService = new ScientificResearch_UserService(dataSource);
     this.userService = new UserService(dataSource);
     this.scientificResearchService = new ScientificResearchService(dataSource);
+    this.scientificResearchGroupService = new ScientificResearchGroupService(dataSource);
   }
 
   public getAllScientificResearchUser = (req: Request, res: Response) => RequestHandler.getAll<ScientificResearch_User>(req, res, this.scientificResearchUserService);
@@ -31,21 +34,20 @@ export class ScientificResearch_UserController {
       .catch(error => res.status(500).json({ message: 'error', error: error.message }));
   };
 
-  public getScientificResearchUserByUserId = async (req: Request, res: Response) => {
+  public getSRUByUserIdAndSRGroupId = async (req: Request, res: Response) => {
     try {
-      const userId = req.query.user as string | undefined;
+      const userId = req.query.userId as string | undefined;
 
       if (!userId) {
         return res.status(400).json({ message: 'Invalid user ID' });
       }
 
-      const user = await this.userService.getByUserId(userId);  // Fetch the User entity by ID
-
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+      let SRGroup = null;
+      if (req.query.srgroupId) {
+        SRGroup = await this.scientificResearchGroupService.getById(req.query.srgroupId as string);
       }
 
-      const scientificResearchUser = await this.scientificResearchUserService.getByUserId(user);
+      const scientificResearchUser = await this.scientificResearchUserService.getByUserIdAndSRGroupId(userId, SRGroup);
       return res.status(200).json({ message: 'success', data: scientificResearchUser });
     } catch (error) {
       const err = error as Error;

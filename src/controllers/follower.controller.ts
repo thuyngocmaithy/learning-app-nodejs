@@ -40,15 +40,22 @@ export class FollowerController {
     }
   };
 
-  public getFollowersByIdsAndSRGroupId = async (req: Request, res: Response) => {
+  public getFollowersByUserIdAndSRGroupId = async (req: Request, res: Response) => {
     try {
-      const user = await this.userService.getById(req.query.userId as string);
-      const SRGroup = await this.scientificResearchGroupService.getById(req.query.srgroupId as string);
+      let user = null;
+      let SRGroup = null;
+
+      if (req.query.userId) {
+        user = await this.userService.getById(req.query.userId as string);
+      }
+      if (req.query.srgroupId) {
+        SRGroup = await this.scientificResearchGroupService.getById(req.query.srgroupId as string);
+      }
 
       let followerDetail = null;
       let followers = null;
 
-      if (user && SRGroup) {
+      if (user) {
         // Lấy danh sách FollowerDetail dựa trên userId
         followerDetail = await this.followerDetailService.getDetailsByUser(user);
 
@@ -57,7 +64,7 @@ export class FollowerController {
           const followerIds = followerDetail.map(detail => detail.follower.id);
 
           // Lấy danh sách follower theo danh sách followerIds
-          followers = await this.followerService.getFollowersByIdsAndSRGroupId(followerIds, SRGroup);
+          followers = await this.followerService.getFollowersByUserIdAndSRGroupId(followerIds, SRGroup);
         }
       }
 

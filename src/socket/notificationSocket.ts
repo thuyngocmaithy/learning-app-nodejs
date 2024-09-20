@@ -31,9 +31,12 @@ export const setupNotificationSocket = (io: Server) => {
         socket.on('deleteNotification', async ({ room, deleteNotification }: { room: string; deleteNotification: Notification }) => {
             try {
                 const notiFind = await notificationService.getWhere({ toUser: deleteNotification.toUser, createUser: deleteNotification.createUser, content: deleteNotification.content });
-                await notificationService.delete(notiFind[0].id);
-                notificationIo.to(room).emit('notificationDeleted', notiFind[0].id);
-                console.log(`Thông báo ${notiFind[0].id} đã bị xóa`);
+                if (notiFind) {
+                    await notificationService.delete(notiFind[0].id);
+                    notificationIo.to(room).emit('notificationDeleted', notiFind[0].id);
+                    console.log(`Thông báo ${notiFind[0].id} đã bị xóa`);
+                }
+
             } catch (error) {
                 console.error('Lỗi khi xóa thông báo:', error);
             }

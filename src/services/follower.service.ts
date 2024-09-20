@@ -46,13 +46,15 @@ export class FollowerService {
     return this.followerRepository.findOne(options);
   }
 
-  public getFollowersByIdsAndSRGroupId = async (followerIds: string[], SRGroup: ScientificResearchGroup): Promise<Follower[] | null> => {
+  public getFollowersByUserIdAndSRGroupId = async (followerIds: string[], SRGroup: ScientificResearchGroup | null): Promise<Follower[] | null> => {
     const options: FindManyOptions<Follower> = {
       where: {
         id: In(followerIds),
-        scientificResearch: {
-          scientificResearchGroup: { scientificResearchGroupId: SRGroup.scientificResearchGroupId }
-        }
+        ...(SRGroup && {
+          scientificResearch: {
+            scientificResearchGroup: { scientificResearchGroupId: SRGroup.scientificResearchGroupId }
+          }
+        })
       },
       relations: ['scientificResearch', 'followerDetails', 'scientificResearch.status']
     };
