@@ -34,6 +34,13 @@ export class SguAuthService {
       // Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
       let account = await this.accountService.getByUsername(username);
       let user = await this.userService.getByUserId(username);
+
+
+
+      if (!account) {
+        throw new Error("Tài khoản không tồn tại.");
+      }
+
       // if (!account) {
       //   // Nếu tài khoản không tồn tại, đăng nhập qua SGU
       //   const loginData = await this.performSguLogin(username, password);
@@ -55,76 +62,85 @@ export class SguAuthService {
         console.log("tài khoản đã tồn tại\n");
         // Tài khoản đã tồn tại, xóa access_token cũ và cập nhật token mới
 
-        let updatedTokens;
-        switch (account.permission.permissionId) {
-          case "ADMIN":
-            updatedTokens = {
-              access_token: jwt.sign(
-                { id: account.id, role: 'ADMIN' },
-                'TokenADMIN',
-                { expiresIn: '2h' }
-              ),
-              refresh_token: account.refreshToken,
-              roles: 'ADMIN',
-            };
-            break;
+        // Kiểm tra mật khẩu
+        const isPasswordValid = await bcrypt.compare(password, account.password);
+        if (!isPasswordValid) {
+          throw new Error("Mật khẩu không đúng.");
+        }
+        else {
+          let updatedTokens;
+          switch (account.permission.permissionId) {
+            case "ADMIN":
+              updatedTokens = {
+                access_token: jwt.sign(
+                  { id: account.id, role: 'ADMIN' },
+                  'TokenADMIN',
+                  { expiresIn: '2h' }
+                ),
+                refresh_token: account.refreshToken,
+                roles: 'ADMIN',
+              };
+              break;
 
-          case "SINHVIEN":
-            updatedTokens = {
-              access_token: jwt.sign(
-                { id: account.id, role: 'SINHVIEN' },
-                'TokenSINHVIEN',
-                { expiresIn: '2h' }
-              ),
-              refresh_token: account.refreshToken,
-              roles: 'SINHVIEN',
-            };
-            break;
+            case "SINHVIEN":
+              updatedTokens = {
+                access_token: jwt.sign(
+                  { id: account.id, role: 'SINHVIEN' },
+                  'TokenSINHVIEN',
+                  { expiresIn: '2h' }
+                ),
+                refresh_token: account.refreshToken,
+                roles: 'SINHVIEN',
+              };
+              break;
 
-          case "GIANGVIEN":
-            updatedTokens = {
-              access_token: jwt.sign(
-                { id: account.id, role: 'GIANGVIEN' },
-                'TokenGIANGVIEN',
-                { expiresIn: '2h' }
-              ),
-              refresh_token: account.refreshToken,
-              roles: 'GIANGVIEN',
-            };
-            break;
+            case "GIANGVIEN":
+              updatedTokens = {
+                access_token: jwt.sign(
+                  { id: account.id, role: 'GIANGVIEN' },
+                  'TokenGIANGVIEN',
+                  { expiresIn: '2h' }
+                ),
+                refresh_token: account.refreshToken,
+                roles: 'GIANGVIEN',
+              };
+              break;
 
-          default:
-            throw new Error("Invalid permissionId");
+            default:
+              throw new Error("Invalid permissionId");
+          }
+
+          // else {
+          //   // Đăng nhập và lấy token mới từ SGU
+          //   account.access_token = ''; // Xóa access_token cũ
+          //   account.refreshToken = '';
+          //   console.log('token của account :', account.access_token);
+          //   console.log("đăng nhập tài khoản mới : \n", account);
+
+          //   updatedTokens = await this.refreshSguTokens(username, password);
+
+          // // Cập nhật access_token và refreshToken
+          // account.access_token = updatedTokens.access_token;
+          // account.refreshToken = updatedTokens.refresh_token;
+          // account.permission.permissionId = updatedTokens.roles;
+
+          // console.log('token của mới account :', account.access_token);
+          // }
+
+
+
+          // await this.saveScoresForUserFromSgu(account.username, account.access_token);
+
+
+          // Lưu lại thay đổi
+          await this.accountService.update(account.id, account);
+
+          // Lấy thông tin người dùng từ cơ sở dữ liệu và trả về phản hồi
+          user = await this.userService.getByUserId(account.username);
+          return this.generateAuthResponse(updatedTokens, user as User);
         }
 
-        // else {
-        //   // Đăng nhập và lấy token mới từ SGU
-        //   account.access_token = ''; // Xóa access_token cũ
-        //   account.refreshToken = '';
-        //   console.log('token của account :', account.access_token);
-        //   console.log("đăng nhập tài khoản mới : \n", account);
 
-        //   updatedTokens = await this.refreshSguTokens(username, password);
-
-        // // Cập nhật access_token và refreshToken
-        // account.access_token = updatedTokens.access_token;
-        // account.refreshToken = updatedTokens.refresh_token;
-        // account.permission.permissionId = updatedTokens.roles;
-
-        // console.log('token của mới account :', account.access_token);
-        // }
-
-
-
-        // await this.saveScoresForUserFromSgu(account.username, account.access_token);
-
-
-        // Lưu lại thay đổi
-        await this.accountService.update(account.id, account);
-
-        // Lấy thông tin người dùng từ cơ sở dữ liệu và trả về phản hồi
-        user = await this.userService.getByUserId(account.username);
-        return this.generateAuthResponse(updatedTokens, user as User);
       }
     } catch (error) {
       this.handleError(error);
