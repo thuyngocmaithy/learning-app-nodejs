@@ -43,7 +43,7 @@ export class UserRegisterSubjectService {
     }
 
     const semester = await this.semesterRepository.findOne({
-      where: { id: semesterId },
+      where: { semesterId: semesterId },
     });
     if (!semester) {
       throw new Error(`Semester with ID ${semesterId} not found`);

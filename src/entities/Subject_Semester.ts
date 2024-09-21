@@ -13,6 +13,6 @@ export class Subject_Semester {
     @JoinColumn({ name: 'subjectId' })
     subject: Subject;
 
-    @ManyToOne(() => Semester, semester => semester.id, { nullable: false })
+    @ManyToOne(() => Semester, semester => semester.semesterId, { nullable: true })
     semester: Semester;
 }

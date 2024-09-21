@@ -30,7 +30,7 @@ export class Score {
     /**
    * Học kỳ (tham chiếu đến thực thể Semester, không rỗng)
    */
-    @ManyToOne(() => Semester, data => data.id, { nullable: false })
+    @ManyToOne(() => Semester, data => data.semesterId, { nullable: true })
     @JoinColumn({ name: 'semesterId' })  // Add this relation
     semester: Semester;
 
