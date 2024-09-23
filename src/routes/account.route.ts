@@ -11,6 +11,6 @@ accountRouter.get('/:id', accountController.getAccountById);
 accountRouter.get('/username/:username', accountController.getAccountByUsername);
 accountRouter.post('/', accountController.createAccount);
 accountRouter.put('/:id', accountController.updateAccount);
-accountRouter.delete('/:id', accountController.deleteAccount);
+accountRouter.delete('/', accountController.deleteAccount);
 
 export default accountRouter;

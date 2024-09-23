@@ -10,6 +10,6 @@ import { AppDataSource } from '../data-source';
     statusRouter.get('/:id', statusController.getStatusById);
     statusRouter.post('/', statusController.createStatus);
     statusRouter.put('/:id', statusController.updateStatus);
-    statusRouter.delete('/:id', statusController.deleteStatus);
+    statusRouter.delete('/', statusController.deleteStatus);
 
     export default statusRouter;

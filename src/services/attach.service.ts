@@ -1,4 +1,4 @@
-import { Repository, DataSource, FindOneOptions } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
 import { Attach } from '../entities/Attach';
 
 export class AttachService {
@@ -28,8 +28,8 @@ export class AttachService {
     return await this.attachRepository.findOne(options);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.attachRepository.delete(id);
+  async delete(ids: string[]): Promise<boolean> {
+    const result = await this.attachRepository.delete({ id: In(ids) });
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
 }

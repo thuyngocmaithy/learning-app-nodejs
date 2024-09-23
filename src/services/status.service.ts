@@ -1,5 +1,5 @@
 // status.service.ts
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Status } from '../entities/Status';
 
 export class StatusService {
@@ -31,8 +31,8 @@ export class StatusService {
     return this.statusRepository.save(status);
   }
 
-  async delete(statusId: string): Promise<boolean> {
-    const result = await this.statusRepository.delete({ statusId });
+  async delete(statusIds: string[]): Promise<boolean> {
+    const result = await this.statusRepository.delete({ statusId: In(statusIds) });
     return result.affected !== 0;
   }
 

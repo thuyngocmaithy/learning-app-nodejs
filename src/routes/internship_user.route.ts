@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { Internship_UserController } from '../controllers/internship_faculty.controller';
+import { Internship_UserController } from '../controllers/internship_user.controller';
 import { AppDataSource } from '../data-source';
 
 
@@ -10,6 +10,6 @@ internshipUserRouter.get('/', internshipUserController.getAllInternshipUser);
 internshipUserRouter.get('/:id', internshipUserController.getInternshipUserById);
 internshipUserRouter.post('/', internshipUserController.createInternshipUser);
 internshipUserRouter.put('/:id', internshipUserController.updateInternshipUser);
-internshipUserRouter.delete('/:id', internshipUserController.deleteInternshipUser);
+internshipUserRouter.delete('/', internshipUserController.deleteInternshipUser);
 
 export default internshipUserRouter;

@@ -1,5 +1,5 @@
 // scientificResearchGroup.service.ts
-import { DataSource, Repository, FindOneOptions, Like, CreateDateColumn } from 'typeorm';
+import { DataSource, Repository, FindOneOptions, Like, CreateDateColumn, In } from 'typeorm';
 import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 import { Faculty } from '../entities/Faculty';
 import { User } from '../entities/User';
@@ -62,8 +62,8 @@ export class ScientificResearchGroupService {
     return this.scientificResearchGroupRepository.save(scientificResearchGroup);
   }
 
-  async delete(scientificResearchGroupId: string): Promise<boolean> {
-    const result = await this.scientificResearchGroupRepository.delete({ scientificResearchGroupId });
+  async delete(scientificResearchGroupIds: string[]): Promise<boolean> {
+    const result = await this.scientificResearchGroupRepository.delete({ scientificResearchGroupId: In(scientificResearchGroupIds) });
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
 

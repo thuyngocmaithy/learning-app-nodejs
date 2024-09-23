@@ -77,24 +77,10 @@ export class RequestHandler {
     }
   }
 
-  static async delete(req: Request, res: Response, service: { delete: (id: string) => Promise<boolean> }) {
-    try {
-      const id = req.params.id;
-      const result = await service.delete(id);
-      if (result) {
-        return RequestHandler.sendResponse(res, StatusCodes.OK, "success", null, "Entity deleted");
-      }
-      return RequestHandler.sendResponse(res, StatusCodes.NOT_FOUND, "error", null, "Entity not found");
-    } catch (error) {
-      console.error("Delete Error:", error);
-      return RequestHandler.sendResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, "error", null, (error as Error).message);
-    }
-  }
-
-  static async deleteMany(req: Request, res: Response, service: { deleteMany: (ids: string[]) => Promise<boolean> }) {
+  static async delete(req: Request, res: Response, service: { delete: (ids: string[]) => Promise<boolean> }) {
     try {
       const ids = (req.query.ids as String).split(',');
-      const result = await service.deleteMany(ids);
+      const result = await service.delete(ids);
       if (result) {
         return RequestHandler.sendResponse(res, StatusCodes.OK, "success", null, "Entity deleted");
       }

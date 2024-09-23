@@ -1,5 +1,5 @@
 // account.service.ts
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Account } from '../entities/Account';
 import * as bcrypt from 'bcrypt';
 import { Permission } from '../entities/Permission';
@@ -40,8 +40,8 @@ export class AccountService {
     return this.accountRepository.save(account);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.accountRepository.delete({ id });
+  async delete(ids: string[]): Promise<boolean> {
+    const result = await this.accountRepository.delete({ id: In(ids) });
     return result.affected !== 0;
   }
 

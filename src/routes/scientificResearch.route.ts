@@ -13,7 +13,7 @@ scientificResearchRouter.get('/getWhere', scientificResearchController.getPermis
 scientificResearchRouter.get('/:id', scientificResearchController.getScientificResearchById);
 scientificResearchRouter.post('/', scientificResearchController.createScientificResearch);
 scientificResearchRouter.put('/:id', scientificResearchController.updateScientificResearch);
-scientificResearchRouter.delete('/:id', scientificResearchController.deleteScientificResearch);
+scientificResearchRouter.delete('/', scientificResearchController.deleteScientificResearch);
 
 export default scientificResearchRouter;
 

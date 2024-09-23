@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Follower, FollowerDetail } from '../entities/Follower';
 import { DataSource } from 'typeorm';
 import { User } from '../entities/User';
@@ -30,8 +30,8 @@ export class FollowerDetailService {
     return this.followerDetailRepository.save(followerDetail);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.followerDetailRepository.delete({ id });
+  async delete(ids: string[]): Promise<boolean> {
+    const result = await this.followerDetailRepository.delete({ id: In(ids) });
     return result.affected !== 0;
   }
   public findByUserAndFollower = async (user: User, follower: Follower): Promise<FollowerDetail | null> => {

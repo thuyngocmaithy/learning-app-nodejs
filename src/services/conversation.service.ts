@@ -1,4 +1,4 @@
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Conversation } from '../entities/Conversation';
 
 export class ConversationService {
@@ -30,8 +30,8 @@ export class ConversationService {
     return this.conversationRepository.save(conversation);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.conversationRepository.delete({ id });
+  async delete(ids: string[]): Promise<boolean> {
+    const result = await this.conversationRepository.delete({ id: In(ids) });
     return result.affected !== 0;
   }
 }

@@ -32,7 +32,7 @@ export const setupNotificationSocket = (io: Server) => {
             try {
                 const notiFind = await notificationService.getWhere({ toUser: deleteNotification.toUser, createUser: deleteNotification.createUser, content: deleteNotification.content });
                 if (notiFind) {
-                    await notificationService.delete(notiFind[0].id);
+                    await notificationService.delete([notiFind[0].id]);
                     notificationIo.to(room).emit('notificationDeleted', notiFind[0].id);
                     console.log(`Thông báo ${notiFind[0].id} đã bị xóa`);
                 }

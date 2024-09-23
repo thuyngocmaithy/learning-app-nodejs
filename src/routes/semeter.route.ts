@@ -9,6 +9,6 @@ semesterRouter.get('/', semesterController.getAllSemesters);
 semesterRouter.get('/:id', semesterController.getSemesterById);
 semesterRouter.post('/', semesterController.createSemester);
 semesterRouter.put('/:id', semesterController.updateSemester);
-semesterRouter.delete('/:id', semesterController.deleteSemester);
+semesterRouter.delete('/', semesterController.deleteSemester);
 
 export default semesterRouter;

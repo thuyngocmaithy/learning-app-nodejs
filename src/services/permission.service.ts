@@ -1,4 +1,4 @@
-import { Repository, DataSource, FindOneOptions, Like } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, Like, In } from 'typeorm';
 import { Permission } from '../entities/Permission';
 
 export class PermissionService {
@@ -28,8 +28,8 @@ export class PermissionService {
     return this.permissionRepository.findOne(options);
   }
 
-  public delete = async (id: string): Promise<boolean> => {
-    const result = await this.permissionRepository.delete(id);
+  public delete = async (ids: string[]): Promise<boolean> => {
+    const result = await this.permissionRepository.delete({permissionId: In(ids)});
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
 }

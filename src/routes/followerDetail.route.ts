@@ -11,7 +11,7 @@ import { AppDataSource } from '../data-source';
   followerDetailRouter.get('/:id', followerDetailController.getFollowerDetailById);
   followerDetailRouter.post('/', followerDetailController.createFollowerDetail);
   followerDetailRouter.put('/:id', followerDetailController.updateFollowerDetail);
-  followerDetailRouter.delete('/:id', followerDetailController.deleteFollowerDetail);
+  followerDetailRouter.delete('/', followerDetailController.deleteFollowerDetail);
 
   export default followerDetailRouter;
 

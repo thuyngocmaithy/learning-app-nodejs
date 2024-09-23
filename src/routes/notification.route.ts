@@ -11,6 +11,6 @@ notificationRouter.get('/getByUserId', notificationController.getNotificationByU
 notificationRouter.get('/:id', notificationController.getNotificationById);
 notificationRouter.post('/', notificationController.createNotification);
 notificationRouter.put('/:id', notificationController.updateNotification);
-notificationRouter.delete('/:id', notificationController.deleteNotification);
+notificationRouter.delete('/', notificationController.deleteNotification);
 
 export default notificationRouter;

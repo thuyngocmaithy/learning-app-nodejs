@@ -18,7 +18,6 @@ export class FeatureController {
   public createFeature = (req: Request, res: Response) => RequestHandler.create<Feature>(req, res, this.featureService);
   public updateFeature = (req: Request, res: Response) => RequestHandler.update<Feature>(req, res, this.featureService);
   public deleteFeature = (req: Request, res: Response) => RequestHandler.delete(req, res, this.featureService);
-  public deleteFeatures = (req: Request, res: Response) => RequestHandler.deleteMany(req, res, this.featureService);
   public saveTreeDataController = (req: Request, res: Response) => {
     const treeData = req.body;
     try {

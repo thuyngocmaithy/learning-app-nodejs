@@ -10,6 +10,6 @@ import { AppDataSource } from '../data-source';
   componentScoreRouter.get('/:id', componentScoreController.getComponentScoreById);
   componentScoreRouter.post('/', componentScoreController.createComponentScore);
   componentScoreRouter.put('/:id', componentScoreController.updateComponentScore);
-  componentScoreRouter.delete('/:id', componentScoreController.deleteComponentScore);
+  componentScoreRouter.delete('/', componentScoreController.deleteComponentScore);
 
   export default componentScoreRouter;

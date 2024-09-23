@@ -11,6 +11,6 @@ import { AppDataSource } from '../data-source';
     academicYearRouter.get('/:id', academicYearController.getAcademicYearById);
     academicYearRouter.post('/', academicYearController.createAcademicYear);
     academicYearRouter.put('/:id', academicYearController.updateAcademicYear);
-    academicYearRouter.delete('/:id', academicYearController.deleteAcademicYear);
+    academicYearRouter.delete('/', academicYearController.deleteAcademicYear);
 
     export default academicYearRouter;

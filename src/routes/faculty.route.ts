@@ -11,7 +11,7 @@ facultyRouter.get('/', facultyController.getAllFaculties);
 facultyRouter.get('/:id', facultyController.getFacultyByFacultyId);
 facultyRouter.post('/', facultyController.createFaculty);
 facultyRouter.put('/:id', facultyController.updateFaculty);
-facultyRouter.delete('/:id', facultyController.deleteFaculty);
+facultyRouter.delete('/', facultyController.deleteFaculty);
 
 
 export default facultyRouter;

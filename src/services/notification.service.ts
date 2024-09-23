@@ -1,4 +1,4 @@
-import { Repository, DataSource, FindOneOptions } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
 import { Notification } from '../entities/Notification';
 import { User } from '../entities/User';
 import { UserService } from './User.service';
@@ -40,10 +40,11 @@ export class NotificationService {
     return this.notificationRepository.findOne(options);
   }
 
-  public delete = async (id: string): Promise<boolean> => {
-    const result = await this.notificationRepository.delete(id);
+  async delete(ids: string[]): Promise<boolean> {
+    const result = await this.notificationRepository.delete({ id: In(ids) });
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
+
 
   async getWhere(condition: Partial<Notification>): Promise<Notification[]> {
     const whereCondition: any = {};

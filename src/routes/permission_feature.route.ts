@@ -11,6 +11,6 @@ permissionFeatureRouter.get('/getPermisisonFeatureWhere', permissionFeatureContr
 permissionFeatureRouter.get('/:id', permissionFeatureController.getPermissionFeatureById);
 permissionFeatureRouter.post('/', permissionFeatureController.createPermissionFeature);
 permissionFeatureRouter.put('/:id', permissionFeatureController.updatePermissionFeature);
-permissionFeatureRouter.delete('/:id', permissionFeatureController.deletePermissionFeature);
+permissionFeatureRouter.delete('/', permissionFeatureController.deletePermissionFeature);
 
 export default permissionFeatureRouter;

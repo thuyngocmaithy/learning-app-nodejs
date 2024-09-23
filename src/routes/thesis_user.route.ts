@@ -10,6 +10,6 @@ thesisUserRouter.get('/', thesis_UserController.getAllThesisUser);
 thesisUserRouter.get('/:id', thesis_UserController.getThesisUserById);
 thesisUserRouter.post('/', thesis_UserController.createThesisUser);
 thesisUserRouter.put('/:id', thesis_UserController.updateThesisUser);
-thesisUserRouter.delete('/:id', thesis_UserController.deleteThesisUser);
+thesisUserRouter.delete('/', thesis_UserController.deleteThesisUser);
 
 export default thesisUserRouter;

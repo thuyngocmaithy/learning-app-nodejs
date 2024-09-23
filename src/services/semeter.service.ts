@@ -1,5 +1,5 @@
 
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Semester } from '../entities/Semester';
 
 export class SemesterService {
@@ -31,8 +31,8 @@ export class SemesterService {
     return this.semesterRepository.save(semester);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.semesterRepository.delete({ id });
+  async delete(ids: string[]): Promise<boolean> {
+    const result = await this.semesterRepository.delete({ id: In(ids) });
     return result.affected !== 0;
   }
 }

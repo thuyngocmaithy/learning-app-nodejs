@@ -11,7 +11,7 @@ scientificResearchGroupRoute.get('/', scientificResearchGroupController.getAllSc
 scientificResearchGroupRoute.get('/:id', scientificResearchGroupController.getScientificResearchGroupById);
 scientificResearchGroupRoute.post('/', scientificResearchGroupController.createScientificResearchGroup);
 scientificResearchGroupRoute.put('/:id', scientificResearchGroupController.updateScientificResearchGroup);
-scientificResearchGroupRoute.delete('/:id', scientificResearchGroupController.deleteScientificResearchGroup);
+scientificResearchGroupRoute.delete('/', scientificResearchGroupController.deleteScientificResearchGroup);
 
 export default scientificResearchGroupRoute;
 

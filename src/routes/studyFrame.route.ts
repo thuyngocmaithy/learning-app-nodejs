@@ -10,7 +10,7 @@ import { AppDataSource } from '../data-source';
     studyFrameRouter.get('/:id', studyFrameController.getStudyFrameById);
     studyFrameRouter.post('/', studyFrameController.createStudyFrame);
     studyFrameRouter.put('/:id', studyFrameController.updateStudyFrame);
-    studyFrameRouter.delete('/:id', studyFrameController.deleteStudyFrame);
+    studyFrameRouter.delete('/', studyFrameController.deleteStudyFrame);
 
     export default studyFrameRouter;
 

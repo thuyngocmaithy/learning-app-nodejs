@@ -1,4 +1,4 @@
-import { DataSource, Repository, FindOneOptions, Like, CreateDateColumn } from 'typeorm';
+import { DataSource, Repository, FindOneOptions, Like, CreateDateColumn, In } from 'typeorm';
 import { Thesis } from '../entities/Thesis';
 import { Faculty } from '../entities/Faculty';
 import { User } from '../entities/User';
@@ -135,8 +135,8 @@ export class ThesisService {
   }
 
 
-  public delete = async (id: string): Promise<boolean> => {
-    const result = await this.thesisRepository.delete(id);
+  public delete = async (ids: string[]): Promise<boolean> => {
+    const result = await this.thesisRepository.delete({id: In(ids)});
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
 }

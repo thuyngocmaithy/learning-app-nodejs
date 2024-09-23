@@ -1,5 +1,5 @@
 // studyFrame.service.ts
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { StudyFrame } from '../entities/StudyFrame';
 
 export class StudyFrameService {
@@ -33,8 +33,8 @@ export class StudyFrameService {
     return this.studyFrameRepository.save(studyFrame);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.studyFrameRepository.delete({ id });
+  async delete(ids: string[]): Promise<boolean> {
+    const result = await this.studyFrameRepository.delete({ id: In(ids) });
     return result.affected !== 0;
   }
 }

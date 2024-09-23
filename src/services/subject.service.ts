@@ -1,5 +1,5 @@
 // src/services/subject.service.ts
-import { Repository, DataSource, FindOneOptions } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
 import { Subject } from '../entities/Subject';
 
 export class SubjectService {
@@ -32,8 +32,8 @@ export class SubjectService {
     return this.subjectRepository.save(subject);
   }
 
-  async delete(subjectId: string): Promise<boolean> {
-    const result = await this.subjectRepository.delete({ subjectId });
+  async delete(subjectIds: string[]): Promise<boolean> {
+    const result = await this.subjectRepository.delete({ subjectId : In(subjectIds)});
     return result.affected !== 0;
   }
 

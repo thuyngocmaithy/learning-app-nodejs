@@ -13,8 +13,7 @@ featureRouter.get('/getFeatureWhereParentAndKeyRoute', featureController.getFeat
 featureRouter.get('/:id', featureController.getFeatureById);
 featureRouter.post('/', featureController.createFeature);
 featureRouter.put('/:id', featureController.updateFeature);
-featureRouter.delete('/:id', featureController.deleteFeature);
-featureRouter.delete('/', featureController.deleteFeatures);
+featureRouter.delete('/', featureController.deleteFeature);
 
 
 export default featureRouter;

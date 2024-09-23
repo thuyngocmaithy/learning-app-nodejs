@@ -14,6 +14,6 @@ userRouter.get('/:userId', userController.getUserByUserId); // Sửa lại route
 
 userRouter.post('/', userController.createUser);
 userRouter.put('/:id', userController.updateUser);
-userRouter.delete('/:id', userController.deleteUser);
+userRouter.delete('/', userController.deleteUser);
 
 export default userRouter;

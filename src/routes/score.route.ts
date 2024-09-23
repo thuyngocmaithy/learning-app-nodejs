@@ -12,6 +12,6 @@ scoreRouter.get('/student/:studentId/semester/:semesterId', scoreController.getS
 scoreRouter.get('/student/:studentId/subject/:subjectId', scoreController.getScoreByStudentIdAndSubjectId);
 scoreRouter.post('/', scoreController.createScore);
 scoreRouter.put('/:id', scoreController.updateScore);
-scoreRouter.delete('/:id', scoreController.deleteScore);
+scoreRouter.delete('/', scoreController.deleteScore);
 
 export default scoreRouter;

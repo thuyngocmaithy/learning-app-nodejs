@@ -11,6 +11,6 @@ conversationRouter.get('/', conversationController.getAllConversations);
 conversationRouter.get('/:id', conversationController.getConversationById);
 conversationRouter.post('/', conversationController.createConversation);
 conversationRouter.put('/:id', conversationController.updateConversation);
-conversationRouter.delete('/:id', conversationController.deleteConversation);
+conversationRouter.delete('/', conversationController.deleteConversation);
 
 export default conversationRouter;

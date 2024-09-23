@@ -1,4 +1,4 @@
-import { Repository, DataSource, FindOneOptions } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
 import { Thesis_User } from '../entities/Thesis_User';
 
 export class Thesis_UserService {
@@ -36,8 +36,8 @@ export class Thesis_UserService {
     return this.thesisFacultyRepository.findOne(options);
   }
 
-  public delete = async (id: string): Promise<boolean> => {
-    const result = await this.thesisFacultyRepository.delete(id);
+  public delete = async (ids: string[]): Promise<boolean> => {
+    const result = await this.thesisFacultyRepository.delete({id:In(ids)});
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
 }

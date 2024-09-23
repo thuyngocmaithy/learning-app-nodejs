@@ -40,8 +40,8 @@ export class FollowerService {
     return this.followerRepository.save(follower);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.followerRepository.delete({ id });
+  async delete(ids: string[]): Promise<boolean> {
+    const result = await this.followerRepository.delete({ id : In(ids)});
     return result.affected !== 0;
   }
 

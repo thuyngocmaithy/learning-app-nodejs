@@ -11,7 +11,7 @@ subjectRouter.get('/listSubjectToFrame', subjectController.callKhungCTDT);
 subjectRouter.get('/:id', subjectController.getSubjectById);
 subjectRouter.post('/', subjectController.createSubject);
 subjectRouter.put('/:id', subjectController.updateSubject);
-subjectRouter.delete('/:id', subjectController.deleteSubject);
+subjectRouter.delete('/', subjectController.deleteSubject);
 
 
 

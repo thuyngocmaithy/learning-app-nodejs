@@ -10,6 +10,6 @@ permissionRouter.get('/', permissionController.getAllPermissions);
 permissionRouter.get('/:id', permissionController.getPermissionByPermissionId);
 permissionRouter.post('/', permissionController.createPermission);
 permissionRouter.put('/:id', permissionController.updatePermission);
-permissionRouter.delete('/:id', permissionController.deletePermission);
+permissionRouter.delete('/', permissionController.deletePermission);
 
 export default permissionRouter;

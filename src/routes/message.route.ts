@@ -10,6 +10,6 @@ messageRouter.get('/', messageController.getAllMessages);
 messageRouter.get('/:id', messageController.getMessageById);
 messageRouter.post('/', messageController.createMessage);
 messageRouter.put('/:id', messageController.updateMessage);
-messageRouter.delete('/:id', messageController.deleteMessage);
+messageRouter.delete('/', messageController.deleteMessage);
 
 export default messageRouter;

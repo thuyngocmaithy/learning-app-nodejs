@@ -11,6 +11,6 @@ import { AppDataSource } from '../data-source';
     thesisRouter.get('/:id', thesisController.getThesisById);
     thesisRouter.post('/', thesisController.createThesis);
     thesisRouter.put('/:id', thesisController.updateThesis);
-    thesisRouter.delete('/:id', thesisController.deleteThesis);
+    thesisRouter.delete('/', thesisController.deleteThesis);
 
     export default thesisRouter;

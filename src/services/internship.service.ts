@@ -1,5 +1,5 @@
 // internship.service.ts
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Internship } from '../entities/Internship';
 
 export class InternshipService {
@@ -31,8 +31,8 @@ export class InternshipService {
     return this.internshipRepository.save(internship);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.internshipRepository.delete({ id });
+  async delete(ids: string[]): Promise<boolean> {
+    const result = await this.internshipRepository.delete({ id: In(ids) });
     return result.affected !== 0;
   }
 }

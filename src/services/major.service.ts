@@ -1,5 +1,5 @@
 // major.service.ts
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Major } from '../entities/Major';
 
 export class MajorService {
@@ -31,8 +31,8 @@ export class MajorService {
     return this.majorRepository.save(major);
   }
 
-  async delete(majorId: string): Promise<boolean> {
-    const result = await this.majorRepository.delete({ majorId });
+  async delete(majorIds: string[]): Promise<boolean> {
+    const result = await this.majorRepository.delete({ majorId: In(majorIds) });
     return result.affected !== 0;
   }
 }

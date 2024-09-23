@@ -1,4 +1,4 @@
-import { Repository, DataSource, FindOneOptions } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
 import { ComponentScore } from '../entities/Score';
 
 export class ComponentScoreService {
@@ -36,8 +36,8 @@ export class ComponentScoreService {
     return this.componentScoreRepository.findOne(options);
   }
 
-  public delete = async (id: string): Promise<boolean> => {
-    const result = await this.componentScoreRepository.delete(id);
+  public delete = async (ids: string[]): Promise<boolean> => {
+    const result = await this.componentScoreRepository.delete({ id: In(ids) });
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
 }

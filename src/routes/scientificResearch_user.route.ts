@@ -13,6 +13,6 @@ scientificResearchUserRouter.get('/:id', scientificResearchUserController.getSci
 scientificResearchUserRouter.post('/', scientificResearchUserController.createScientificResearchUser);
 scientificResearchUserRouter.put('/:id', scientificResearchUserController.updateScientificResearchUser);
 scientificResearchUserRouter.delete('/deleteByUserAndScientificResearch', scientificResearchUserController.deleteByUserAndScientificResearch);
-scientificResearchUserRouter.delete('/:id', scientificResearchUserController.deleteScientificResearchUser);
+scientificResearchUserRouter.delete('/', scientificResearchUserController.deleteScientificResearchUser);
 
 export default scientificResearchUserRouter;

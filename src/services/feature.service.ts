@@ -70,21 +70,7 @@ export class FeatureService {
 
   private readonly restrictedIds = ['FT012', 'FT013']; // Danh sách ID không được phép xóa
 
-  async delete(featureId: string): Promise<boolean> {
-    let result: DeleteResult = {
-      affected: 0,
-      raw: undefined
-    };
-
-    // Kiểm tra xem featureId có nằm trong danh sách các ID không được phép xóa không
-    if (!this.restrictedIds.includes(featureId)) {
-      // Nếu không nằm trong danh sách ID bị cấm, thực hiện xóa
-      result = await this.featureRepository.delete({ featureId });
-    }
-    return result.affected !== 0;
-  }
-
-  async deleteMany(featureIds: string[]): Promise<boolean> {
+  async delete(featureIds: string[]): Promise<boolean> {
     let result: DeleteResult = {
       affected: 0,
       raw: undefined

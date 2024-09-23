@@ -1,4 +1,4 @@
-import { Repository, DataSource, FindOneOptions, Int32, FindManyOptions } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, Int32, FindManyOptions, In } from 'typeorm';
 import { ScientificResearch_User } from '../entities/ScientificResearch_User'
 import { User } from '../entities/User';
 import { ScientificResearch } from '../entities/ScientificResearch';
@@ -108,8 +108,8 @@ export class ScientificResearch_UserService {
   }
 
 
-  public delete = async (id: string): Promise<boolean> => {
-    const result = await this.scientificResearchUserRepository.delete(id);
+  public delete = async (ids: string[]): Promise<boolean> => {
+    const result = await this.scientificResearchUserRepository.delete({id: In(ids)});
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
 

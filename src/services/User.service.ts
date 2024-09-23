@@ -1,5 +1,5 @@
 // user.service.ts
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { User } from '../entities/User';
 
 export class UserService {
@@ -59,8 +59,8 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.userRepository.delete({ userId: id });
+  async delete(ids: string[]): Promise<boolean> {
+    const result = await this.userRepository.delete({ userId: In(ids) });
     return result.affected !== 0;
   }
 

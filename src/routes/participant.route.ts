@@ -10,6 +10,6 @@ participantRouter.get('/', participantController.getAllParticipants);
 participantRouter.get('/:id', participantController.getParticipantById);
 participantRouter.post('/', participantController.createParticipant);
 participantRouter.put('/:id', participantController.updateParticipant);
-participantRouter.delete('/:id', participantController.deleteParticipant);
+participantRouter.delete('/', participantController.deleteParticipant);
 
 export default participantRouter;

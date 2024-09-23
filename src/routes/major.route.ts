@@ -11,6 +11,6 @@ import { AppDataSource } from '../data-source';
     majorRouter.get('/:id', majorController.getMajorById);
     majorRouter.post('/', majorController.createMajor);
     majorRouter.put('/:id', majorController.updateMajor);
-    majorRouter.delete('/:id', majorController.deleteMajor);
+    majorRouter.delete('/', majorController.deleteMajor);
 
     export default majorRouter;

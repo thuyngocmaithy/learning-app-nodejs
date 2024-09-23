@@ -11,7 +11,7 @@ import { AppDataSource } from '../data-source';
     internshipRouter.get('/:id', internshipController.getInternshipById);
     internshipRouter.post('/', internshipController.createInternship);
     internshipRouter.put('/:id', internshipController.updateInternship);
-    internshipRouter.delete('/:id', internshipController.deleteInternship);
+    internshipRouter.delete('/', internshipController.deleteInternship);
 
     export default internshipRouter;
 

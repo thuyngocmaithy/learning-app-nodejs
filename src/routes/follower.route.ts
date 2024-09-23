@@ -13,7 +13,7 @@ followerRouter.get('/getFollowersByUserIdAndSRGroupId', followerController.getFo
 followerRouter.get('/:id', followerController.getFollowerById);
 followerRouter.post('/', followerController.createFollower);
 followerRouter.put('/:id', followerController.updateFollower);
-followerRouter.delete('/:id', followerController.deleteFollower);
+followerRouter.delete('/', followerController.deleteFollower);
 
 export default followerRouter;
 

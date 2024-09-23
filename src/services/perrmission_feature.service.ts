@@ -1,4 +1,4 @@
-import { Repository, DataSource, FindOneOptions } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
 import { PermissionFeature } from '../entities/Permission_Feature';
 import { Permission } from '../entities/Permission';
 import { Feature } from '../entities/Feature';
@@ -56,8 +56,8 @@ export class PermissionFeatureService {
     return this.permissionFeatureRepository.findOne(options);
   }
 
-  public delete = async (id: string): Promise<boolean> => {
-    const result = await this.permissionFeatureRepository.delete(id);
+  public delete = async (ids: string[]): Promise<boolean> => {
+    const result = await this.permissionFeatureRepository.delete({id: In(ids)});
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
 
