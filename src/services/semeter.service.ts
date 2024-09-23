@@ -18,12 +18,12 @@ export class SemesterService {
     return this.semesterRepository.find({ relations: ['academicYear'] });
   }
 
-  async getById(id: string): Promise<Semester | null> {
-    return this.semesterRepository.findOne({ where: { id }, relations: ['academicYear'] });
+  async getById(semesterId: string): Promise<Semester | null> {
+    return this.semesterRepository.findOne({ where: { semesterId }, relations: ['academicYear'] });
   }
 
-  async update(id: string, data: Partial<Semester>): Promise<Semester | null> {
-    const semester = await this.semesterRepository.findOne({ where: { id }, relations: ['academicYear'] });
+  async update(semesterId: string, data: Partial<Semester>): Promise<Semester | null> {
+    const semester = await this.semesterRepository.findOne({ where: { semesterId }, relations: ['academicYear'] });
     if (!semester) {
       return null;
     }
@@ -32,7 +32,7 @@ export class SemesterService {
   }
 
   async delete(ids: string[]): Promise<boolean> {
-    const result = await this.semesterRepository.delete({ id: In(ids) });
+    const result = await this.semesterRepository.delete({ semesterId: In(ids) });
     return result.affected !== 0;
   }
 }

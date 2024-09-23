@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn } from 'typeorm';
 import { AcademicYear } from './AcademicYear'
 
 /**
@@ -9,8 +9,8 @@ export class Semester {
   /**
    * Khóa chính
    */
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryColumn({ type: 'varchar', length: 25 })
+  semesterId: string;
 
   /**
    * Tên học kỳ
@@ -21,7 +21,7 @@ export class Semester {
   /**
    * Năm học (tham chiếu đến thực thể AcademicYear, không rỗng)
    */
-  @ManyToOne(() => AcademicYear, data => data.id, { nullable: false })
+  @ManyToOne(() => AcademicYear, data => data.yearId, { nullable: false })
   academicYear: AcademicYear;
 
 

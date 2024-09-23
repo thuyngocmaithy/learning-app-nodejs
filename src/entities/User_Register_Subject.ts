@@ -32,7 +32,7 @@ export class UserRegisterSubject {
   /**
    * Học kỳ (tham chiếu đến thực thể Semester, không rỗng)
    */
-  @ManyToOne(() => Semester, semester => semester.id, { nullable: false })
+  @ManyToOne(() => Semester, semester => semester.semesterId, { nullable: false })
   @JoinColumn({ name: 'semesterId' })
   semester: Semester;
 

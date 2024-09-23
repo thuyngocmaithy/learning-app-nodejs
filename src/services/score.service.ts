@@ -60,7 +60,7 @@ export class ScoreService {
     semesterId: string
   ): Promise<Score[]> => {
     return this.scoreRepository.find({
-      where: { student: { userId: studentId }, semester: { id: semesterId } },
+      where: { student: { userId: studentId }, semester: { semesterId: semesterId } },
       relations: ['subject', 'student', 'semester'],
     });
   };

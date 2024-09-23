@@ -18,12 +18,12 @@ export class AcademicYearService {
     return this.academicYearRepository.find();
   }
 
-  async getById(id: string): Promise<AcademicYear | null> {
-    return this.academicYearRepository.findOneBy({ id });
+  async getById(yearId: string): Promise<AcademicYear | null> {
+    return this.academicYearRepository.findOneBy({ yearId });
   }
 
-  async update(id: string, data: Partial<AcademicYear>): Promise<AcademicYear | null> {
-    const academicYear = await this.academicYearRepository.findOneBy({ id });
+  async update(yearId: string, data: Partial<AcademicYear>): Promise<AcademicYear | null> {
+    const academicYear = await this.academicYearRepository.findOneBy({ yearId });
     if (!academicYear) {
       return null;
     }
@@ -32,7 +32,7 @@ export class AcademicYearService {
   }
 
   async delete(ids: string[]): Promise<boolean> {
-    const result = await this.academicYearRepository.delete({ id: In(ids) });
+    const result = await this.academicYearRepository.delete({ yearId: In(ids) });
     return result.affected !== 0;
   }
 }
