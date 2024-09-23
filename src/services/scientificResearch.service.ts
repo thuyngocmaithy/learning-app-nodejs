@@ -144,7 +144,7 @@ export class ScientificResearchService {
 
   public getByScientificResearchGroupId = async (scientificResearchGroupId: string): Promise<ScientificResearch[]> => {
     const options: FindManyOptions<ScientificResearch> = {
-      where: { scientificResearchGroup: { scientificResearchGroupId } },
+      where: { scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId } },
       relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower']
     };
     return this.scientificResearchRepository.find(options);

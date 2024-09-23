@@ -25,6 +25,7 @@ export class ScientificResearch_User {
      * ID user (tham chiếu đến thực thể User, không rỗng)
      */
     @ManyToOne(() => User, data => data.userId, { nullable: false })
+    @JoinColumn({ name: 'userId' })
     user: User;
 
     /**

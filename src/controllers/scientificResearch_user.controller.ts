@@ -37,7 +37,7 @@ export class ScientificResearch_UserController {
   public getSRUByUserIdAndSRGroupId = async (req: Request, res: Response) => {
     try {
       const userId = req.query.userId as string | null;
-      const srgId = req.query.srgroupId as string | null;
+      const srgId = req.query.srgroupId as string | undefined;
 
       if (!userId) {
         return res.status(400).json({ message: 'Invalid user ID' });

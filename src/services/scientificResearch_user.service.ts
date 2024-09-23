@@ -1,4 +1,4 @@
-import { Repository, DataSource, FindOneOptions, Int32, FindManyOptions, In } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, Int32, FindManyOptions, In, FindOptions } from 'typeorm';
 import { ScientificResearch_User } from '../entities/ScientificResearch_User'
 import { User } from '../entities/User';
 import { ScientificResearch } from '../entities/ScientificResearch';
@@ -109,7 +109,7 @@ export class ScientificResearch_UserService {
 
 
   public delete = async (ids: string[]): Promise<boolean> => {
-    const result = await this.scientificResearchUserRepository.delete({id: In(ids)});
+    const result = await this.scientificResearchUserRepository.delete({ id: In(ids) });
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
 
@@ -129,19 +129,15 @@ export class ScientificResearch_UserService {
     return scientificResearchUser.group || 0;
   }
 
-  public getByUserIdAndSRGroupId = async (userId: string, SRGroupId: string | null): Promise<ScientificResearch_User[]> => {
-    let SRGroup = null;
-    if (SRGroupId) {
-      SRGroup = await this.srgRepository.findOneBy({ scientificResearchGroupId: SRGroupId });
-    }
+  public getByUserIdAndSRGroupId = async (userId: string, SRGroupId: string | undefined): Promise<ScientificResearch_User[]> => {
     const options: FindManyOptions<ScientificResearch_User> = {
       where: {
         user: { userId: userId },
-        ...(SRGroup && {
+        ...(SRGroupId ? {
           scientificResearch: {
-            scientificResearchGroup: { scientificResearchGroupId: SRGroup.scientificResearchGroupId }
+            scientificResearchGroup: { scientificResearchGroupId: SRGroupId }
           }
-        })
+        } : {})
       },
       relations: [
         'scientificResearch',

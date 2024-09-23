@@ -12,7 +12,7 @@ export const AppDataSource = new DataSource({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     synchronize: false,
-    logging: false, // Đặt thành true nếu muốn xem các câu lệnh SQL trong console
+    logging: false,
     entities: [__dirname + '/entities/*{.js,.ts}'], // Đường dẫn đến các thực thể
     migrations: [__dirname + '/migrations/**{.js,.ts}'], // Đường dẫn đến các tệp di chuyển
     subscribers: [__dirname + '/subscribers/**{.js,.ts}'], // Đường dẫn đến các tệp phụ

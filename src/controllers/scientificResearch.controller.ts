@@ -21,7 +21,7 @@ export class ScientificResearchController {
 
   public getByScientificResearchIGroupId = async (req: Request, res: Response) => {
     try {
-      const scientificResearchGroupId = req.query.scientificResearchGroupId as string;
+      const scientificResearchGroupId = req.query.SRGId as string;
 
       const data = await this.scientificResearchService.getByScientificResearchGroupId(scientificResearchGroupId);
 
