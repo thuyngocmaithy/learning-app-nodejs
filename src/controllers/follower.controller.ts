@@ -42,33 +42,10 @@ export class FollowerController {
 
   public getFollowersByUserIdAndSRGroupId = async (req: Request, res: Response) => {
     try {
-      let user = null;
-      let SRGroup = null;
 
-      if (req.query.userId) {
-        user = await this.userService.getById(req.query.userId as string);
-      }
-      if (req.query.srgroupId) {
-        SRGroup = await this.scientificResearchGroupService.getById(req.query.srgroupId as string);
-      }
+      const result = await this.followerService.getFollowersByUserIdAndSRGroupId(req.query.userId as string, req.query.srgroupId as string);
 
-      let followerDetail = null;
-      let followers = null;
-
-      if (user) {
-        // Lấy danh sách FollowerDetail dựa trên userId
-        followerDetail = await this.followerDetailService.getDetailsByUser(user);
-
-        if (followerDetail && followerDetail.length > 0) {
-          // Lấy danh sách followerId từ followerDetail
-          const followerIds = followerDetail.map(detail => detail.follower.id);
-
-          // Lấy danh sách follower theo danh sách followerIds
-          followers = await this.followerService.getFollowersByUserIdAndSRGroupId(followerIds, SRGroup);
-        }
-      }
-
-      return res.status(200).json({ message: 'success', data: followers });
+      return res.status(200).json({ message: 'success', data: result });
     } catch (error) {
       const err = error as Error;
       return res.status(500).json({ message: 'error', error: err.message });

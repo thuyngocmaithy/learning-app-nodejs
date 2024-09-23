@@ -4,9 +4,7 @@ import { ScientificResearch } from '../entities/ScientificResearch';
 import { Faculty } from '../entities/Faculty';
 import { User } from '../entities/User';
 import { Status } from '../entities/Status';
-import { FollowerService } from './follower.service';
 import { AppDataSource } from '../data-source';
-import { FollowerDetailService } from './followerDetail.service';
 import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 import { ScientificResearch_User } from '../entities/ScientificResearch_User';
 

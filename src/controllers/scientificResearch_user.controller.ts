@@ -36,18 +36,14 @@ export class ScientificResearch_UserController {
 
   public getSRUByUserIdAndSRGroupId = async (req: Request, res: Response) => {
     try {
-      const userId = req.query.userId as string | undefined;
+      const userId = req.query.userId as string | null;
+      const srgId = req.query.srgroupId as string | null;
 
       if (!userId) {
         return res.status(400).json({ message: 'Invalid user ID' });
       }
 
-      let SRGroup = null;
-      if (req.query.srgroupId) {
-        SRGroup = await this.scientificResearchGroupService.getById(req.query.srgroupId as string);
-      }
-
-      const scientificResearchUser = await this.scientificResearchUserService.getByUserIdAndSRGroupId(userId, SRGroup);
+      const scientificResearchUser = await this.scientificResearchUserService.getByUserIdAndSRGroupId(userId, srgId);
       return res.status(200).json({ message: 'success', data: scientificResearchUser });
     } catch (error) {
       const err = error as Error;
@@ -69,7 +65,7 @@ export class ScientificResearch_UserController {
         return res.status(404).json({ message: 'ScientificResearch not found' });
       }
 
-      const scientificResearchUser = await this.scientificResearchUserService.getByScientificResearchId(scientificResearch);
+      const scientificResearchUser = await this.scientificResearchUserService.getByScientificResearch(scientificResearch);
 
       return res.status(200).json({ message: 'success', data: scientificResearchUser });
     } catch (error) {

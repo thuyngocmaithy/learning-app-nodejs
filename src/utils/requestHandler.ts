@@ -90,4 +90,18 @@ export class RequestHandler {
       return RequestHandler.sendResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, "error", null, (error as Error).message);
     }
   }
+
+  static async deleteMany(req: Request, res: Response, service: { deleteMany: (ids: string[]) => Promise<boolean> }) {
+    try {
+      const ids = (req.query.ids as String).split(',');
+      const result = await service.deleteMany(ids);
+      if (result) {
+        return RequestHandler.sendResponse(res, StatusCodes.OK, "success", null, "Entity deleted");
+      }
+      return RequestHandler.sendResponse(res, StatusCodes.NOT_FOUND, "error", null, "Entity not found");
+    } catch (error) {
+      console.error("Delete Error:", error);
+      return RequestHandler.sendResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, "error", null, (error as Error).message);
+    }
+  }
 }

@@ -1,5 +1,5 @@
 // feature.service.ts
-import { DataSource, DeleteResult, Repository } from 'typeorm';
+import { DataSource, DeleteResult, In, Repository } from 'typeorm';
 import { Feature } from '../entities/Feature';
 import { Permission } from '../entities/Permission';
 
@@ -76,10 +76,25 @@ export class FeatureService {
       raw: undefined
     };
 
-    // Nếu không nằm trong danh sách ID bị cấm, thực hiện xóa
+    // Kiểm tra xem featureId có nằm trong danh sách các ID không được phép xóa không
     if (!this.restrictedIds.includes(featureId)) {
       // Nếu không nằm trong danh sách ID bị cấm, thực hiện xóa
       result = await this.featureRepository.delete({ featureId });
+    }
+    return result.affected !== 0;
+  }
+
+  async deleteMany(featureIds: string[]): Promise<boolean> {
+    let result: DeleteResult = {
+      affected: 0,
+      raw: undefined
+    };
+
+    // Lọc ra những featureId không nằm trong danh sách bị cấm
+    const deletableIds = featureIds.filter(id => !this.restrictedIds.includes(id));
+    // Nếu có bất kỳ ID nào hợp lệ để xóa
+    if (deletableIds.length > 0) {
+      result = await this.featureRepository.delete({ featureId: In(deletableIds) });
     }
     return result.affected !== 0;
   }

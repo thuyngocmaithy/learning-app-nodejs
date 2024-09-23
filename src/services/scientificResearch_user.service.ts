@@ -12,6 +12,7 @@ export class ScientificResearch_UserService {
   private scientificResearchUserRepository: Repository<ScientificResearch_User>;
   private followerDetailRepository: Repository<FollowerDetail>;
   private followerRepository: Repository<Follower>;
+  private srgRepository: Repository<ScientificResearchGroup>;
   private followerService: FollowerService;
   private followerDetailService: FollowerDetailService;
 
@@ -19,8 +20,10 @@ export class ScientificResearch_UserService {
     this.scientificResearchUserRepository = dataSource.getRepository(ScientificResearch_User);
     this.followerDetailRepository = dataSource.getRepository(FollowerDetail);
     this.followerRepository = dataSource.getRepository(Follower);
+    this.srgRepository = dataSource.getRepository(ScientificResearchGroup);
     this.followerService = new FollowerService(AppDataSource);
     this.followerDetailService = new FollowerDetailService(AppDataSource);
+
   }
 
   public getAll = async (): Promise<ScientificResearch_User[]> => {
@@ -126,7 +129,11 @@ export class ScientificResearch_UserService {
     return scientificResearchUser.group || 0;
   }
 
-  public getByUserIdAndSRGroupId = async (userId: string, SRGroup: ScientificResearchGroup | null): Promise<ScientificResearch_User[]> => {
+  public getByUserIdAndSRGroupId = async (userId: string, SRGroupId: string | null): Promise<ScientificResearch_User[]> => {
+    let SRGroup = null;
+    if (SRGroupId) {
+      SRGroup = await this.srgRepository.findOneBy({ scientificResearchGroupId: SRGroupId });
+    }
     const options: FindManyOptions<ScientificResearch_User> = {
       where: {
         user: { userId: userId },
@@ -150,7 +157,7 @@ export class ScientificResearch_UserService {
     return this.scientificResearchUserRepository.find(options);
   }
 
-  public getByScientificResearchId = async (scientificResearch: ScientificResearch): Promise<ScientificResearch_User | null> => {
+  public getByScientificResearch = async (scientificResearch: ScientificResearch): Promise<ScientificResearch_User | null> => {
     const options: FindOneOptions<ScientificResearch_User> = {
       where: { scientificResearch: { scientificResearchId: scientificResearch.scientificResearchId } },
       relations: [

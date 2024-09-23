@@ -14,6 +14,7 @@ featureRouter.get('/:id', featureController.getFeatureById);
 featureRouter.post('/', featureController.createFeature);
 featureRouter.put('/:id', featureController.updateFeature);
 featureRouter.delete('/:id', featureController.deleteFeature);
+featureRouter.delete('/', featureController.deleteFeatures);
 
 
 export default featureRouter;
