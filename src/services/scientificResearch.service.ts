@@ -28,7 +28,19 @@ export class ScientificResearchService {
   }
 
   async getById(scientificResearchId: string): Promise<ScientificResearch | null> {
-    return this.scientificResearchRepository.findOne({ where: { scientificResearchId }, relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'] });
+    return this.scientificResearchRepository.findOne({
+      where: { scientificResearchId },
+      relations: [
+        'status',
+        'instructor',
+        'createUser',
+        'lastModifyUser',
+        'follower',
+        'follower.followerDetails',
+        'follower.followerDetails.user',
+        'faculty'
+      ]
+    });
   }
 
   public create = async (scientificResearchData: any): Promise<ScientificResearch> => {
@@ -48,6 +60,14 @@ export class ScientificResearchService {
     }
 
     const newId = await this.generateNewId(scientificResearchData.facultyId);
+
+    const followerDetails = [{ user: scientificResearchData.createUserId }];
+
+    // Nếu instructor khác với createUserId, thêm instructor vào followerDetails
+    if (scientificResearchData.instructorId !== scientificResearchData.createUserId.userId) {
+      followerDetails.push({ user: instructor });
+    }
+
     const scientificResearch = this.scientificResearchRepository.create({
       scientificResearchId: newId,
       scientificResearchName: scientificResearchData.scientificResearchName,
@@ -61,39 +81,12 @@ export class ScientificResearchService {
       scientificResearchGroup: scientificResearchGroup,
       follower: [
         {
-          followerDetails: [
-            { user: scientificResearchData.createUserId },
-            { user: instructor }
-          ]
+          followerDetails: followerDetails
         }
       ]
     });
 
     const savedScientificResearch = await this.scientificResearchRepository.save(scientificResearch);
-
-    // Xác định người dùng thêm vào dự án
-    const usersToInsert = [];
-
-    if (instructor) {
-      usersToInsert.push({
-        userId: instructor.userId,
-        isLeader: false
-      });
-    }
-
-
-    for (const userData of usersToInsert) {
-      const user = await this.userRepository.findOne({ where: { userId: userData.userId } });
-      if (user) {
-        const scientificResearchUser = this.scientificResearch_UserRepository.create({
-          scientificResearch: savedScientificResearch,
-          user: user,
-          isLeader: userData.isLeader,
-          isApprove: true
-        });
-        await this.scientificResearch_UserRepository.save(scientificResearchUser);
-      }
-    }
 
     return savedScientificResearch;
   }
@@ -145,7 +138,16 @@ export class ScientificResearchService {
   public getByScientificResearchGroupId = async (scientificResearchGroupId: string): Promise<ScientificResearch[]> => {
     const options: FindManyOptions<ScientificResearch> = {
       where: { scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId } },
-      relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower']
+      relations: [
+        'status',
+        'instructor',
+        'createUser',
+        'lastModifyUser',
+        'follower',
+        'follower.followerDetails',
+        'follower.followerDetails.user',
+        'faculty'
+      ]
     };
     return this.scientificResearchRepository.find(options);
   }
@@ -165,3 +167,4 @@ export class ScientificResearchService {
 
 
 }
+

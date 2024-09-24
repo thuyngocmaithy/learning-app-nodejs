@@ -147,14 +147,15 @@ export class ScientificResearch_UserService {
         'scientificResearch.lastModifyUser',
         'scientificResearch.follower',
         'scientificResearch.follower.followerDetails',
-        'scientificResearch.status'
+        'scientificResearch.status',
+        'scientificResearch.faculty'
       ]
     };
     return this.scientificResearchUserRepository.find(options);
   }
 
-  public getByScientificResearch = async (scientificResearch: ScientificResearch): Promise<ScientificResearch_User | null> => {
-    const options: FindOneOptions<ScientificResearch_User> = {
+  public getByScientificResearch = async (scientificResearch: ScientificResearch): Promise<ScientificResearch_User[] | null> => {
+    const options: FindManyOptions<ScientificResearch_User> = {
       where: { scientificResearch: { scientificResearchId: scientificResearch.scientificResearchId } },
       relations: [
         'scientificResearch',
@@ -169,7 +170,7 @@ export class ScientificResearch_UserService {
         'scientificResearch.scientificResearchGroup.faculty'
       ]
     };
-    return this.scientificResearchUserRepository.findOne(options);
+    return this.scientificResearchUserRepository.find(options);
   }
 
   // Xóa bằng user và scientificResearch
