@@ -158,7 +158,27 @@ export class SguAuthService {
     user.ma_truong = studentInfo.ma_truong;
     user.ten_truong = studentInfo.ten_truong;
     user.hoc_vi = studentInfo.hoc_vi;
-    user.bo_mon = studentInfo.bo_mon;
+    switch (true) {
+      case studentInfo.bo_mon === 'Kỹ thuật phần mềm' || studentInfo.chuyen_nganh === 'Kỹ thuật phần mềm':
+        user.major.majorId = "KTPM";
+        break;
+      
+      case studentInfo.bo_mon === 'Kỹ thuật máy tính' || studentInfo.chuyen_nganh === 'Kỹ thuật máy tính':
+        user.major.majorId = "KTMT";
+        break;
+      
+      case studentInfo.bo_mon === 'Hệ thống thông tin' || studentInfo.chuyen_nganh === 'Hệ thống thông tin':
+        user.major.majorId = "KTPM";
+        break;
+      
+      case studentInfo.bo_mon === 'Khoa học máy tính' || studentInfo.chuyen_nganh === 'Khoa học máy tính':
+        user.major.majorId = "KTPM";
+        break;
+    
+      default:
+        break;
+    }
+    
 
     return await this.userService.update(user.userId, user) as User;
   }
@@ -317,7 +337,26 @@ export class SguAuthService {
       user.ma_truong = studentInfo.ma_truong;
       user.ten_truong = studentInfo.ten_truong;
       user.hoc_vi = studentInfo.hoc_vi;
-      user.bo_mon = studentInfo.bo_mon;
+      switch (true) {
+        case studentInfo.bo_mon === 'Kỹ thuật phần mềm' || studentInfo.chuyen_nganh === 'Kỹ thuật phần mềm':
+          user.major.majorId = "KTPM";
+          break;
+        
+        case studentInfo.bo_mon === 'Kỹ thuật máy tính' || studentInfo.chuyen_nganh === 'Kỹ thuật máy tính':
+          user.major.majorId = "KTMT";
+          break;
+        
+        case studentInfo.bo_mon === 'Hệ thống thông tin' || studentInfo.chuyen_nganh === 'Hệ thống thông tin':
+          user.major.majorId = "KTPM";
+          break;
+        
+        case studentInfo.bo_mon === 'Khoa học máy tính' || studentInfo.chuyen_nganh === 'Khoa học máy tính':
+          user.major.majorId = "KTPM";
+          break;
+      
+        default:
+          break;
+      }
     }
 
 

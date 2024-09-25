@@ -20,7 +20,7 @@ export class UserRegisterSubjectService {
     this.semesterRepository = dataSource.getRepository(Semester);
   }
 
-  async registerSubject(userId: string, subjectId: string, frameId: string, semesterId: string): Promise<UserRegisterSubject> {
+  async registerSubject(userId: string, subjectId: string, semesterId: string): Promise<UserRegisterSubject> {
     const user = await this.userRepository.findOne({
       where: { userId: userId },
     });
@@ -33,13 +33,6 @@ export class UserRegisterSubjectService {
     });
     if (!subject) {
       throw new Error(`Subject with ID ${subjectId} not found`);
-    }
-
-    const studyFrame = await this.studyFrameRepository.findOne({
-      where: { id: frameId },
-    });
-    if (!studyFrame) {
-      throw new Error(`StudyFrame with ID ${frameId} not found`);
     }
 
     const semester = await this.semesterRepository.findOne({
@@ -64,7 +57,6 @@ export class UserRegisterSubjectService {
     const userRegisterSubject = this.userRegisterSubjectRepository.create({
       user,
       subject,
-      studyFrame,
       semester,
     });
 
@@ -74,7 +66,7 @@ export class UserRegisterSubjectService {
   async getUserRegisteredSubjects(userId: string): Promise<UserRegisterSubject[]> {
     return this.userRegisterSubjectRepository.find({
       where: { user: { userId: userId } },
-      relations: ['subject', 'studyFrame', 'semester'],
+      relations: ['subject', 'semester'],
     });
   }
 }
