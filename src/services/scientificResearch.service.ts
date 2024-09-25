@@ -38,7 +38,8 @@ export class ScientificResearchService {
         'follower',
         'follower.followerDetails',
         'follower.followerDetails.user',
-        'faculty'
+        'faculty',
+        'scientificResearchGroup'
       ]
     });
   }
@@ -156,7 +157,10 @@ export class ScientificResearchService {
     const whereCondition: any = {};
 
     if (condition.instructor) {
-      whereCondition.instructor = { instructorId: condition.instructor };
+      whereCondition.instructor = { userId: condition.instructor};
+    }
+    if (condition.scientificResearchGroup) {
+      whereCondition.scientificResearchGroup = { scientificResearchGroupId: condition.scientificResearchGroup};
     }
 
     return this.scientificResearchRepository.find({
@@ -165,6 +169,43 @@ export class ScientificResearchService {
     });
   }
 
+
+  public getBySRGIdAndCheckApprove = async (scientificResearchGroupId: string, userId: string): Promise<any[]> => {
+    const options: FindManyOptions<ScientificResearch> = {
+      where: { scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId } },
+      relations: [
+        'status',
+        'instructor',
+        'createUser',
+        'lastModifyUser',
+        'follower',
+        'follower.followerDetails',
+        'follower.followerDetails.user',
+        'faculty'
+      ]
+    };
+    const listSR = await this.scientificResearchRepository.find(options);
+
+    const promises = listSR.map(async (SR) => {
+      const responseCountRegister = await this.scientificResearch_UserRepository.findBy({ scientificResearch: {scientificResearchId: SR.scientificResearchId }});
+      const count = responseCountRegister.length;
+
+      const responseUserRegister = await this.scientificResearch_UserRepository.findOneBy(
+        { 
+          scientificResearch: {scientificResearchId: SR.scientificResearchId }, 
+           user: {userId:userId}
+        }
+      );
+      const approve = responseUserRegister?.isApprove;
+
+      return { ...SR, count, approve};
+    });
+
+    // Đợi tất cả các Promise hoàn thành
+    const result = await Promise.all(promises);
+    
+    return result;
+  }
 
 }
 

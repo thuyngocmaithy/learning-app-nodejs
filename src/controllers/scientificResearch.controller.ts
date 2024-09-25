@@ -31,4 +31,18 @@ export class ScientificResearchController {
       return res.status(500).json({ message: 'error', error: err.message });
     }
   };
+
+  public getBySRGIdAndCheckApprove = async (req: Request, res: Response) => {
+    try {
+      const SRGId = req.query.SRGId as string;
+      const userId = req.query.userId as string;
+
+      const data = await this.scientificResearchService.getBySRGIdAndCheckApprove(SRGId, userId);
+
+      return res.status(200).json({ message: 'success', data: data });
+    } catch (error) {
+      const err = error as Error;
+      return res.status(500).json({ message: 'error', error: err.message });
+    }
+  };
 }
