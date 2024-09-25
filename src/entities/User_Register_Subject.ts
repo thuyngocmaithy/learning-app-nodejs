@@ -2,7 +2,6 @@ import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, CreateDateColumn
 import { User } from './User';
 import { Subject } from './Subject';
 import { Semester } from './Semester';
-import { StudyFrame } from './StudyFrame';
 
 /**
  * Thực thể đăng ký môn học của sinh viên
@@ -36,9 +35,6 @@ export class UserRegisterSubject {
   @JoinColumn({ name: 'semesterId' })
   semester: Semester;
 
-  @ManyToOne(() => StudyFrame, frame => frame.id, { nullable: false })
-  @JoinColumn({ name: 'frameId' })
-  studyFrame: StudyFrame;
 
   /**
    * Ngày tạo (tự động)

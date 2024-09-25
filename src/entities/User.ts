@@ -211,12 +211,6 @@ export class User {
   hoc_vi: string;
 
   /**
-  * bo_mon (giảng viên)
-  */
-  @Column({ nullable: true })
-  bo_mon: string;
-
-  /**
    * Năm học đầu tiên (có thể rỗng)
    */
   @Column({ nullable: true })
