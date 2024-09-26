@@ -1,5 +1,4 @@
 import { Entity, Column, PrimaryColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn } from 'typeorm';
-import { AcademicYear } from './AcademicYear'
 
 /**
  * Thực thể Học kỳ
@@ -19,11 +18,9 @@ export class Semester {
   semesterName: number;
 
   /**
-   * Năm học (tham chiếu đến thực thể AcademicYear, không rỗng)
-   */
-  @ManyToOne(() => AcademicYear, data => data.yearId, { nullable: false })
-  academicYear: AcademicYear;
-
-
+ * Năm học (duy nhất, không rỗng)
+ */
+  @Column({ nullable: false })
+  academicYear: string;
 
 }

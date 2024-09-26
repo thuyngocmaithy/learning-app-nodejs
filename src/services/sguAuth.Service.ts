@@ -11,7 +11,6 @@ import { Permission } from '../entities/Permission';
 import jwt from 'jsonwebtoken';
 import { Subject } from '../entities/Subject';
 import { Semester } from '../entities/Semester';
-import { AcademicYear } from '../entities/AcademicYear';
 import puppeteer from 'puppeteer';
 import { Major } from '../entities/Major';
 
@@ -456,7 +455,6 @@ export class SguAuthService {
       const componentScoreRepository = AppDataSource.getRepository(ComponentScore);
       const subjectRepository = AppDataSource.getRepository(Subject);
       const semesterRepository = AppDataSource.getRepository(Semester);
-      const academicYearRepository = AppDataSource.getRepository(AcademicYear);
       const userRepository = AppDataSource.getRepository(User);
 
       // Loop through each semester in the response
@@ -466,26 +464,19 @@ export class SguAuthService {
         const yearString = semesterCode.substring(0, 4);
         const semesterNumber = parseInt(semesterCode.substring(4));
 
-        // Find or create the academic year
-        let academicYear = await academicYearRepository.findOne({ where: { year: yearString } });
-        if (!academicYear) {
-          academicYear = new AcademicYear();
-          academicYear.year = yearString;
-          await academicYearRepository.save(academicYear);
-        }
 
         // Find or create the semester
         let semester = await semesterRepository.findOne({
           where: {
             semesterName: semesterNumber,
-            academicYear: academicYear
+            academicYear: yearString
           }
         });
 
         if (!semester) {
           semester = new Semester();
           semester.semesterName = semesterNumber;
-          semester.academicYear = academicYear;
+          semester.academicYear = yearString;
           await semesterRepository.save(semester);
         }
 
