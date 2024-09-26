@@ -266,4 +266,5 @@ export class User {
    */
   @UpdateDateColumn()
   lastModifyDate: Date;
+  user: Promise<Major | null>;
 }

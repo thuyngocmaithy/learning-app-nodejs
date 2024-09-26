@@ -12,6 +12,8 @@ import jwt from 'jsonwebtoken';
 import { Subject } from '../entities/Subject';
 import { Semester } from '../entities/Semester';
 import { AcademicYear } from '../entities/AcademicYear';
+import puppeteer from 'puppeteer';
+import { Major } from '../entities/Major';
 
 const SGU_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/auth/login';
 const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/dkmh/w-locsinhvieninfo';
@@ -22,11 +24,17 @@ export class SguAuthService {
   private accountService: AccountService;
   private userService: UserService;
   private permissionRepository: Repository<Permission>;
+  private majorRepository: Repository<Major>;
+  private uaScore: string;
+  private uaImage: string;
 
   constructor() {
     this.accountService = new AccountService(AppDataSource);
     this.userService = new UserService(AppDataSource);
     this.permissionRepository = AppDataSource.getRepository(Permission);
+    this.majorRepository = AppDataSource.getRepository(Major);
+    this.uaScore = "";
+    this.uaImage = "";
   }
 
   async loginToSgu(username: string, password: string) {
@@ -34,32 +42,38 @@ export class SguAuthService {
       // Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
       let account = await this.accountService.getByUsername(username);
       let user = await this.userService.getByUserId(username);
-  
+
+      const loginData = await this.getInfoUserFromSGU(username, password);
+      const CURRENT_USER = JSON.parse(loginData.CURRENT_USER || "");
+      const CURRENT_USER_INFO = JSON.parse(loginData.CURRENT_USER_INFO || "");
+
       if (!account) {
-        throw new Error("Tài khoản không tồn tại.");
+        // // Nếu tài khoản không tồn tại, đăng nhập qua SGU
+        // const loginData = await this.performSguLogin(username, password);
+
+        // Tạo tài khoản mới trong cơ sở dữ liệu
+        account = await this.createOrUpdateAccount(CURRENT_USER, password);
+
+        // Lấy thông tin sinh viên từ SGU
+        const imageData = await this.getImageAccount(this.uaImage, CURRENT_USER.access_token, username);
+
+        if (user) {
+          // Nếu user đã tồn tại, cập nhật thông tin
+          user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, imageData, account);
+        } else {
+          // Nếu user chưa tồn tại, tạo mới
+          user = await this.createNewUser(CURRENT_USER, CURRENT_USER_INFO, imageData, account);
+        }
+
+        await this.saveScoresForUserFromSgu(account.username, account.access_token, this.uaScore);
+
+        return this.generateAuthResponse(CURRENT_USER, user as User);
       }
-  
-      // if (!account) {
-      //   // Nếu tài khoản không tồn tại, đăng nhập qua SGU
-      //   const loginData = await this.performSguLogin(username, password);
-  
-      //   // Tạo tài khoản mới trong cơ sở dữ liệu
-      //   account = await this.createOrUpdateAccount(loginData, password);
-  
-      //   // Lấy thông tin sinh viên từ SGU
-      //   const studentInfo = await this.fetchStudentInfo(loginData.access_token);
-  
-      //   const imageData = await this.getImageAccount(loginData.access_token, username);
-  
-      //   // Tạo hoặc cập nhật người dùng
-      //   const user = await this.createNewUser(loginData, studentInfo, imageData, account);
-  
-      //   return this.generateAuthResponse(loginData, user as User);
-      // } else {
+      // else {
       if (account) {
         console.log("tài khoản đã tồn tại\n");
         // Tài khoản đã tồn tại, xóa access_token cũ và cập nhật token mới
-  
+
         // Kiểm tra mật khẩu
         const isPasswordValid = await bcrypt.compare(password, account.password);
         if (!isPasswordValid) {
@@ -70,7 +84,7 @@ export class SguAuthService {
             SINHVIEN: { secret: 'TokenSINHVIEN', role: 'SINHVIEN' },
             GIANGVIEN: { secret: 'TokenGIANGVIEN', role: 'GIANGVIEN' }
           };
-  
+
           type PermissionId = keyof typeof tokenConfig;
 
           const permissionId = account.permission.permissionId as PermissionId;
@@ -78,7 +92,7 @@ export class SguAuthService {
           if (!config) {
             throw new Error("Invalid permissionId");
           }
-  
+
           const updatedTokens = {
             access_token: jwt.sign(
               { id: account.id, role: config.role },
@@ -88,29 +102,29 @@ export class SguAuthService {
             refresh_token: account.refreshToken,
             roles: config.role
           };
-  
+
           // else {
           //   // Đăng nhập và lấy token mới từ SGU
           //   account.access_token = ''; // Xóa access_token cũ
           //   account.refreshToken = '';
           //   console.log('token của account :', account.access_token);
           //   console.log("đăng nhập tài khoản mới : \n", account);
-  
+
           //   updatedTokens = await this.refreshSguTokens(username, password);
-  
+
           // // Cập nhật access_token và refreshToken
           // account.access_token = updatedTokens.access_token;
           // account.refreshToken = updatedTokens.refresh_token;
           // account.permission.permissionId = updatedTokens.roles;
-  
+
           // console.log('token của mới account :', account.access_token);
           // }
-  
-          // await this.saveScoresForUserFromSgu(account.username, account.access_token);
-  
+
+          await this.saveScoresForUserFromSgu(CURRENT_USER.userName, CURRENT_USER.access_token, this.uaScore);
+
           // Lưu lại thay đổi
           await this.accountService.update(account.id, account);
-  
+
           // Lấy thông tin người dùng từ cơ sở dữ liệu và trả về phản hồi
           user = await this.userService.getByUserId(account.username);
           return this.generateAuthResponse(updatedTokens, user as User);
@@ -162,23 +176,23 @@ export class SguAuthService {
       case studentInfo.bo_mon === 'Kỹ thuật phần mềm' || studentInfo.chuyen_nganh === 'Kỹ thuật phần mềm':
         user.major.majorId = "KTPM";
         break;
-      
+
       case studentInfo.bo_mon === 'Kỹ thuật máy tính' || studentInfo.chuyen_nganh === 'Kỹ thuật máy tính':
         user.major.majorId = "KTMT";
         break;
-      
+
       case studentInfo.bo_mon === 'Hệ thống thông tin' || studentInfo.chuyen_nganh === 'Hệ thống thông tin':
         user.major.majorId = "KTPM";
         break;
-      
+
       case studentInfo.bo_mon === 'Khoa học máy tính' || studentInfo.chuyen_nganh === 'Khoa học máy tính':
         user.major.majorId = "KTPM";
         break;
-    
+
       default:
         break;
     }
-    
+
 
     return await this.userService.update(user.userId, user) as User;
   }
@@ -296,6 +310,10 @@ export class SguAuthService {
   private async createNewUser(loginData: any, studentInfo: any, imageData: any, account: Account): Promise<User> {
     const studentId = studentInfo.ma_sv;
     let user = await this.userService.getByUserId(studentId);
+    const majorKTPM = await this.majorRepository.findOneBy({ majorId: "KTPM" });
+    const majorHTTT = await this.majorRepository.findOneBy({ majorId: "HTTT" });
+    const majorKHMT = await this.majorRepository.findOneBy({ majorId: "KHMT" });
+    const majorKTMT = await this.majorRepository.findOneBy({ majorId: "KTMT" });
 
     if (!user) {
       user = new User();
@@ -339,21 +357,25 @@ export class SguAuthService {
       user.hoc_vi = studentInfo.hoc_vi;
       switch (true) {
         case studentInfo.bo_mon === 'Kỹ thuật phần mềm' || studentInfo.chuyen_nganh === 'Kỹ thuật phần mềm':
-          user.major.majorId = "KTPM";
+          if (majorKTPM)
+            user.major = majorKTPM;
           break;
-        
+
         case studentInfo.bo_mon === 'Kỹ thuật máy tính' || studentInfo.chuyen_nganh === 'Kỹ thuật máy tính':
-          user.major.majorId = "KTMT";
+          if (majorKTMT)
+            user.major = majorKTMT;
           break;
-        
+
         case studentInfo.bo_mon === 'Hệ thống thông tin' || studentInfo.chuyen_nganh === 'Hệ thống thông tin':
-          user.major.majorId = "KTPM";
+          if (majorHTTT)
+            user.major = majorHTTT;
           break;
-        
+
         case studentInfo.bo_mon === 'Khoa học máy tính' || studentInfo.chuyen_nganh === 'Khoa học máy tính':
-          user.major.majorId = "KTPM";
+          if (majorKHMT)
+            user.major = majorKHMT;
           break;
-      
+
         default:
           break;
       }
@@ -388,12 +410,13 @@ export class SguAuthService {
     }
   }
 
-  async getImageAccount(access_token: string, ma_sv: string) {
+  async getImageAccount(ua: string, access_token: string, ma_sv: string) {
     try {
       const response = await axios.post(`${SGU_IMAGE_ACCOUNT_API_URL}?MaSV=${ma_sv}`, {}, {
         headers: {
           'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'ua': ua
         }
       });
       console.log('getImageAccount', response);
@@ -404,12 +427,13 @@ export class SguAuthService {
     }
   }
 
-  async getScoreFromSGU(access_token: string) { //Lấy điểm theo access token
+  async getScoreFromSGU(ua: string, access_token: string) { //Lấy điểm theo access token
     try {
       const response = await axios.post(`${SGU_DIEM_API_URL}?hien_thi_mon_theo_hkdk=false`, {}, {
         headers: {
           'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json; charset=utf-8'
+          'Content-Type': 'application/json; charset=utf-8',
+          'ua': ua
         }
       });
       return response.data;
@@ -419,10 +443,10 @@ export class SguAuthService {
     }
   }
 
-  async saveScoresForUserFromSgu(userId: string, accessToken: string) {
+  async saveScoresForUserFromSgu(userId: string, accessToken: string, ua: string) {
     try {
       const sguAuthService = new SguAuthService();
-      const jsonResponse = await sguAuthService.getScoreFromSGU(accessToken);
+      const jsonResponse = await sguAuthService.getScoreFromSGU(ua, accessToken);
 
       if (!jsonResponse || !jsonResponse.data || jsonResponse.data.ds_diem_hocky.length === 0) {
         throw new Error('No scores found for the user.');
@@ -541,6 +565,143 @@ export class SguAuthService {
     }
   }
 
+
+  // async getInfoUserFromSGU(username: string, password: string) {
+  //   const browser = await puppeteer.launch({ headless: false });
+  //   const page = await browser.newPage();
+
+  //   try {
+  //     // Mở trang login của SGU
+  //     await page.goto('https://thongtindaotao.sgu.edu.vn/');
+
+  //     // Nhập username và password
+  //     await page.type('input#username', username);
+  //     await page.type('input#password', password);
+
+  //     // Bấm vào nút đăng nhập
+  //     await page.click('button#login-btn');
+
+  //     // Chờ đến khi đăng nhập xong
+  //     await page.waitForNavigation();
+
+  //     // Chuyển hướng tới trang xem điểm
+  //     await page.goto('https://thongtindaotao.sgu.edu.vn/XemDiem');
+
+  //     // Lấy thông tin điểm
+  //     const scores = await page.evaluate(() => {
+  //       const scoreTable = document.querySelectorAll('table#scores tbody tr');
+  //       const scoreData: any[] = [];
+  //       scoreTable.forEach((row) => {
+  //         const cols = row.querySelectorAll('td');
+  //         scoreData.push({
+  //           subject: cols[0].innerText,
+  //           score: cols[1].innerText
+  //         });
+  //       });
+  //       return scoreData;
+  //     });
+
+  //     await browser.close();
+  //     return scores;
+  //   } catch (error) {
+  //     await browser.close();
+  //     throw new Error('Có lỗi xảy ra trong quá trình lấy điểm.');
+  //   }
+  // };
+  async getInfoUserFromSGU(username: string, password: string) {
+    const browser = await puppeteer.launch({ headless: false, defaultViewport: null, });
+    const pages = await browser.pages(); // Lấy danh sách các tab hiện có
+    const page = pages[0] || await browser.newPage(); // Sử dụng tab đầu tiên hoặc tạo mới
+
+    // Bắt các yêu cầu gửi đi từ trang
+    page.on('request', request => {
+      const url = request.url();
+      const headers = request.headers();
+
+      // Kiểm tra xem yêu cầu có phải là API lấy điểm
+      if (url.includes('/api/srm/w-locdsdiemsinhvien')) {
+        this.uaScore = headers['ua'];
+
+      }
+
+      // Kiểm tra xem yêu cầu có phải là API lấy ảnh
+      if (url.includes('/api/sms/w-locthongtinimagesinhvien')) {
+        this.uaImage = headers['ua'];
+      }
+    });
+
+    try {
+      // 1. Mở trang login của SGU
+      await page.goto('https://thongtindaotao.sgu.edu.vn/', { waitUntil: 'networkidle2' });
+
+      // Hiển thị thông báo "Đang xử lý"
+      await page.evaluate(() => {
+        const message = document.createElement('div');
+        message.textContent = 'Đang xử lý...';
+        message.style.position = 'absolute';
+        message.style.top = '0'; // Đặt vị trí top là 0
+        message.style.left = '0'; // Đặt vị trí left là 0
+        message.style.width = '100vw'; // Chiếm toàn bộ chiều rộng
+        message.style.height = '100vh'; // Chiếm toàn bộ chiều cao
+        message.style.display = 'flex'; // Sử dụng flexbox để căn giữa
+        message.style.alignItems = 'center'; // Căn giữa theo chiều dọc
+        message.style.justifyContent = 'center'; // Căn giữa theo chiều ngang
+        message.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+        message.style.color = 'white';
+        message.style.padding = '20px';
+        message.style.borderRadius = '5px';
+        message.style.pointerEvents = 'none';
+        document.body.appendChild(message);
+      });
+
+
+      // 2. Nhập thông tin đăng nhập
+      await page.type('input[formcontrolname="username"]', username);
+      await page.type('input[formcontrolname="password"]', password);
+
+      // 3. Bấm nút đăng nhập
+      await page.click('button.btn.btn-primary.ng-star-inserted');
+
+      // 4. Chờ cho đến khi trang chuyển hướng sau khi đăng nhập thành công
+      await page.waitForNavigation({ waitUntil: 'networkidle2' });
+
+      // 5. Vào trang điểm
+      await page.goto('https://thongtindaotao.sgu.edu.vn/#/diem', { waitUntil: 'domcontentloaded' });
+
+      // Chờ xử lý xong api lấy điểm
+      await Promise.all([
+        page.waitForResponse(response => response.url().includes('/api/srm/w-locdsdiemsinhvien') && response.status() === 200),
+        page.goto('https://thongtindaotao.sgu.edu.vn/#/diem', { waitUntil: 'domcontentloaded' }),
+      ]);
+
+      // 6. Vào trang thông tin user
+      await page.goto('https://thongtindaotao.sgu.edu.vn/#/userinfo', { waitUntil: 'domcontentloaded' });
+
+      // Chờ xử lý xong api lấy ảnh
+      await Promise.all([
+        page.waitForResponse(response => response.url().includes('/api/sms/w-locthongtinimagesinhvien') && response.status() === 200),
+        page.goto('https://thongtindaotao.sgu.edu.vn/#/userinfo', { waitUntil: 'domcontentloaded' }),
+      ]);
+
+      // 5. Lấy dữ liệu từ sessionStorage
+      const sessionData = await page.evaluate(() => {
+        const data: { [key: string]: string | null } = {};
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key) {
+            data[key] = sessionStorage.getItem(key);
+          }
+        }
+        return data;
+      });
+
+      await browser.close();
+      return sessionData;
+    } catch (error) {
+      await browser.close();
+      throw new Error(`Lỗi khi lấy dữ liệu sessionStorage: ${error}`);
+    }
+  }
 
 
 }

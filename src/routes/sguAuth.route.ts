@@ -8,6 +8,7 @@ const sguAuthController = new SguAuthController();
 sguAuthRouter.post('/login-sgu', sguAuthController.loginToSgu);
 sguAuthRouter.post('/getImageAccount', sguAuthController.getImageAccount);
 sguAuthRouter.post('/getScore', sguAuthController.getScore);
+sguAuthRouter.post('/getInfoUserFromSGU', sguAuthController.getInfoUserFromSGU);
 
 export default sguAuthRouter;
 
