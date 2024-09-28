@@ -523,6 +523,7 @@ export class SguAuthService {
           } else {
             // Delete the existing ComponentScore records
             await componentScoreRepository.delete({ score: score });
+            await scoreRepository.delete(score.id);
           }
 
           // Replace NaN values with 0
