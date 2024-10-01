@@ -71,5 +71,6 @@ export class FollowerDetail {
    * ID người dùng (tham chiếu đến thực thể User, không rỗng)
    */
   @ManyToOne(() => User, data => data.userId, { nullable: true })
+  @JoinColumn({ name: 'userId' })
   user: User;
 }

@@ -22,10 +22,24 @@ export class ScientificResearch_UserController {
 
   public getAllScientificResearchUser = (req: Request, res: Response) => RequestHandler.getAll<ScientificResearch_User>(req, res, this.scientificResearchUserService);
   public getScientificResearchUserById = (req: Request, res: Response) => RequestHandler.getById<ScientificResearch_User>(req, res, this.scientificResearchUserService);
-  public createScientificResearchUser = (req: Request, res: Response) => RequestHandler.create<ScientificResearch_User>(req, res, this.scientificResearchUserService);
-  public updateScientificResearchUser = (req: Request, res: Response) => RequestHandler.update<ScientificResearch_User>(req, res, this.scientificResearchUserService);
+  // public createScientificResearchUser = (req: Request, res: Response) => RequestHandler.create<ScientificResearch_User>(req, res, this.scientificResearchUserService);
+  // public updateScientificResearchUser = (req: Request, res: Response) => RequestHandler.update<ScientificResearch_User>(req, res, this.scientificResearchUserService);
   public deleteScientificResearchUser = (req: Request, res: Response) => RequestHandler.delete(req, res, this.scientificResearchUserService);
 
+  public updateScientificResearchUser = async (req: Request, res: Response) => {
+    try {
+      const ids = (req.params.id as String).split(',');
+      const data = req.body;
+      const result = await this.scientificResearchUserService.update(ids, data);
+      if (result) {
+        return res.status(200).json({ message: 'success', data: result });
+      }
+      return res.status(404).json({ message: 'SRU not found' });
+    } catch (error) {
+      const err = error as Error;
+      return res.status(500).json({ message: 'error', error: err.message });
+    }
+  }
 
   //lấy ScientificResearchUser có group cao nhất
   public getHighestGroupScientificResearchUser = (req: Request, res: Response) => {
@@ -94,7 +108,6 @@ export class ScientificResearch_UserController {
       if (!scientificResearch) {
         return res.status(404).json({ message: 'ScientificResearch not found' });
       }
-
       const deletionResult = await this.scientificResearchUserService.deleteByUserAndScientificResearch(user, scientificResearch);
 
       if (deletionResult) {
@@ -107,4 +120,22 @@ export class ScientificResearch_UserController {
       return res.status(500).json({ message: 'error', error: err.message });
     }
   };
+
+  public createScientificResearchUser = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      // Lấy dữ liệu từ body của yêu cầu
+      const scientificResearchUserData = req.body;
+
+      // Gọi hàm create từ service
+      await this.scientificResearchUserService.create(scientificResearchUserData);
+
+      // Trả về phản hồi thành công
+      return res.status(200).json({ message: 'success', data: 'Lưu thành công' });
+    } catch (error) {
+      console.error('Error creating Scientific Research User:', error);
+      // Trả về phản hồi lỗi
+      const err = error as Error;
+      return res.status(500).json({ message: 'error', error: err.message });
+    }
+  }
 }

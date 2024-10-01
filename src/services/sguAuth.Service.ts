@@ -11,8 +11,14 @@ import { Permission } from '../entities/Permission';
 import jwt from 'jsonwebtoken';
 import { Subject } from '../entities/Subject';
 import { Semester } from '../entities/Semester';
-import puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer';
 import { Major } from '../entities/Major';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os'; // Sử dụng để lấy thư mục tạm của hệ điều hành
+
+// Lấy thư mục tạm của hệ điều hành
+const tempDir = os.tmpdir();
 
 const SGU_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/auth/login';
 const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/dkmh/w-locsinhvieninfo';
@@ -24,16 +30,16 @@ export class SguAuthService {
   private userService: UserService;
   private permissionRepository: Repository<Permission>;
   private majorRepository: Repository<Major>;
-  private uaScore: string;
-  private uaImage: string;
+  private ScoreOfUser: any;
+  private ImageOfUser: string;
 
   constructor() {
     this.accountService = new AccountService(AppDataSource);
     this.userService = new UserService(AppDataSource);
     this.permissionRepository = AppDataSource.getRepository(Permission);
     this.majorRepository = AppDataSource.getRepository(Major);
-    this.uaScore = "";
-    this.uaImage = "";
+    this.ScoreOfUser = new Object();
+    this.ImageOfUser = "";
   }
 
   async loginToSgu(username: string, password: string) {
@@ -42,29 +48,32 @@ export class SguAuthService {
       let account = await this.accountService.getByUsername(username);
       let user = await this.userService.getByUserId(username);
 
-      const loginData = await this.getInfoUserFromSGU(username, password);
+      const loginData = await this.getInfoUserFromSGU(username, password, account ? true : false);
+
       const CURRENT_USER = JSON.parse(loginData.CURRENT_USER || "");
       const CURRENT_USER_INFO = JSON.parse(loginData.CURRENT_USER_INFO || "");
 
-      if (!account) {
-        // // Nếu tài khoản không tồn tại, đăng nhập qua SGU
-        // const loginData = await this.performSguLogin(username, password);
+      if (account?.permission.permissionId === "ADMIN") {
+        // Kiểm tra mật khẩu
+        const isPasswordMatch = await bcrypt.compare(password, account.password);
 
+        if (!isPasswordMatch) {
+          throw new Error("Tên đăng nhập hoặc mật khẩu không chính xác");
+        }
+      }
+      if (!account) {
         // Tạo tài khoản mới trong cơ sở dữ liệu
         account = await this.createOrUpdateAccount(CURRENT_USER, password);
 
-        // Lấy thông tin sinh viên từ SGU
-        const imageData = await this.getImageAccount(this.uaImage, CURRENT_USER.access_token, username);
-
         if (user) {
           // Nếu user đã tồn tại, cập nhật thông tin
-          user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, imageData, account);
+          user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, account);
         } else {
           // Nếu user chưa tồn tại, tạo mới
-          user = await this.createNewUser(CURRENT_USER, CURRENT_USER_INFO, imageData, account);
+          user = await this.createNewUser(CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, account);
         }
-
-        await this.saveScoresForUserFromSgu(account.username, account.access_token, this.uaScore);
+        if (account.permission.permissionId === "SINHVIEN")
+          await this.saveScoresForUserFromSgu(account.username);
 
         return this.generateAuthResponse(CURRENT_USER, user as User);
       }
@@ -72,62 +81,47 @@ export class SguAuthService {
       if (account) {
         console.log("tài khoản đã tồn tại\n");
         // Tài khoản đã tồn tại, xóa access_token cũ và cập nhật token mới
+        // Update tài khoản trong cơ sở dữ liệu
+        account = await this.createOrUpdateAccount(CURRENT_USER, password);
 
-        // Kiểm tra mật khẩu
-        const isPasswordValid = await bcrypt.compare(password, account.password);
-        if (!isPasswordValid) {
-          throw new Error("Mật khẩu không đúng.");
-        } else {
-          const tokenConfig = {
-            ADMIN: { secret: 'TokenADMIN', role: 'ADMIN' },
-            SINHVIEN: { secret: 'TokenSINHVIEN', role: 'SINHVIEN' },
-            GIANGVIEN: { secret: 'TokenGIANGVIEN', role: 'GIANGVIEN' }
-          };
+        const tokenConfig = {
+          ADMIN: { secret: 'TokenADMIN', role: 'ADMIN' },
+          SINHVIEN: { secret: 'TokenSINHVIEN', role: 'SINHVIEN' },
+          GIANGVIEN: { secret: 'TokenGIANGVIEN', role: 'GIANGVIEN' }
+        };
 
-          type PermissionId = keyof typeof tokenConfig;
+        type PermissionId = keyof typeof tokenConfig;
 
-          const permissionId = account.permission.permissionId as PermissionId;
-          const config = tokenConfig[permissionId];
-          if (!config) {
-            throw new Error("Invalid permissionId");
-          }
-
-          const updatedTokens = {
-            access_token: jwt.sign(
-              { id: account.id, role: config.role },
-              config.secret,
-              { expiresIn: '2h' }
-            ),
-            refresh_token: account.refreshToken,
-            roles: config.role
-          };
-
-          // else {
-          //   // Đăng nhập và lấy token mới từ SGU
-          //   account.access_token = ''; // Xóa access_token cũ
-          //   account.refreshToken = '';
-          //   console.log('token của account :', account.access_token);
-          //   console.log("đăng nhập tài khoản mới : \n", account);
-
-          //   updatedTokens = await this.refreshSguTokens(username, password);
-
-          // // Cập nhật access_token và refreshToken
-          // account.access_token = updatedTokens.access_token;
-          // account.refreshToken = updatedTokens.refresh_token;
-          // account.permission.permissionId = updatedTokens.roles;
-
-          // console.log('token của mới account :', account.access_token);
-          // }
-
-          await this.saveScoresForUserFromSgu(CURRENT_USER.userName, CURRENT_USER.access_token, this.uaScore);
-
-          // Lưu lại thay đổi
-          await this.accountService.update(account.id, account);
-
-          // Lấy thông tin người dùng từ cơ sở dữ liệu và trả về phản hồi
-          user = await this.userService.getByUserId(account.username);
-          return this.generateAuthResponse(updatedTokens, user as User);
+        const permissionId = account.permission.permissionId as PermissionId;
+        const config = tokenConfig[permissionId];
+        if (!config) {
+          throw new Error("Invalid permissionId");
         }
+
+        const updatedTokens = {
+          access_token: jwt.sign(
+            { id: account.id, role: config.role },
+            config.secret,
+            { expiresIn: '2h' }
+          ),
+          refresh_token: account.refreshToken,
+          roles: config.role
+        };
+
+        if (permissionId === "SINHVIEN")
+          await this.saveScoresForUserFromSgu(CURRENT_USER.userName);
+
+        // Lưu lại thay đổi
+        await this.accountService.update(account.id, account);
+
+        // Nếu user đã tồn tại, cập nhật thông tin user
+        if (user)
+          user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, account);
+
+        // Lấy thông tin người dùng từ cơ sở dữ liệu và trả về phản hồi
+        user = await this.userService.getByUserId(account.username);
+        return this.generateAuthResponse(updatedTokens, user as User);
+
       }
     } catch (error) {
       this.handleError(error);
@@ -136,16 +130,16 @@ export class SguAuthService {
 
   private async updateExistingUser(user: User, loginData: any, studentInfo: any, imageData: any, account: Account): Promise<User> {
     user.fullname = studentInfo.ten_day_du;
-    user.dateOfBirth = new Date(studentInfo.ngay_sinh.split('/').reverse().join('-'));
+    user.dateOfBirth = new Date(studentInfo.ngay_sinh?.split('/').reverse().join('-'));
     user.placeOfBirth = studentInfo.noi_sinh;
     user.phone = studentInfo.dien_thoai;
     user.email = studentInfo.email || loginData.principal;
     user.isStudent = studentInfo.hien_dien_sv === 'Đang học';
     user.class = studentInfo.lop;
-    user.faculty = { facultyId: studentInfo.khoi.substring(0, 3) } as any;
+    user.faculty = { facultyId: studentInfo.khoi?.substring(0, 3) } as any;
     user.stillStudy = user.isStudent;
-    user.firstAcademicYear = parseInt(studentInfo.nhhk_vao.toString().substring(0, 4));
-    user.lastAcademicYear = parseInt(studentInfo.nhhk_ra.toString().substring(0, 4));
+    user.firstAcademicYear = parseInt(studentInfo.nhhk_vao?.toString().substring(0, 4)) || 0;
+    user.lastAcademicYear = parseInt(studentInfo.nhhk_ra?.toString().substring(0, 4)) || 0;
     user.isActive = true;
     user.avatar = imageData;
     user.account = account;
@@ -409,16 +403,14 @@ export class SguAuthService {
     }
   }
 
-  async getImageAccount(ua: string, access_token: string, ma_sv: string) {
+  async getImageAccount(access_token: string, ma_sv: string) {
     try {
       const response = await axios.post(`${SGU_IMAGE_ACCOUNT_API_URL}?MaSV=${ma_sv}`, {}, {
         headers: {
           'Authorization': `Bearer ${access_token}`,
           'Content-Type': 'application/json',
-          'ua': ua
         }
       });
-      console.log('getImageAccount', response);
       return response.data.data.thong_tin_sinh_vien.image;
     } catch (error) {
       console.error('Error fetching image account:', error);
@@ -442,49 +434,48 @@ export class SguAuthService {
     }
   }
 
-  async saveScoresForUserFromSgu(userId: string, accessToken: string, ua: string) {
+  async saveScoresForUserFromSgu(userId: string) {
     try {
-      const sguAuthService = new SguAuthService();
-      const jsonResponse = await sguAuthService.getScoreFromSGU(ua, accessToken);
-
-      if (!jsonResponse || !jsonResponse.data || jsonResponse.data.ds_diem_hocky.length === 0) {
-        throw new Error('No scores found for the user.');
-      }
-
       const scoreRepository = AppDataSource.getRepository(Score);
       const componentScoreRepository = AppDataSource.getRepository(ComponentScore);
       const subjectRepository = AppDataSource.getRepository(Subject);
       const semesterRepository = AppDataSource.getRepository(Semester);
       const userRepository = AppDataSource.getRepository(User);
 
-      // Loop through each semester in the response
-      const semesters = jsonResponse.data.ds_diem_hocky;
+      const semesters = this.ScoreOfUser.ds_diem_hocky;
+
+      // Lấy thông tin người dùng một lần
+      const user = await userRepository.findOne({ where: { userId: userId } });
+      if (!user) {
+        throw new Error(`Không tìm thấy người dùng với ID ${userId}.`);
+      }
+
+      // Xử lý từng học kỳ
       for (const semesterData of semesters) {
         const semesterCode = semesterData.hoc_ky;
         const yearString = semesterCode.substring(0, 4);
         const semesterNumber = parseInt(semesterCode.substring(4));
 
-
-        // Find or create the semester
+        // Tìm hoặc tạo học kỳ
         let semester = await semesterRepository.findOne({
           where: {
             semesterName: semesterNumber,
             academicYear: yearString
           }
-        });
+        }) || new Semester();
 
-        if (!semester) {
-          semester = new Semester();
+        // Nếu chưa có ID học kỳ, lưu học kỳ mới
+        if (!semester.semesterId) {
           semester.semesterName = semesterNumber;
           semester.academicYear = yearString;
           await semesterRepository.save(semester);
         }
 
-        // Process each subject in the semester
-        for (const subjectData of semesterData.ds_diem_mon_hoc) {
-          let subject = await subjectRepository.findOne({ where: { subjectId: subjectData.ma_mon } });
-          if (!subject) {
-            subject = new Subject();
+        // Xử lý từng môn học trong học kỳ
+        const subjectPromises = semesterData.ds_diem_mon_hoc.map(async (subjectData: any) => {
+          // Tìm hoặc tạo môn học
+          let subject = await subjectRepository.findOne({ where: { subjectId: subjectData.ma_mon } }) || new Subject();
+          if (!subject.subjectId) {
             subject.subjectId = subjectData.ma_mon;
             subject.subjectName = subjectData.ten_mon;
             subject.creditHour = parseInt(subjectData.so_tin_chi);
@@ -492,152 +483,90 @@ export class SguAuthService {
             subject.listFrame = '';
             subject.createDate = new Date();
             subject.lastModifyDate = new Date();
-
-            const userSubject = await userRepository.findOne({ where: { userId: userId } }) as User;
-            subject.createUser = userSubject as User;
-            subject.lastModifyUser = userSubject as User;
-
+            subject.createUser = user; // Gán người tạo
+            subject.lastModifyUser = user; // Gán người sửa đổi
             await subjectRepository.save(subject);
           }
 
-          // Fetch the User entity based on the userId
-          const user = await userRepository.findOne({ where: { userId: userId } });
-          if (!user) {
-            throw new Error(`User with ID ${userId} not found.`);
-          }
-
-          // Find the existing Score entry with the correct relationships
-          let score = await scoreRepository.findOne({
-            where: {
-              student: user, // Pass the User entity
-              subject: subject, // Pass the Subject entity
-              semester: semester // Pass the Semester entity
-            }
-          });
-
-          if (!score) {
-            score = new Score();
-            score.student = user;
-            score.subject = subject;
-            score.semester = semester;
-          } else {
-            // Delete the existing ComponentScore records
-            await componentScoreRepository.delete({ score: score });
-            await scoreRepository.delete(score.id);
-          }
-
-          // Replace NaN values with 0
+          // Chuẩn bị dữ liệu điểm
+          const score = new Score();
           score.examScore = isNaN(parseFloat(subjectData.diem_thi)) ? 0 : parseFloat(subjectData.diem_thi);
           score.testScore = isNaN(parseFloat(subjectData.diem_giua_ky)) ? 0 : parseFloat(subjectData.diem_giua_ky);
           score.finalScore10 = isNaN(parseFloat(subjectData.diem_tk)) ? 0 : parseFloat(subjectData.diem_tk);
           score.finalScore4 = isNaN(parseFloat(subjectData.diem_tk_so)) ? 0 : parseFloat(subjectData.diem_tk_so);
           score.finalScoreLetter = subjectData.diem_tk_chu || '';
-          score.result = subjectData.ket_qua === 1;
+          score.result = subjectData.ket_qua === 1; // Kiểm tra kết quả
+          score.student = user; // Gán sinh viên
+          score.subject = subject; // Gán môn học
+          score.semester = semester; // Gán học kỳ
 
+          // Lưu hoặc cập nhật điểm
           await scoreRepository.save(score);
 
-          // Save component scores
-          if (subjectData.ds_diem_thanh_phan && subjectData.ds_diem_thanh_phan.length > 0) {
-            for (const component of subjectData.ds_diem_thanh_phan) {
-              let componentScore = new ComponentScore();
-              componentScore.score = score;
+          // Xử lý điểm của các thành phần
+          if (subjectData.ds_diem_thanh_phan) {
+            const componentPromises = subjectData.ds_diem_thanh_phan.map(async (component: any) => {
+              const componentScore = new ComponentScore();
+              componentScore.score = score; // Gán điểm cho thành phần
               componentScore.componentName = component.ten_thanh_phan;
               componentScore.weight = parseInt(component.trong_so);
               componentScore.weightScore = isNaN(parseFloat(component.diem_thanh_phan)) ? 0 : parseFloat(component.diem_thanh_phan);
-
               await componentScoreRepository.save(componentScore);
-            }
+            });
+            await Promise.all(componentPromises); // Lưu tất cả điểm thành phần đồng thời
           }
-        }
+        });
+
+        await Promise.all(subjectPromises); // Lưu tất cả môn học đồng thời
       }
 
-      console.log('User scores successfully saved.');
+      console.log('Điểm của người dùng đã được lưu thành công.');
     } catch (error) {
-      console.error('Error saving user scores:', error);
+      console.error('Lỗi khi lưu điểm của người dùng:', error);
     }
   }
 
 
-  // async getInfoUserFromSGU(username: string, password: string) {
-  //   const browser = await puppeteer.launch({ headless: false });
-  //   const page = await browser.newPage();
-
-  //   try {
-  //     // Mở trang login của SGU
-  //     await page.goto('https://thongtindaotao.sgu.edu.vn/');
-
-  //     // Nhập username và password
-  //     await page.type('input#username', username);
-  //     await page.type('input#password', password);
-
-  //     // Bấm vào nút đăng nhập
-  //     await page.click('button#login-btn');
-
-  //     // Chờ đến khi đăng nhập xong
-  //     await page.waitForNavigation();
-
-  //     // Chuyển hướng tới trang xem điểm
-  //     await page.goto('https://thongtindaotao.sgu.edu.vn/XemDiem');
-
-  //     // Lấy thông tin điểm
-  //     const scores = await page.evaluate(() => {
-  //       const scoreTable = document.querySelectorAll('table#scores tbody tr');
-  //       const scoreData: any[] = [];
-  //       scoreTable.forEach((row) => {
-  //         const cols = row.querySelectorAll('td');
-  //         scoreData.push({
-  //           subject: cols[0].innerText,
-  //           score: cols[1].innerText
-  //         });
-  //       });
-  //       return scoreData;
-  //     });
-
-  //     await browser.close();
-  //     return scores;
-  //   } catch (error) {
-  //     await browser.close();
-  //     throw new Error('Có lỗi xảy ra trong quá trình lấy điểm.');
-  //   }
-  // };
-  async getInfoUserFromSGU(username: string, password: string) {
-    const browser = await puppeteer.launch({ headless: false, defaultViewport: null, });
+  async getInfoUserFromSGU(username: string, password: string, isExistAccount: boolean) {
+    // Khởi tạo trình duyệt Puppeteer
+    const browser = await puppeteer.launch({ headless: false, defaultViewport: null });
     const pages = await browser.pages(); // Lấy danh sách các tab hiện có
     const page = pages[0] || await browser.newPage(); // Sử dụng tab đầu tiên hoặc tạo mới
 
-    // Bắt các yêu cầu gửi đi từ trang
-    page.on('request', request => {
-      const url = request.url();
-      const headers = request.headers();
+    // Bắt các phản hồi (response) từ server
+    page.on('response', async response => {
+      const url = response.url();
 
-      // Kiểm tra xem yêu cầu có phải là API lấy điểm
+      // Kiểm tra phản hồi có phải là API lấy điểm không
       if (url.includes('/api/srm/w-locdsdiemsinhvien')) {
-        this.uaScore = headers['ua'];
-
+        const scoreData = await response.json(); // Đọc nội dung phản hồi dưới dạng JSON
+        this.ScoreOfUser = scoreData.data; // Lưu điểm của người dùng
       }
 
-      // Kiểm tra xem yêu cầu có phải là API lấy ảnh
+      // Kiểm tra phản hồi có phải là API lấy ảnh không
       if (url.includes('/api/sms/w-locthongtinimagesinhvien')) {
-        this.uaImage = headers['ua'];
+        const imageData = await response.json(); // Đọc nội dung phản hồi dưới dạng JSON
+        this.ImageOfUser = imageData.data.thong_tin_sinh_vien.image; // Lưu ảnh của người dùng
       }
     });
 
     try {
-      // 1. Mở trang login của SGU
-      await page.goto('https://thongtindaotao.sgu.edu.vn/', { waitUntil: 'networkidle2' });
+      await page.setCacheEnabled(false);
+      // 1. Mở trang đăng nhập của SGU
+      await page.goto('https://thongtindaotao.sgu.edu.vn/#/home', { waitUntil: 'networkidle0' });
 
       // Hiển thị thông báo "Đang xử lý"
       await page.evaluate(() => {
         const message = document.createElement('div');
         message.textContent = 'Đang xử lý...';
         message.style.position = 'absolute';
-        message.style.top = '0'; // Đặt vị trí top là 0
-        message.style.left = '0'; // Đặt vị trí left là 0
-        message.style.width = '100vw'; // Chiếm toàn bộ chiều rộng
-        message.style.height = '100vh'; // Chiếm toàn bộ chiều cao
-        message.style.display = 'flex'; // Sử dụng flexbox để căn giữa
-        message.style.alignItems = 'center'; // Căn giữa theo chiều dọc
-        message.style.justifyContent = 'center'; // Căn giữa theo chiều ngang
+        message.style.top = '0';
+        message.style.left = '0';
+        message.style.width = '100vw';
+        message.style.height = '100vh';
+        message.style.display = 'flex';
+        message.style.alignItems = 'center';
+        message.style.justifyContent = 'center';
         message.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
         message.style.color = 'white';
         message.style.padding = '20px';
@@ -646,7 +575,6 @@ export class SguAuthService {
         document.body.appendChild(message);
       });
 
-
       // 2. Nhập thông tin đăng nhập
       await page.type('input[formcontrolname="username"]', username);
       await page.type('input[formcontrolname="password"]', password);
@@ -654,26 +582,20 @@ export class SguAuthService {
       // 3. Bấm nút đăng nhập
       await page.click('button.btn.btn-primary.ng-star-inserted');
 
-      // 4. Chờ cho đến khi trang chuyển hướng sau khi đăng nhập thành công
-      await page.waitForNavigation({ waitUntil: 'networkidle2' });
+      // 4. Đợi thông báo lỗi xuất hiện hoặc điều hướng thành công
+      const navigationPromise = page.waitForNavigation();
+      const errorPromise = page.waitForSelector('div.alert.alert-danger', { visible: true });
 
-      // 5. Vào trang điểm
-      await page.goto('https://thongtindaotao.sgu.edu.vn/#/diem', { waitUntil: 'domcontentloaded' });
+      const result = await Promise.race([navigationPromise, errorPromise]);
 
-      // Chờ xử lý xong api lấy điểm
-      await Promise.all([
-        page.waitForResponse(response => response.url().includes('/api/srm/w-locdsdiemsinhvien') && response.status() === 200),
-        page.goto('https://thongtindaotao.sgu.edu.vn/#/diem', { waitUntil: 'domcontentloaded' }),
-      ]);
+      // Kiểm tra xem thông báo lỗi xuất hiện
+      if (result && result instanceof puppeteer.ElementHandle) {
+        const errorMessage = await page.$eval('div.alert.alert-danger', el => el?.textContent?.trim());
+        if (errorMessage) {
+          throw errorMessage; // Ném ra thông báo lỗi nếu có
+        }
+      }
 
-      // 6. Vào trang thông tin user
-      await page.goto('https://thongtindaotao.sgu.edu.vn/#/userinfo', { waitUntil: 'domcontentloaded' });
-
-      // Chờ xử lý xong api lấy ảnh
-      await Promise.all([
-        page.waitForResponse(response => response.url().includes('/api/sms/w-locthongtinimagesinhvien') && response.status() === 200),
-        page.goto('https://thongtindaotao.sgu.edu.vn/#/userinfo', { waitUntil: 'domcontentloaded' }),
-      ]);
 
       // 5. Lấy dữ liệu từ sessionStorage
       const sessionData = await page.evaluate(() => {
@@ -681,17 +603,58 @@ export class SguAuthService {
         for (let i = 0; i < sessionStorage.length; i++) {
           const key = sessionStorage.key(i);
           if (key) {
-            data[key] = sessionStorage.getItem(key);
+            data[key] = sessionStorage.getItem(key); // Lưu trữ dữ liệu từ sessionStorage
           }
         }
         return data;
       });
 
-      await browser.close();
+      // Chức năng điều hướng đến trang điểm
+      async function navigateToDiem(retries = 0) {
+        await page.goto('https://thongtindaotao.sgu.edu.vn/#/diem', { waitUntil: 'networkidle0' });
+
+        // Kiểm tra phản hồi từ API lấy điểm
+        try {
+          await Promise.race([
+            page.waitForResponse(response => response.url().includes('/api/srm/w-locdsdiemsinhvien') && response.status() === 200),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000)) // Thời gian chờ tối đa
+          ]);
+        } catch (error) {
+          if (retries < 3) { // Giới hạn số lần gọi lại
+            console.log("Lấy lại điểm, thử lại lần thứ:", retries + 1);
+            await navigateToDiem(retries + 1); // Gọi lại nếu có lỗi
+          } else {
+            throw new Error("Không thể lấy điểm.");
+          }
+        }
+      }
+
+      // Lấy thông tin CURRENT_USER
+      let currentUser: any = null; // Sử dụng 'any' để tránh lỗi kiểu
+      if (sessionData.CURRENT_USER) {
+        try {
+          currentUser = JSON.parse(sessionData.CURRENT_USER); // Phân tích cú pháp CURRENT_USER
+        } catch (error) {
+          console.error("Lỗi phân tích cú pháp CURRENT_USER:", error);
+        }
+      }
+
+      // Gọi hàm để chuyển hướng đến trang điểm và thông tin nếu người dùng là sinh viên
+      if (currentUser && typeof currentUser === 'object' && currentUser.roles === "SINHVIEN") {
+        // if (!isExistAccount) {
+        // 6. Vào trang thông tin người dùng
+        await page.goto('https://thongtindaotao.sgu.edu.vn/#/userinfo', { waitUntil: 'networkidle0' });
+        await page.waitForResponse(response => response.url().includes('/api/sms/w-locthongtinimagesinhvien') && response.status() === 200); // Chờ xử lý xong API lấy ảnh
+        // }
+        // 7. Vào trang điểm
+        await navigateToDiem();
+      }
       return sessionData;
     } catch (error) {
+      throw new Error(`${error}`);
+    } finally {
+      await new Promise(resolve => setTimeout(resolve, 500));
       await browser.close();
-      throw new Error(`Lỗi khi lấy dữ liệu sessionStorage: ${error}`);
     }
   }
 

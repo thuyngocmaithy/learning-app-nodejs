@@ -53,13 +53,31 @@ export class ScientificResearchGroupService {
     return await this.scientificResearchGroupRepository.save(scientificResearchGroup);
   }
 
-  async update(scientificResearchGroupId: string, data: Partial<ScientificResearchGroup>): Promise<ScientificResearchGroup | null> {
-    const scientificResearchGroup = await this.scientificResearchGroupRepository.findOne({ where: { scientificResearchGroupId } });
-    if (!scientificResearchGroup) {
+  async update(scientificResearchGroupId: string, data: any): Promise<ScientificResearchGroup | null> {
+    const SRGUpdate = await this.scientificResearchGroupRepository.findOneBy({ scientificResearchGroupId });
+    if (!SRGUpdate) {
       return null;
     }
-    this.scientificResearchGroupRepository.merge(scientificResearchGroup, data);
-    return this.scientificResearchGroupRepository.save(scientificResearchGroup);
+    const faculty = await this.facultyRepository.findOne({ where: { facultyId: data.facultyId } });
+    if (!faculty) {
+      throw new Error('Invalid Faculty ID');
+    }
+
+    const status = await this.statusRepository.findOne({ where: { statusId: data.statusId } });
+    if (!status) {
+      throw new Error('Invalid Status ID');
+    }
+
+
+    // Merge dữ liệu mới vào đối tượng đã tìm thấy
+    SRGUpdate.scientificResearchGroupName = data.scientificResearchGroupName;
+    SRGUpdate.startYear = data.startYear;
+    SRGUpdate.finishYear = data.finishYear;
+    SRGUpdate.faculty = faculty;
+    SRGUpdate.status = status;
+    SRGUpdate.lastModifyUser = data.lastModifyUserId;
+
+    return this.scientificResearchGroupRepository.save(SRGUpdate);
   }
 
   async delete(scientificResearchGroupIds: string[]): Promise<boolean> {
