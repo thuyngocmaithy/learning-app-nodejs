@@ -19,9 +19,9 @@ export class Notification {
    */
   @Column({
     type: 'enum',
-    enum: ['success', 'error', 'warning'],
+    enum: ['success', 'error', 'warning', 'info'],
   })
-  type: 'success' | 'error' | 'warning' = "warning";
+  type: 'success' | 'error' | 'warning' | 'info' = "info";
 
   /**
    * Nội dung thông báo (không rỗng)
@@ -39,6 +39,7 @@ export class Notification {
    * ID người nhận thông báo (tham chiếu đến thực thể User, không rỗng)
    */
   @ManyToOne(() => User, data => data.userId, { nullable: true })
+  @JoinColumn({ name: 'toUserId' })
   toUser: User;
 
   /**
@@ -51,6 +52,7 @@ export class Notification {
    * ID người tạo thông báo (tham chiếu đến thực thể User, không rỗng)
    */
   @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'createUserId' })
   createUser: User;
 
   /**

@@ -2,17 +2,45 @@ import { In, Repository } from 'typeorm';
 import { Follower, FollowerDetail } from '../entities/Follower';
 import { DataSource } from 'typeorm';
 import { User } from '../entities/User';
+import { ScientificResearch } from '../entities/ScientificResearch';
 
 export class FollowerDetailService {
   private followerDetailRepository: Repository<FollowerDetail>;
+  private followerRepository: Repository<Follower>;
+  private userRepository: Repository<User>;
+  private SRRepository: Repository<ScientificResearch>;
 
   constructor(dataSource: DataSource) {
     this.followerDetailRepository = dataSource.getRepository(FollowerDetail);
+    this.followerRepository = dataSource.getRepository(Follower);
+    this.userRepository = dataSource.getRepository(User);
+    this.SRRepository = dataSource.getRepository(ScientificResearch);
   }
 
-  async create(data: Partial<FollowerDetail>): Promise<FollowerDetail> {
-    const followerDetail = this.followerDetailRepository.create(data);
-    return this.followerDetailRepository.save(followerDetail);
+  async create(data: any): Promise<FollowerDetail> {
+    let follower = await this.followerRepository.findOne({ where: { scientificResearch: { scientificResearchId: data.scientificResearchId } } });
+    const scientificResearch = await this.SRRepository.findOneBy({ scientificResearchId: data.scientificResearchId });
+
+    if (!follower && scientificResearch) {
+      const newFollower = new Follower();
+      newFollower.scientificResearch = scientificResearch;
+      follower = await this.followerRepository.save(newFollower);
+    }
+    if (!follower) {
+      throw new Error('Follower not found');
+    }
+
+    const user = await this.userRepository.findOne({ where: { userId: data.userId } });
+    if (!user) {
+      throw new Error('Invalid user ID');
+    }
+
+    const followerDetail = this.followerDetailRepository.create({
+      follower: follower,
+      user: user
+    });
+
+    return await this.followerDetailRepository.save(followerDetail);
   }
 
   async getAll(): Promise<FollowerDetail[]> {

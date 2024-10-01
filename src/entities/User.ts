@@ -23,7 +23,7 @@ export class User {
   /**
    * Ngày sinh (không rỗng)
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   dateOfBirth: Date;
 
   /**
@@ -213,13 +213,13 @@ export class User {
   /**
    * Năm học đầu tiên (có thể rỗng)
    */
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   firstAcademicYear: number;
 
   /**
    * Năm học cuối cùng (có thể rỗng)
    */
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   lastAcademicYear: number;
 
   /**
@@ -267,4 +267,10 @@ export class User {
   @UpdateDateColumn()
   lastModifyDate: Date;
   user: Promise<Major | null>;
+
+  /**
+   * GPA (có thể rỗng)
+   */
+  @Column({ type: 'float', nullable: true })
+  GPA: number;
 }

@@ -69,9 +69,10 @@ export class UserService {
       where: {
         isStudent: false,
         isActive: true,
-        faculty: { facultyId } // Giả sử bạn đã thiết lập mối quan hệ đúng với entity User
+        faculty: { facultyId }
       },
       relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
     });
   }
+
 }

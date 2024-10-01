@@ -10,8 +10,7 @@ userRouter.get('/teachers', userController.getActiveNonStudents);
 userRouter.get('/students', userController.getActiveStudents);
 userRouter.get('/users-by-faculty/:facultyId', userController.getUsersByFaculty);
 userRouter.get('/', userController.getAllUsers);
-userRouter.get('/:userId', userController.getUserByUserId); // Sửa lại route
-
+userRouter.get('/:userId', userController.getUserByUserId);
 userRouter.post('/', userController.createUser);
 userRouter.put('/:id', userController.updateUser);
 userRouter.delete('/', userController.deleteUser);

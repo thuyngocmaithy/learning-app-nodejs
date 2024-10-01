@@ -14,6 +14,7 @@ export class ScientificResearchService {
   private userRepository: Repository<User>;
   private statusRepository: Repository<Status>;
   private scientificResearchGroupRepository: Repository<ScientificResearchGroup>;
+  private facultyRepository: Repository<Faculty>;
 
   constructor(dataSource: DataSource) {
     this.scientificResearchRepository = dataSource.getRepository(ScientificResearch);
@@ -21,6 +22,7 @@ export class ScientificResearchService {
     this.userRepository = dataSource.getRepository(User);
     this.statusRepository = dataSource.getRepository(Status);
     this.scientificResearchGroupRepository = dataSource.getRepository(ScientificResearchGroup);
+    this.facultyRepository = dataSource.getRepository(Faculty);
   }
 
   async getAll(): Promise<ScientificResearch[]> {
@@ -38,13 +40,18 @@ export class ScientificResearchService {
         'follower',
         'follower.followerDetails',
         'follower.followerDetails.user',
-        'faculty',
+        'scientificResearchGroup.faculty',
         'scientificResearchGroup'
       ]
     });
   }
 
   public create = async (scientificResearchData: any): Promise<ScientificResearch> => {
+    const faculty = await this.facultyRepository.findOne({ where: { facultyId: scientificResearchData.facultyId } });
+    if (!faculty) {
+      throw new Error('Invalid faculty ID');
+    }
+
     const instructor = await this.userRepository.findOne({ where: { userId: scientificResearchData.instructorId } });
     if (!instructor) {
       throw new Error('Invalid instructor ID');
@@ -55,12 +62,15 @@ export class ScientificResearchService {
       throw new Error('Invalid Status ID');
     }
 
-    const scientificResearchGroup = await this.scientificResearchGroupRepository.findOne({ where: { scientificResearchGroupId: scientificResearchData.scientificResearchGroup } });
+    const scientificResearchGroup = await this.scientificResearchGroupRepository.findOne({
+      where: { scientificResearchGroupId: scientificResearchData.scientificResearchGroup },
+      relations: ["faculty"]
+    });
     if (!scientificResearchGroup) {
       throw new Error('Invalid ScientificResearchGroups ID');
     }
 
-    const newId = await this.generateNewId(scientificResearchData.facultyId);
+    const newId = await this.generateNewId(scientificResearchGroup.faculty.facultyId);
 
     const followerDetails = [{ user: scientificResearchData.createUserId }];
 
@@ -147,7 +157,7 @@ export class ScientificResearchService {
         'follower',
         'follower.followerDetails',
         'follower.followerDetails.user',
-        'faculty'
+        'scientificResearchGroup.faculty'
       ]
     };
     return this.scientificResearchRepository.find(options);
@@ -157,10 +167,10 @@ export class ScientificResearchService {
     const whereCondition: any = {};
 
     if (condition.instructor) {
-      whereCondition.instructor = { userId: condition.instructor};
+      whereCondition.instructor = { userId: condition.instructor };
     }
     if (condition.scientificResearchGroup) {
-      whereCondition.scientificResearchGroup = { scientificResearchGroupId: condition.scientificResearchGroup};
+      whereCondition.scientificResearchGroup = { scientificResearchGroupId: condition.scientificResearchGroup };
     }
 
     return this.scientificResearchRepository.find({
@@ -181,29 +191,29 @@ export class ScientificResearchService {
         'follower',
         'follower.followerDetails',
         'follower.followerDetails.user',
-        'faculty'
+        'scientificResearchGroup.faculty'
       ]
     };
     const listSR = await this.scientificResearchRepository.find(options);
 
     const promises = listSR.map(async (SR) => {
-      const responseCountRegister = await this.scientificResearch_UserRepository.findBy({ scientificResearch: {scientificResearchId: SR.scientificResearchId }});
+      const responseCountRegister = await this.scientificResearch_UserRepository.findBy({ scientificResearch: { scientificResearchId: SR.scientificResearchId } });
       const count = responseCountRegister.length;
 
       const responseUserRegister = await this.scientificResearch_UserRepository.findOneBy(
-        { 
-          scientificResearch: {scientificResearchId: SR.scientificResearchId }, 
-           user: {userId:userId}
+        {
+          scientificResearch: { scientificResearchId: SR.scientificResearchId },
+          user: { userId: userId }
         }
       );
       const approve = responseUserRegister?.isApprove;
 
-      return { ...SR, count, approve};
+      return { ...SR, count, approve };
     });
 
     // Đợi tất cả các Promise hoàn thành
     const result = await Promise.all(promises);
-    
+
     return result;
   }
 

@@ -13,6 +13,8 @@ export class ScientificResearch_UserService {
   private followerDetailRepository: Repository<FollowerDetail>;
   private followerRepository: Repository<Follower>;
   private srgRepository: Repository<ScientificResearchGroup>;
+  private userRepository: Repository<User>;
+  private srRepository: Repository<ScientificResearch>;
   private followerService: FollowerService;
   private followerDetailService: FollowerDetailService;
 
@@ -21,6 +23,8 @@ export class ScientificResearch_UserService {
     this.followerDetailRepository = dataSource.getRepository(FollowerDetail);
     this.followerRepository = dataSource.getRepository(Follower);
     this.srgRepository = dataSource.getRepository(ScientificResearchGroup);
+    this.userRepository = dataSource.getRepository(User);
+    this.srRepository = dataSource.getRepository(ScientificResearch);
     this.followerService = new FollowerService(AppDataSource);
     this.followerDetailService = new FollowerDetailService(AppDataSource);
 
@@ -49,59 +53,89 @@ export class ScientificResearch_UserService {
     return this.scientificResearchUserRepository.findOne(options);
   }
 
-  public create = async (scientificResearchUserData: Partial<ScientificResearch_User>): Promise<ScientificResearch_User> => {
-    const scientificResearchUser = this.scientificResearchUserRepository.create(scientificResearchUserData);
-    return this.scientificResearchUserRepository.save(scientificResearchUser);
+  public create = async (scientificResearchUserData: any): Promise<boolean> => {
+    const listUser = await this.userRepository.findBy({
+      userId: In(scientificResearchUserData.userId)
+    });
+    if (!listUser) {
+      throw new Error('Invalid userId');
+    }
+
+    const scientificResearch = await this.srRepository.findOneBy({ scientificResearchId: scientificResearchUserData.scientificResearchId });
+    if (!scientificResearch) {
+      throw new Error('Invalid scientificResearchId');
+    }
+    const indexGroup = this.getHighestGroupScientificResearchUser();
+    // Lặp qua danh sách scientificResearch và tạo các đối tượng scientificResearchUser
+    for (const user of listUser) {
+      const scientificResearchUser = this.scientificResearchUserRepository.create({
+        scientificResearch: scientificResearch,
+        user: user,
+        group: listUser.length === 1 ? 0 : await indexGroup + 1,
+        isLeader: user.userId === scientificResearchUserData.isLeader,
+      });
+
+      // Lưu đối tượng scientificResearchUser 
+      await this.scientificResearchUserRepository.save(scientificResearchUser);
+    }
+    return true
   }
 
-  public update = async (id: string, scientificResearchUserData: Partial<ScientificResearch_User>): Promise<ScientificResearch_User | null> => {
-    await this.scientificResearchUserRepository.update(id, scientificResearchUserData);
+  public update = async (id: string[], scientificResearchUserData: Partial<ScientificResearch_User>): Promise<ScientificResearch_User[] | null> => {
+    await this.scientificResearchUserRepository.update(
+      { id: In(id) },
+      scientificResearchUserData
+    );
 
-    const updatedScientificResearchUser = await this.scientificResearchUserRepository.findOne({
-      where: { id },
+    const updatedScientificResearchUser = await this.scientificResearchUserRepository.find({
+      where: { id: In(id) },
       relations: ['scientificResearch', 'user']
     });
 
     if (updatedScientificResearchUser) {
-      // Tìm follower bằng scientificResearchId
-      const follower = await this.followerService.getByScientificResearchId(updatedScientificResearchUser.scientificResearch.scientificResearchId);
-      // Nếu đã có follower => Thêm detail
-      if (follower) {
-        const followerDetail = await this.followerDetailService.findByUserAndFollower(updatedScientificResearchUser.user, follower);
-        if (scientificResearchUserData.isApprove) {
-          // Thêm người theo dõi
-          if (!followerDetail) {
-            const newFollowerDetail = new FollowerDetail();
-            newFollowerDetail.follower = follower;
-            newFollowerDetail.user = updatedScientificResearchUser.user;
-            await this.followerDetailRepository.save(newFollowerDetail);
-          }
-        } else {
-          // Xóa người theo dõi
-          if (followerDetail) {
-            await this.followerDetailRepository.remove(followerDetail);
+      updatedScientificResearchUser.forEach(async (updatedSRU) => {
+        // Tìm follower bằng scientificResearchId
+        const follower = await this.followerService.getByScientificResearchId(updatedSRU.scientificResearch.scientificResearchId);
+        // Nếu đã có follower => Thêm detail
+        if (follower) {
+          const followerDetail = await this.followerDetailService.findByUserAndFollower(updatedSRU.user, follower);
+          if (scientificResearchUserData.isApprove) {
+            // Thêm người theo dõi
+            if (!followerDetail) {
+              const newFollowerDetail = new FollowerDetail();
+              newFollowerDetail.follower = follower;
+              newFollowerDetail.user = updatedSRU.user;
+              await this.followerDetailRepository.save(newFollowerDetail);
+            }
+          } else {
+            // Xóa người theo dõi
+            if (followerDetail) {
+              await this.followerDetailRepository.remove(followerDetail);
+            }
           }
         }
-      }
-      // Chưa có follower => Tạo mới follower trước khi thêm detail
-      else {
-        // Chưa có follower => không xử lý trường hợp Hủy duyệt (isApprove = false)
-        // Do Hủy duyệt => Xóa followerDetail nhưng chưa có follower nên không cần xử lý
-        if (scientificResearchUserData.isApprove) {
-          const newFollower = new Follower();
-          newFollower.scientificResearch = updatedScientificResearchUser.scientificResearch;
-          const newfollowerCreate = await this.followerRepository.save(newFollower);
-          const followerDetail = await this.followerDetailService.findByUserAndFollower(updatedScientificResearchUser.user, newfollowerCreate);
+        else {
+          // Chưa có follower => Tạo mới follower trước khi thêm detail
+          // Chưa có follower => không xử lý trường hợp Hủy duyệt (isApprove = false)
+          // Do Hủy duyệt => Xóa followerDetail nhưng chưa có follower nên không cần xử lý
+          if (scientificResearchUserData.isApprove) {
+            updatedScientificResearchUser.forEach(async (updatedSRU) => {
+              const newFollower = new Follower();
+              newFollower.scientificResearch = updatedSRU.scientificResearch;
+              const newfollowerCreate = await this.followerRepository.save(newFollower);
+              const followerDetail = await this.followerDetailService.findByUserAndFollower(updatedSRU.user, newfollowerCreate);
 
-          // Thêm người theo dõi
-          if (!followerDetail) {
-            const newFollowerDetail = new FollowerDetail();
-            newFollowerDetail.follower = newfollowerCreate;
-            newFollowerDetail.user = updatedScientificResearchUser.user;
-            await this.followerDetailRepository.save(newFollowerDetail);
+              // Thêm người theo dõi
+              if (!followerDetail) {
+                const newFollowerDetail = new FollowerDetail();
+                newFollowerDetail.follower = newfollowerCreate;
+                newFollowerDetail.user = updatedSRU.user;
+                await this.followerDetailRepository.save(newFollowerDetail);
+              }
+            })
           }
         }
-      }
+      })
     }
 
     return updatedScientificResearchUser;
@@ -148,7 +182,7 @@ export class ScientificResearch_UserService {
         'scientificResearch.follower',
         'scientificResearch.follower.followerDetails',
         'scientificResearch.status',
-        'scientificResearch.faculty'
+        'scientificResearch.scientificResearchGroup.faculty'
       ]
     };
     return this.scientificResearchUserRepository.find(options);
@@ -175,9 +209,13 @@ export class ScientificResearch_UserService {
 
   // Xóa bằng user và scientificResearch
   public deleteByUserAndScientificResearch = async (user: User, scientificResearch: ScientificResearch): Promise<boolean> => {
+    const findGroupDel = await this.scientificResearchUserRepository.findOneBy({
+      user: { userId: user.userId },
+      scientificResearch: { scientificResearchId: scientificResearch.scientificResearchId },
+    })
+
     const result = await this.scientificResearchUserRepository.delete({
-      user,
-      scientificResearch
+      group: findGroupDel?.group
     });
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }

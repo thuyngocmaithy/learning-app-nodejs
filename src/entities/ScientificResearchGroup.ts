@@ -73,5 +73,4 @@ export class ScientificResearchGroup {
    */
   @UpdateDateColumn()
   lastModifyDate: Date;
-
 }
