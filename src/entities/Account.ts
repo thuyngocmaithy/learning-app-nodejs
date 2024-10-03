@@ -49,6 +49,12 @@ export class Account {
   @ManyToOne(() => Permission)
   @JoinColumn({ name: 'permissionId' })
   permission: Permission;
+
+  /**
+   * Tài khoản hệ thống
+   */
+  @Column({ default: false, nullable: false })
+  isSystem: boolean;
 }
 
 
