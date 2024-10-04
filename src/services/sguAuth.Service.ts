@@ -24,6 +24,8 @@ const SGU_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/auth/login';
 const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/dkmh/w-locsinhvieninfo';
 const SGU_IMAGE_ACCOUNT_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/sms/w-locthongtinimagesinhvien';
 const SGU_DIEM_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/srm/w-locdsdiemsinhvien';
+const SGU_API_CTSV = 'https://ctsv.sgu.edu.vn/sinhvien/index.php';
+
 // https://thongtindaotao.sgu.edu.vn/api/srm/w-locdsdiemsinhvien?hien_thi_mon_theo_hkdk=false
 export class SguAuthService {
   private accountService: AccountService;
@@ -32,6 +34,9 @@ export class SguAuthService {
   private majorRepository: Repository<Major>;
   private ScoreOfUser: any;
   private ImageOfUser: string;
+  private GPAOfUser: number;
+  private tokenConfig: { [key: string]: { secret: string, role: string } };
+
 
   constructor() {
     this.accountService = new AccountService(AppDataSource);
@@ -40,6 +45,12 @@ export class SguAuthService {
     this.majorRepository = AppDataSource.getRepository(Major);
     this.ScoreOfUser = new Object();
     this.ImageOfUser = "";
+    this.GPAOfUser = 0;
+    this.tokenConfig = {
+      ADMIN: { secret: 'TokenADMIN', role: 'ADMIN' },
+      SINHVIEN: { secret: 'TokenSINHVIEN', role: 'SINHVIEN' },
+      GIANGVIEN: { secret: 'TokenGIANGVIEN', role: 'GIANGVIEN' }
+    };
   }
 
   async loginToSgu(username: string, password: string) {
@@ -48,29 +59,53 @@ export class SguAuthService {
       let account = await this.accountService.getByUsername(username);
       let user = await this.userService.getByUserId(username);
 
-      const loginData = await this.getInfoUserFromSGU(username, password, account ? true : false);
-
-      const CURRENT_USER = JSON.parse(loginData.CURRENT_USER || "");
-      const CURRENT_USER_INFO = JSON.parse(loginData.CURRENT_USER_INFO || "");
-
-      if (account?.permission.permissionId === "ADMIN") {
+      if (account?.isSystem) {
         // Kiểm tra mật khẩu
         const isPasswordMatch = await bcrypt.compare(password, account.password);
 
         if (!isPasswordMatch) {
           throw new Error("Tên đăng nhập hoặc mật khẩu không chính xác");
         }
+
+        // Update token
+        type PermissionId = keyof SguAuthService['tokenConfig'];
+
+        const permissionId = account.permission.permissionId as PermissionId;
+        const config = this.tokenConfig[permissionId];
+        if (!config) {
+          throw new Error("Invalid permissionId");
+        }
+
+        const updatedTokens = {
+          access_token: jwt.sign(
+            { id: account.id, role: config.role },
+            config.secret,
+            { expiresIn: '2h' }
+          ),
+          refresh_token: account.refreshToken,
+          roles: config.role
+        };
+
+
+        return this.generateAuthResponse(updatedTokens, user as User);
       }
+
+      const loginData = await this.getInfoUserFromSGU(username, password, account ? true : false);
+
+
+      const CURRENT_USER = JSON.parse(loginData.CURRENT_USER || "");
+      const CURRENT_USER_INFO = JSON.parse(loginData.CURRENT_USER_INFO || "");
+
       if (!account) {
         // Tạo tài khoản mới trong cơ sở dữ liệu
         account = await this.createOrUpdateAccount(CURRENT_USER, password);
 
         if (user) {
           // Nếu user đã tồn tại, cập nhật thông tin
-          user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, account);
+          user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
         } else {
           // Nếu user chưa tồn tại, tạo mới
-          user = await this.createNewUser(CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, account);
+          user = await this.createNewUser(CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
         }
         if (account.permission.permissionId === "SINHVIEN")
           await this.saveScoresForUserFromSgu(account.username);
@@ -84,16 +119,11 @@ export class SguAuthService {
         // Update tài khoản trong cơ sở dữ liệu
         account = await this.createOrUpdateAccount(CURRENT_USER, password);
 
-        const tokenConfig = {
-          ADMIN: { secret: 'TokenADMIN', role: 'ADMIN' },
-          SINHVIEN: { secret: 'TokenSINHVIEN', role: 'SINHVIEN' },
-          GIANGVIEN: { secret: 'TokenGIANGVIEN', role: 'GIANGVIEN' }
-        };
 
-        type PermissionId = keyof typeof tokenConfig;
+        type PermissionId = keyof SguAuthService['tokenConfig'];
 
         const permissionId = account.permission.permissionId as PermissionId;
-        const config = tokenConfig[permissionId];
+        const config = this.tokenConfig[permissionId];
         if (!config) {
           throw new Error("Invalid permissionId");
         }
@@ -116,7 +146,7 @@ export class SguAuthService {
 
         // Nếu user đã tồn tại, cập nhật thông tin user
         if (user)
-          user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, account);
+          user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
 
         // Lấy thông tin người dùng từ cơ sở dữ liệu và trả về phản hồi
         user = await this.userService.getByUserId(account.username);
@@ -128,7 +158,7 @@ export class SguAuthService {
     }
   }
 
-  private async updateExistingUser(user: User, loginData: any, studentInfo: any, imageData: any, account: Account): Promise<User> {
+  private async updateExistingUser(user: User, loginData: any, studentInfo: any, imageData: any, gpaData: number, account: Account): Promise<User> {
     user.fullname = studentInfo.ten_day_du;
     user.dateOfBirth = new Date(studentInfo.ngay_sinh?.split('/').reverse().join('-'));
     user.placeOfBirth = studentInfo.noi_sinh;
@@ -165,6 +195,7 @@ export class SguAuthService {
     user.ma_truong = studentInfo.ma_truong;
     user.ten_truong = studentInfo.ten_truong;
     user.hoc_vi = studentInfo.hoc_vi;
+    user.GPA = gpaData;
     switch (true) {
       case studentInfo.bo_mon === 'Kỹ thuật phần mềm' || studentInfo.chuyen_nganh === 'Kỹ thuật phần mềm':
         user.major.majorId = "KTPM";
@@ -300,7 +331,7 @@ export class SguAuthService {
     }
   }
 
-  private async createNewUser(loginData: any, studentInfo: any, imageData: any, account: Account): Promise<User> {
+  private async createNewUser(loginData: any, studentInfo: any, imageData: any, gpaData: number, account: Account): Promise<User> {
     const studentId = studentInfo.ma_sv;
     let user = await this.userService.getByUserId(studentId);
     const majorKTPM = await this.majorRepository.findOneBy({ majorId: "KTPM" });
@@ -348,6 +379,7 @@ export class SguAuthService {
       user.ma_truong = studentInfo.ma_truong;
       user.ten_truong = studentInfo.ten_truong;
       user.hoc_vi = studentInfo.hoc_vi;
+      user.GPA = gpaData;
       switch (true) {
         case studentInfo.bo_mon === 'Kỹ thuật phần mềm' || studentInfo.chuyen_nganh === 'Kỹ thuật phần mềm':
           if (majorKTPM)
@@ -541,6 +573,7 @@ export class SguAuthService {
       if (url.includes('/api/srm/w-locdsdiemsinhvien')) {
         const scoreData = await response.json(); // Đọc nội dung phản hồi dưới dạng JSON
         this.ScoreOfUser = scoreData.data; // Lưu điểm của người dùng
+        this.GPAOfUser = scoreData.data.ds_diem_hocky.find((item: any) => item.loai_nganh).dtb_tich_luy_he_4;
       }
 
       // Kiểm tra phản hồi có phải là API lấy ảnh không
@@ -657,6 +690,4 @@ export class SguAuthService {
       await browser.close();
     }
   }
-
-
 }
