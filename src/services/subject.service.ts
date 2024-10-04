@@ -47,4 +47,5 @@ export class SubjectService {
       throw new Error('Lỗi khi gọi stored procedure');
     }
   }
+
 }

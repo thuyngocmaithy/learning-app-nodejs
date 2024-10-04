@@ -6,6 +6,7 @@ import { AppDataSource } from '../data-source';
     const studyFrameRouter = Router();
     const studyFrameController = new StudyFrameController(AppDataSource);
 
+    studyFrameRouter.get('/major/:majorId', studyFrameController.GetSubjectByMajor);
     studyFrameRouter.get('/', studyFrameController.getAllStudyFrames);
     studyFrameRouter.get('/:id', studyFrameController.getStudyFrameById);
     studyFrameRouter.post('/', studyFrameController.createStudyFrame);
