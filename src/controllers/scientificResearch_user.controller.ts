@@ -22,9 +22,8 @@ export class ScientificResearch_UserController {
 
   public getAllScientificResearchUser = (req: Request, res: Response) => RequestHandler.getAll<ScientificResearch_User>(req, res, this.scientificResearchUserService);
   public getScientificResearchUserById = (req: Request, res: Response) => RequestHandler.getById<ScientificResearch_User>(req, res, this.scientificResearchUserService);
-  // public createScientificResearchUser = (req: Request, res: Response) => RequestHandler.create<ScientificResearch_User>(req, res, this.scientificResearchUserService);
-  // public updateScientificResearchUser = (req: Request, res: Response) => RequestHandler.update<ScientificResearch_User>(req, res, this.scientificResearchUserService);
   public deleteScientificResearchUser = (req: Request, res: Response) => RequestHandler.delete(req, res, this.scientificResearchUserService);
+  public getScientificResearchUserWhere = (req: Request, res: Response) => RequestHandler.getWhere<ScientificResearch_User>(req, res, this.scientificResearchUserService);
 
   public updateScientificResearchUser = async (req: Request, res: Response) => {
     try {
@@ -46,23 +45,6 @@ export class ScientificResearch_UserController {
     this.scientificResearchUserService.getHighestGroupScientificResearchUser()
       .then(scientificResearchUser => res.status(200).json({ message: 'success', data: scientificResearchUser }))
       .catch(error => res.status(500).json({ message: 'error', error: error.message }));
-  };
-
-  public getSRUByUserIdAndSRGroupId = async (req: Request, res: Response) => {
-    try {
-      const userId = req.query.userId as string | null;
-      const srgId = req.query.srgroupId as string | undefined;
-
-      if (!userId) {
-        return res.status(400).json({ message: 'Invalid user ID' });
-      }
-
-      const scientificResearchUser = await this.scientificResearchUserService.getByUserIdAndSRGroupId(userId, srgId);
-      return res.status(200).json({ message: 'success', data: scientificResearchUser });
-    } catch (error) {
-      const err = error as Error;
-      return res.status(500).json({ message: 'error', error: err.message });
-    }
   };
 
   public getByScientificResearchId = async (req: Request, res: Response) => {

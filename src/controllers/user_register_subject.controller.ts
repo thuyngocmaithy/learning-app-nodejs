@@ -14,7 +14,7 @@ export class UserRegisterSubjectController {
   public registerSubject = async (req: Request, res: Response) => {
     const { userId, subjectId, semesterId } = req.body; // Nhận thông tin từ request
     try {
-      const result = await this.userRegisterSubjectService.registerSubject(userId, subjectId,  semesterId);
+      const result = await this.userRegisterSubjectService.registerSubject(userId, subjectId, semesterId);
       res.status(StatusCodes.CREATED).json({ message: 'Subject registered successfully', data: result });
     } catch (error) {
       console.error('Error registering subject:', error);

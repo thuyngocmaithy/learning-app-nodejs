@@ -28,7 +28,24 @@ export class FollowerDetailController {
       // Trả về phản hồi thành công
       return res.status(200).json({ message: 'success', data: 'Lưu thành công' });
     } catch (error) {
-      console.error('Error creating Scientific Research User:', error);
+      console.error('Error creating FollowerDetail:', error);
+      // Trả về phản hồi lỗi
+      const err = error as Error;
+      return res.status(500).json({ message: 'error', error: err.message });
+    }
+  }
+
+  public deleteFollowerDetailBySRIdAndUserId = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const srId = req.query.srId as string;
+      const userId = req.query.userId as string;
+
+      await this.followerDetailService.deleteBySRIdAndUserId(srId, userId);
+
+      // Trả về phản hồi thành công
+      return res.status(200).json({ message: 'success', data: 'Xóa thành công' });
+    } catch (error) {
+      console.error('Error delete FollowerDetail:', error);
       // Trả về phản hồi lỗi
       const err = error as Error;
       return res.status(500).json({ message: 'error', error: err.message });

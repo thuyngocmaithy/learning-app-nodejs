@@ -4,14 +4,15 @@ import { FollowerDetailController } from '../controllers/followerDetail.controll
 import { AppDataSource } from '../data-source';
 
 
-  const followerDetailRouter = Router();
-  const followerDetailController = new FollowerDetailController(AppDataSource);
+const followerDetailRouter = Router();
+const followerDetailController = new FollowerDetailController(AppDataSource);
 
-  followerDetailRouter.get('/', followerDetailController.getAllFollowerDetails);
-  followerDetailRouter.get('/:id', followerDetailController.getFollowerDetailById);
-  followerDetailRouter.post('/', followerDetailController.createFollowerDetail);
-  followerDetailRouter.put('/:id', followerDetailController.updateFollowerDetail);
-  followerDetailRouter.delete('/', followerDetailController.deleteFollowerDetail);
+followerDetailRouter.get('/', followerDetailController.getAllFollowerDetails);
+followerDetailRouter.get('/:id', followerDetailController.getFollowerDetailById);
+followerDetailRouter.post('/', followerDetailController.createFollowerDetail);
+followerDetailRouter.put('/:id', followerDetailController.updateFollowerDetail);
+followerDetailRouter.delete('/', followerDetailController.deleteFollowerDetail);
+followerDetailRouter.delete('/deleteFollowerDetailBySRIdAndUserId', followerDetailController.deleteFollowerDetailBySRIdAndUserId);
 
-  export default followerDetailRouter;
+export default followerDetailRouter;
 
