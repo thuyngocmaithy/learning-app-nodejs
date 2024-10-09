@@ -91,7 +91,6 @@ export class StudyFrameService {
         const query = 'CALL GetSubjectByMajor(?)';
         const [results] = await this.dataSource.query(query, [majorId]);
         
-        console.log(results);
         // MySQL returns an array of arrays for stored procedures
         // The first element is the actual result set
         const resultSet = results[0];
@@ -99,13 +98,15 @@ export class StudyFrameService {
         if (!resultSet || resultSet.length === 0) {
           return [];
         }
-  
+        
+        console.log(resultSet);
+
         // No need to parse JSON, as MySQL already returns it as an object
         return results;
       } catch (error) {
         console.error('Lỗi khi gọi stored procedure GetSubjectByMajor', error);
         throw new Error('Lỗi khi gọi stored procedure');
       }
-    }
+    };
 
 }
