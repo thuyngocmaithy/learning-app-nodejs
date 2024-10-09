@@ -1,4 +1,4 @@
-import { Account } from './../entities/Account';
+import { Account } from '../entities/Account';
 import { User } from '../entities/User';
 import { AppDataSource } from '../data-source';
 import bcrypt from 'bcrypt';

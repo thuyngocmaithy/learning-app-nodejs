@@ -62,6 +62,18 @@ export class FollowerDetailService {
     const result = await this.followerDetailRepository.delete({ id: In(ids) });
     return result.affected !== 0;
   }
+
+  async deleteBySRIdAndUserId(scientificResearchId: string, userId: string): Promise<boolean> {
+    const follower = await this.followerRepository.findOneBy({ scientificResearch: { scientificResearchId: scientificResearchId } })
+    const user = await this.userRepository.findOneBy({ userId: userId });
+    const followerDetailDel = await this.followerDetailRepository.findOneBy({
+      follower: { id: follower?.id },
+      user: { userId: user?.userId }
+    })
+    const result = await this.followerDetailRepository.delete({ id: followerDetailDel?.id });
+    return result.affected !== 0;
+  }
+
   public findByUserAndFollower = async (user: User, follower: Follower): Promise<FollowerDetail | null> => {
     return this.followerDetailRepository.findOne({
       where: {
@@ -72,8 +84,8 @@ export class FollowerDetailService {
   };
 
   /**
- * Lấy danh sách FollowerDetail theo user
- */
+   * Lấy danh sách FollowerDetail theo user
+   */
   public async getDetailsByUser(user: User): Promise<FollowerDetail[]> {
     return this.followerDetailRepository.find({
       where: {

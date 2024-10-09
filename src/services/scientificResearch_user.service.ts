@@ -163,16 +163,25 @@ export class ScientificResearch_UserService {
     return scientificResearchUser.group || 0;
   }
 
-  public getByUserIdAndSRGroupId = async (userId: string, SRGroupId: string | undefined): Promise<ScientificResearch_User[]> => {
-    const options: FindManyOptions<ScientificResearch_User> = {
-      where: {
-        user: { userId: userId },
-        ...(SRGroupId ? {
-          scientificResearch: {
-            scientificResearchGroup: { scientificResearchGroupId: SRGroupId }
-          }
-        } : {})
-      },
+  async getWhere(condition: any): Promise<ScientificResearch_User[]> {
+    const whereCondition: any = {};
+
+    if (condition.userId) {
+      whereCondition.user = { userId: condition.userId };
+    }
+    if (condition.srgroupId) {
+      whereCondition.scientificResearch = { scientificResearchGroup: { scientificResearchGroupId: condition.srgroupId } };
+    }
+
+    if (condition.srId) {
+      whereCondition.scientificResearch = { scientificResearchId: condition.srId };
+    }
+    if (condition.group) {
+      whereCondition.group = condition.group;
+    }
+
+    return this.scientificResearchUserRepository.find({
+      where: whereCondition,
       relations: [
         'scientificResearch',
         'user',
@@ -183,9 +192,8 @@ export class ScientificResearch_UserService {
         'scientificResearch.follower.followerDetails',
         'scientificResearch.status',
         'scientificResearch.scientificResearchGroup.faculty'
-      ]
-    };
-    return this.scientificResearchUserRepository.find(options);
+      ],
+    });
   }
 
   public getByScientificResearch = async (scientificResearch: ScientificResearch): Promise<ScientificResearch_User[] | null> => {

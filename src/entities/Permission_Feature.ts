@@ -29,4 +29,17 @@ export class PermissionFeature {
     @JoinColumn({ name: 'featureId' })
     feature: Feature;
 
+    /**
+     * Quyền chi tiết (JSON)
+     */
+    @Column('json', { nullable: true })
+    permissionDetail: Record<PermissionType, boolean>;
+}
+
+
+export enum PermissionType {
+    VIEW = 'isView',
+    ADD = 'isAdd',
+    EDIT = 'isEdit',
+    DELETE = 'isDelete',
 }
