@@ -123,4 +123,10 @@ export class ScientificResearch {
   @ManyToOne(() => ScientificResearchGroup, data => data.scientificResearchGroupId, { nullable: true })
   @JoinColumn({ name: 'scientificResearchGroupId' })
   scientificResearchGroup: ScientificResearchGroup;
+
+  /**
+   * Hiển thị
+   */
+  @Column({ nullable: false, default: false })
+  isDisable: boolean;
 }

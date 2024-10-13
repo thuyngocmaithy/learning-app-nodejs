@@ -9,213 +9,233 @@ import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 import { ScientificResearch_User } from '../entities/ScientificResearch_User';
 
 export class ScientificResearchService {
-  private scientificResearchRepository: Repository<ScientificResearch>;
-  private scientificResearch_UserRepository: Repository<ScientificResearch_User>;
-  private userRepository: Repository<User>;
-  private statusRepository: Repository<Status>;
-  private scientificResearchGroupRepository: Repository<ScientificResearchGroup>;
-  private facultyRepository: Repository<Faculty>;
+	private scientificResearchRepository: Repository<ScientificResearch>;
+	private scientificResearch_UserRepository: Repository<ScientificResearch_User>;
+	private userRepository: Repository<User>;
+	private statusRepository: Repository<Status>;
+	private scientificResearchGroupRepository: Repository<ScientificResearchGroup>;
+	private facultyRepository: Repository<Faculty>;
 
-  constructor(dataSource: DataSource) {
-    this.scientificResearchRepository = dataSource.getRepository(ScientificResearch);
-    this.scientificResearch_UserRepository = dataSource.getRepository(ScientificResearch_User);
-    this.userRepository = dataSource.getRepository(User);
-    this.statusRepository = dataSource.getRepository(Status);
-    this.scientificResearchGroupRepository = dataSource.getRepository(ScientificResearchGroup);
-    this.facultyRepository = dataSource.getRepository(Faculty);
-  }
+	constructor(dataSource: DataSource) {
+		this.scientificResearchRepository = dataSource.getRepository(ScientificResearch);
+		this.scientificResearch_UserRepository = dataSource.getRepository(ScientificResearch_User);
+		this.userRepository = dataSource.getRepository(User);
+		this.statusRepository = dataSource.getRepository(Status);
+		this.scientificResearchGroupRepository = dataSource.getRepository(ScientificResearchGroup);
+		this.facultyRepository = dataSource.getRepository(Faculty);
+	}
 
-  async getAll(): Promise<ScientificResearch[]> {
-    return this.scientificResearchRepository.find({ relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'] });
-  }
+	async getAll(): Promise<ScientificResearch[]> {
+		return this.scientificResearchRepository.find({ relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'] });
+	}
 
-  async getById(scientificResearchId: string): Promise<ScientificResearch | null> {
-    return this.scientificResearchRepository.findOne({
-      where: { scientificResearchId },
-      relations: [
-        'status',
-        'instructor',
-        'createUser',
-        'lastModifyUser',
-        'follower',
-        'follower.followerDetails',
-        'follower.followerDetails.user',
-        'scientificResearchGroup.faculty',
-        'scientificResearchGroup'
-      ]
-    });
-  }
+	async getById(scientificResearchId: string): Promise<ScientificResearch | null> {
+		return this.scientificResearchRepository.findOne({
+			where: { scientificResearchId },
+			relations: [
+				'status',
+				'instructor',
+				'createUser',
+				'lastModifyUser',
+				'follower',
+				'follower.followerDetails',
+				'follower.followerDetails.user',
+				'scientificResearchGroup.faculty',
+				'scientificResearchGroup'
+			]
+		});
+	}
 
-  public create = async (scientificResearchData: any): Promise<ScientificResearch> => {
-    const faculty = await this.facultyRepository.findOne({ where: { facultyId: scientificResearchData.facultyId } });
-    if (!faculty) {
-      throw new Error('Invalid faculty ID');
-    }
+	public create = async (scientificResearchData: any): Promise<ScientificResearch> => {
+		const faculty = await this.facultyRepository.findOne({ where: { facultyId: scientificResearchData.facultyId } });
+		if (!faculty) {
+			throw new Error('Invalid faculty ID');
+		}
 
-    const instructor = await this.userRepository.findOne({ where: { userId: scientificResearchData.instructorId } });
-    if (!instructor) {
-      throw new Error('Invalid instructor ID');
-    }
+		const instructor = await this.userRepository.findOne({ where: { userId: scientificResearchData.instructorId } });
+		if (!instructor) {
+			throw new Error('Invalid instructor ID');
+		}
 
-    const status = await this.statusRepository.findOne({ where: { statusId: scientificResearchData.statusId } });
-    if (!status) {
-      throw new Error('Invalid Status ID');
-    }
+		const status = await this.statusRepository.findOne({ where: { statusId: scientificResearchData.statusId } });
+		if (!status) {
+			throw new Error('Invalid Status ID');
+		}
 
-    const scientificResearchGroup = await this.scientificResearchGroupRepository.findOne({
-      where: { scientificResearchGroupId: scientificResearchData.scientificResearchGroup },
-      relations: ["faculty"]
-    });
-    if (!scientificResearchGroup) {
-      throw new Error('Invalid ScientificResearchGroups ID');
-    }
+		const scientificResearchGroup = await this.scientificResearchGroupRepository.findOne({
+			where: { scientificResearchGroupId: scientificResearchData.scientificResearchGroup },
+			relations: ["faculty"]
+		});
+		if (!scientificResearchGroup) {
+			throw new Error('Invalid ScientificResearchGroups ID');
+		}
 
-    const newId = await this.generateNewId(scientificResearchGroup.faculty.facultyId);
+		const newId = await this.generateNewId(scientificResearchGroup.faculty.facultyId);
 
-    const followerDetails = [{ user: scientificResearchData.createUserId }];
+		const followerDetails = [{ user: scientificResearchData.createUserId }];
 
-    // Nếu instructor khác với createUserId, thêm instructor vào followerDetails
-    if (scientificResearchData.instructorId !== scientificResearchData.createUserId.userId) {
-      followerDetails.push({ user: instructor });
-    }
+		// Nếu instructor khác với createUserId, thêm instructor vào followerDetails
+		if (scientificResearchData.instructorId !== scientificResearchData.createUserId.userId) {
+			followerDetails.push({ user: instructor });
+		}
 
-    const scientificResearch = this.scientificResearchRepository.create({
-      scientificResearchId: newId,
-      scientificResearchName: scientificResearchData.scientificResearchName,
-      description: scientificResearchData.description,
-      executionTime: scientificResearchData.executionTime,
-      numberOfMember: scientificResearchData.numberOfMember,
-      instructor: instructor,
-      status: status,
-      createUser: scientificResearchData.createUserId,
-      lastModifyUser: scientificResearchData.lastModifyUserId,
-      scientificResearchGroup: scientificResearchGroup,
-      follower: [
-        {
-          followerDetails: followerDetails
-        }
-      ]
-    });
+		const scientificResearch = this.scientificResearchRepository.create({
+			scientificResearchId: newId,
+			scientificResearchName: scientificResearchData.scientificResearchName,
+			description: scientificResearchData.description,
+			executionTime: scientificResearchData.executionTime,
+			numberOfMember: scientificResearchData.numberOfMember,
+			instructor: instructor,
+			status: status,
+			createUser: scientificResearchData.createUserId,
+			lastModifyUser: scientificResearchData.lastModifyUserId,
+			scientificResearchGroup: scientificResearchGroup,
+			follower: [
+				{
+					followerDetails: followerDetails
+				}
+			]
+		});
 
-    const savedScientificResearch = await this.scientificResearchRepository.save(scientificResearch);
+		const savedScientificResearch = await this.scientificResearchRepository.save(scientificResearch);
 
-    return savedScientificResearch;
-  }
-
-
-  async update(scientificResearchId: string, data: Partial<ScientificResearch>): Promise<ScientificResearch | null> {
-    const scientificResearch = await this.scientificResearchRepository.findOne({ where: { scientificResearchId } });
-    if (!scientificResearch) {
-      return null;
-    }
-
-    const status = await AppDataSource.getRepository(Status)
-      .createQueryBuilder("status")
-      .where("status.statusId = :statusId", { statusId: data.status })
-      .getOne();
-
-    if (status) {
-      scientificResearch.status = status;
-    }
-
-    this.scientificResearchRepository.merge(scientificResearch, data);
-    return this.scientificResearchRepository.save(scientificResearch);
-  }
-
-  async delete(scientificResearchIds: string[]): Promise<boolean> {
-    const result = await this.scientificResearchRepository.delete({ scientificResearchId: In(scientificResearchIds) });
-    return result.affected !== null && result.affected !== undefined && result.affected > 0;
-  }
+		return savedScientificResearch;
+	}
 
 
-  private generateNewId = async (facultyId: string): Promise<string> => {
-    // Find the last thesis for this faculty
-    const lastTScientificResearch = await this.scientificResearchRepository.findOne({
-      where: { scientificResearchId: Like(`${facultyId}%`) },
-      order: { scientificResearchId: 'DESC' }
-    });
+	async update(scientificResearchId: string, data: Partial<ScientificResearch>): Promise<ScientificResearch | null> {
+		const scientificResearch = await this.scientificResearchRepository.findOne({ where: { scientificResearchId } });
+		if (!scientificResearch) {
+			return null;
+		}
 
-    let numericPart = 1;
-    if (lastTScientificResearch) {
-      const match = lastTScientificResearch.scientificResearchId.match(/\d+$/); // Regex lấy phần số cuối cùng của chuỗi
-      const lastNumericPart = match ? parseInt(match[0], 10) : 0; // Nếu có kết quả, chuyển đổi thành số
+		const status = await AppDataSource.getRepository(Status)
+			.createQueryBuilder("status")
+			.where("status.statusId = :statusId", { statusId: data.status })
+			.getOne();
 
-      numericPart = lastNumericPart + 1;
-    }
-    // Format the new ID
-    return `${facultyId}PROJECT${numericPart.toString().padStart(3, '0')}`;
-  }
+		if (status) {
+			scientificResearch.status = status;
+		}
 
-  public getByScientificResearchGroupId = async (scientificResearchGroupId: string): Promise<ScientificResearch[]> => {
-    const options: FindManyOptions<ScientificResearch> = {
-      where: { scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId } },
-      relations: [
-        'status',
-        'instructor',
-        'createUser',
-        'lastModifyUser',
-        'follower',
-        'follower.followerDetails',
-        'follower.followerDetails.user',
-        'scientificResearchGroup.faculty'
-      ]
-    };
-    return this.scientificResearchRepository.find(options);
-  }
+		this.scientificResearchRepository.merge(scientificResearch, data);
+		return this.scientificResearchRepository.save(scientificResearch);
+	}
 
-  async getWhere(condition: Partial<ScientificResearch>): Promise<ScientificResearch[]> {
-    const whereCondition: any = {};
+	async updateMulti(scientificResearchId: string[], data: Partial<ScientificResearch>): Promise<ScientificResearch[] | null> {
+		// Tìm tất cả các bản ghi với scientificResearchId trong mảng
+		const scientificResearchList = await this.scientificResearchRepository.find({
+			where: { scientificResearchId: In(scientificResearchId) }
+		});
 
-    if (condition.instructor) {
-      whereCondition.instructor = { userId: condition.instructor };
-    }
-    if (condition.scientificResearchGroup) {
-      whereCondition.scientificResearchGroup = { scientificResearchGroupId: condition.scientificResearchGroup };
-    }
+		// Nếu không tìm thấy bản ghi nào
+		if (scientificResearchList.length === 0) {
+			return null;
+		}
 
-    return this.scientificResearchRepository.find({
-      where: whereCondition,
-      relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'],
-    });
-  }
+		// Cập nhật từng bản ghi
+		scientificResearchList.forEach((scientificResearch) => {
+			this.scientificResearchRepository.merge(scientificResearch, data);
+		});
+
+		// Lưu tất cả các bản ghi đã cập nhật
+		return this.scientificResearchRepository.save(scientificResearchList);
+	}
+
+	async delete(scientificResearchIds: string[]): Promise<boolean> {
+		const result = await this.scientificResearchRepository.delete({ scientificResearchId: In(scientificResearchIds) });
+		return result.affected !== null && result.affected !== undefined && result.affected > 0;
+	}
 
 
-  public getBySRGIdAndCheckApprove = async (scientificResearchGroupId: string, userId: string): Promise<any[]> => {
-    const options: FindManyOptions<ScientificResearch> = {
-      where: { scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId } },
-      relations: [
-        'status',
-        'instructor',
-        'createUser',
-        'lastModifyUser',
-        'follower',
-        'follower.followerDetails',
-        'follower.followerDetails.user',
-        'scientificResearchGroup.faculty'
-      ]
-    };
-    const listSR = await this.scientificResearchRepository.find(options);
+	private generateNewId = async (facultyId: string): Promise<string> => {
+		// Find the last thesis for this faculty
+		const lastTScientificResearch = await this.scientificResearchRepository.findOne({
+			where: { scientificResearchId: Like(`${facultyId}%`) },
+			order: { scientificResearchId: 'DESC' }
+		});
 
-    const promises = listSR.map(async (SR) => {
-      const responseCountRegister = await this.scientificResearch_UserRepository.findBy({ scientificResearch: { scientificResearchId: SR.scientificResearchId } });
-      const count = responseCountRegister.length;
+		let numericPart = 1;
+		if (lastTScientificResearch) {
+			const match = lastTScientificResearch.scientificResearchId.match(/\d+$/); // Regex lấy phần số cuối cùng của chuỗi
+			const lastNumericPart = match ? parseInt(match[0], 10) : 0; // Nếu có kết quả, chuyển đổi thành số
 
-      const responseUserRegister = await this.scientificResearch_UserRepository.findOneBy(
-        {
-          scientificResearch: { scientificResearchId: SR.scientificResearchId },
-          user: { userId: userId }
-        }
-      );
-      const approve = responseUserRegister?.isApprove;
+			numericPart = lastNumericPart + 1;
+		}
+		// Format the new ID
+		return `${facultyId}PROJECT${numericPart.toString().padStart(3, '0')}`;
+	}
 
-      return { ...SR, count, approve };
-    });
+	public getByScientificResearchGroupId = async (scientificResearchGroupId: string): Promise<ScientificResearch[]> => {
+		const options: FindManyOptions<ScientificResearch> = {
+			where: { scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId } },
+			relations: [
+				'status',
+				'instructor',
+				'createUser',
+				'lastModifyUser',
+				'follower',
+				'follower.followerDetails',
+				'follower.followerDetails.user',
+				'scientificResearchGroup.faculty'
+			]
+		};
+		return this.scientificResearchRepository.find(options);
+	}
 
-    // Đợi tất cả các Promise hoàn thành
-    const result = await Promise.all(promises);
+	async getWhere(condition: Partial<ScientificResearch>): Promise<ScientificResearch[]> {
+		const whereCondition: any = {};
 
-    return result;
-  }
+		if (condition.instructor) {
+			whereCondition.instructor = { userId: condition.instructor };
+		}
+		if (condition.scientificResearchGroup) {
+			whereCondition.scientificResearchGroup = { scientificResearchGroupId: condition.scientificResearchGroup };
+		}
+
+		return this.scientificResearchRepository.find({
+			where: whereCondition,
+			relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'],
+		});
+	}
+
+
+	public getBySRGIdAndCheckApprove = async (scientificResearchGroupId: string, userId: string): Promise<any[]> => {
+		const options: FindManyOptions<ScientificResearch> = {
+			where: { scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId } },
+			relations: [
+				'status',
+				'instructor',
+				'createUser',
+				'lastModifyUser',
+				'follower',
+				'follower.followerDetails',
+				'follower.followerDetails.user',
+				'scientificResearchGroup.faculty'
+			]
+		};
+		const listSR = await this.scientificResearchRepository.find(options);
+
+		const promises = listSR.map(async (SR) => {
+			const responseCountRegister = await this.scientificResearch_UserRepository.findBy({ scientificResearch: { scientificResearchId: SR.scientificResearchId } });
+			const count = responseCountRegister.length;
+
+			const responseUserRegister = await this.scientificResearch_UserRepository.findOneBy(
+				{
+					scientificResearch: { scientificResearchId: SR.scientificResearchId },
+					user: { userId: userId }
+				}
+			);
+			const approve = responseUserRegister?.isApprove;
+
+			return { ...SR, count, approve };
+		});
+
+		// Đợi tất cả các Promise hoàn thành
+		const result = await Promise.all(promises);
+
+		return result;
+	}
 
 }
 
