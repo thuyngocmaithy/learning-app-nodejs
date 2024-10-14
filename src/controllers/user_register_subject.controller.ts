@@ -33,4 +33,20 @@ export class UserRegisterSubjectController {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch registered subjects', error: (error as Error).message });
     }
   };
+
+  // Xóa đăng ký môn học của user
+  public deleteRegistration = async (req: Request, res: Response) => {
+    const { userId, subjectId, semesterId } = req.params;
+    try {
+      const result = await this.userRegisterSubjectService.deleteRegistration(userId, subjectId, semesterId);
+      if (result.success) {
+        res.status(StatusCodes.OK).json({ message: result.message });
+      } else {
+        res.status(StatusCodes.BAD_REQUEST).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('Error deleting subject registration:', error);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to delete subject registration', error: (error as Error).message });
+    }
+  };
 }
