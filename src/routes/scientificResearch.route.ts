@@ -11,6 +11,7 @@ scientificResearchRouter.get('/', scientificResearchController.getAllScientificR
 scientificResearchRouter.get('/getByScientificResearchGroupId', scientificResearchController.getByScientificResearchIGroupId);
 scientificResearchRouter.get('/getBySRGIdAndCheckApprove', scientificResearchController.getBySRGIdAndCheckApprove);
 scientificResearchRouter.get('/getWhere', scientificResearchController.getPermissionFeatureWhere);
+scientificResearchRouter.put('/updateSRMulti/:ids', scientificResearchController.updateScientificResearchMulti);
 scientificResearchRouter.get('/:id', scientificResearchController.getScientificResearchById);
 scientificResearchRouter.post('/', scientificResearchController.createScientificResearch);
 scientificResearchRouter.put('/:id', scientificResearchController.updateScientificResearch);

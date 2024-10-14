@@ -17,6 +17,7 @@ export class ScientificResearchController {
   public getPermissionFeatureWhere = (req: Request, res: Response) => RequestHandler.getWhere<ScientificResearch>(req, res, this.scientificResearchService);
   public createScientificResearch = (req: Request, res: Response) => RequestHandler.create<ScientificResearch>(req, res, this.scientificResearchService);
   public updateScientificResearch = (req: Request, res: Response) => RequestHandler.update<ScientificResearch>(req, res, this.scientificResearchService);
+  public updateScientificResearchMulti = (req: Request, res: Response) => RequestHandler.updateMulti<ScientificResearch>(req, res, this.scientificResearchService);
   public deleteScientificResearch = (req: Request, res: Response) => RequestHandler.delete(req, res, this.scientificResearchService);
 
   public getByScientificResearchIGroupId = async (req: Request, res: Response) => {
