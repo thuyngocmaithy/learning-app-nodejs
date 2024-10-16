@@ -35,4 +35,25 @@ export class MajorService {
     const result = await this.majorRepository.delete({ majorId: In(majorIds) });
     return result.affected !== 0;
   }
+
+
+    /**
+   * Lấy các chuyên ngành theo mã khoa (facultyId)
+   */
+    async getMajorByFacultyId(facultyId: string): Promise<Major[]> {
+      return this.majorRepository.find({
+        where: { faculty: { facultyId } }, // Điều kiện lấy chuyên ngành theo mã khoa
+        relations: ['faculty'], // Đảm bảo lấy thông tin liên quan tới khoa
+      });
+    }
+  
+    /**
+     * Lấy các chuyên ngành theo tên khoa (facultyName)
+     */
+    async getMajorByFacultyName(facultyName: string): Promise<Major[]> {
+      return this.majorRepository.find({
+        where: { faculty: { facultyName } }, // Điều kiện lấy chuyên ngành theo tên khoa
+        relations: ['faculty'], // Đảm bảo lấy thông tin liên quan tới khoa
+      });
+    }
 }
