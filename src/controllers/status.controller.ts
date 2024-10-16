@@ -15,7 +15,7 @@ export class StatusController {
   public getAllStatuses = (req: Request, res: Response) => RequestHandler.getAll<Status>(req, res, this.statusService);
   public getStatusById = (req: Request, res: Response) => RequestHandler.getById<Status>(req, res, this.statusService);
   public getStatusByType = async (req: Request, res: Response) => {
-    const type = req.query.type as 'Tiến độ đề tài NCKH' | 'Tiến độ khóa luận' | 'Tiến độ thực tập' | 'Tiến độ nhóm đề tài NCKH';
+    const type = req.query.type as 'Tiến độ đề tài NCKH' | 'Tiến độ khóa luận' | 'Tiến độ nhóm đề tài NCKH';
     if (!type) {
       return res.status(400).json({ message: 'Thiếu tham số type' });
     }

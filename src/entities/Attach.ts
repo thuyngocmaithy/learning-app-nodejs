@@ -1,6 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from './User';
-import { Internship } from './Internship';
 import { ScientificResearch } from './ScientificResearch';
 import { Thesis } from './Thesis';
 

@@ -36,7 +36,7 @@ export class StatusService {
     return result.affected !== 0;
   }
 
-  async getByType(type: 'Tiến độ đề tài NCKH' | 'Tiến độ khóa luận' | 'Tiến độ thực tập' | 'Tiến độ nhóm đề tài NCKH'): Promise<Status[]> {
+  async getByType(type: 'Tiến độ đề tài NCKH' | 'Tiến độ khóa luận' | 'Tiến độ nhóm đề tài NCKH'): Promise<Status[]> {
     return this.statusRepository.find({ where: { type } });
   }
 }
