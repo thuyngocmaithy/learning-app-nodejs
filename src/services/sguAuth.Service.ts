@@ -510,7 +510,7 @@ export class SguAuthService {
             subject.subjectName = subjectData.ten_mon;
             subject.creditHour = parseInt(subjectData.so_tin_chi);
             subject.isCompulsory = false;
-            subject.listFrame = '';
+            subject.frames = [];
             subject.createDate = new Date();
             subject.lastModifyDate = new Date();
             subject.createUser = user; // Gán người tạo

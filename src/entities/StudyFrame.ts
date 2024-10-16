@@ -1,9 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany, ManyToOne } from 'typeorm';
-import { Subject } from './Subject';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Cycle } from './Cycle';
+import { Major } from './Major';
 
 
 /**
  * Thực thể Khung đào tạo
+ * Một khung đào tạo có thể thuộc nhiều chu kỳ  
+ * Một khung đào tạo có thể áp dụng cho nhiều chuyên ngành
  */
 @Entity()
 export class StudyFrame {
@@ -49,4 +52,27 @@ export class StudyFrame {
    */
   @Column({ nullable: true })
   creditHour: string;
+
+  /**
+   * Liên kết với nhiều chu kỳ
+   * Nhớ đổi lại nulable false
+   */
+  @ManyToMany(() => Cycle)
+  @JoinTable({
+    name: 'studyFrame_cycle',
+    joinColumn: { name: 'frameId', referencedColumnName: 'frameId' },
+    inverseJoinColumn: { name: 'cycleId', referencedColumnName: 'cycleId' },
+  })
+  cycles: Cycle[];
+
+  /**
+   * Khung ctr đào tạo áp dụng được cho nhiều ngành
+   */
+  @ManyToMany(() => Major)
+  @JoinTable({
+    name: 'studyFrame_major',
+    joinColumn: { name: 'frameId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'majorId', referencedColumnName: 'majorId' },
+  })
+  majors: Major[];
 }

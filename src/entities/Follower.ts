@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn, Unique } from 'typeorm';
 import { User } from './User'; // Replace with your User entity
-import { Internship } from './Internship';
 import { ScientificResearch } from './ScientificResearch';
 import { Thesis } from './Thesis';
 
@@ -8,19 +7,13 @@ import { Thesis } from './Thesis';
  * Thực thể Người theo dõi
  */
 @Entity()
-@Unique(["internship", "scientificResearch", "thesis"])
+@Unique(["scientificResearch", "thesis"])
 export class Follower {
   /**
    * Khóa chính
    */
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  /**
-   * ID thực tập (tham chiếu đến thực thể Internship, có thể rỗng)
-   */
-  @ManyToOne(() => Internship, data => data.id, { nullable: true })
-  internship: Internship;
 
   /**
    * ID dự án (tham chiếu đến thực thể ScientificResearch, có thể rỗng)

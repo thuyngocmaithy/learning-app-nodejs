@@ -25,11 +25,11 @@ export class FollowerService {
   }
 
   async getAll(): Promise<Follower[]> {
-    return this.followerRepository.find({ relations: ['internship', 'scientificResearch'] });
+    return this.followerRepository.find({ relations: ['scientificResearch'] });
   }
 
   async getById(id: string): Promise<Follower | null> {
-    return this.followerRepository.findOne({ where: { id }, relations: ['internship', 'scientificResearch'] });
+    return this.followerRepository.findOne({ where: { id }, relations: ['scientificResearch'] });
   }
 
 
@@ -41,7 +41,7 @@ export class FollowerService {
   }
 
   async delete(ids: string[]): Promise<boolean> {
-    const result = await this.followerRepository.delete({ id : In(ids)});
+    const result = await this.followerRepository.delete({ id: In(ids) });
     return result.affected !== 0;
   }
 
