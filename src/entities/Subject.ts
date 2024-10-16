@@ -50,11 +50,15 @@ export class Subject {
   isCompulsory: boolean;
 
   /**
-   * ID chuyên ngành (tham chiếu đến thực thể Major, có thể rỗng)
-   */
-  @ManyToOne(() => Major, data => data.majorId, { nullable: true })
-  @JoinColumn({ name: 'majorId' })
-  major: Major;
+    * ID chuyên ngành (tham chiếu đến thực thể Major)
+    */
+  @ManyToMany(() => Major)
+  @JoinTable({
+    name: 'subject_major',
+    joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
+    inverseJoinColumn: { name: 'majorId', referencedColumnName: 'majorId' },
+  })
+  majors: Major[];
 
   /**
     * ID khung học tập (tham chiếu đến thực thể StudyFrame)
