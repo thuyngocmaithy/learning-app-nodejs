@@ -61,9 +61,9 @@ export class Subject {
     */
   @ManyToMany(() => StudyFrame)
   @JoinTable({
-    name: 'Subject_StudyFrame',
+    name: 'subject_studyFrame',
     joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
-    inverseJoinColumn: { name: 'frameId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'frameId', referencedColumnName: 'frameId' },
   })
   frames: StudyFrame[];
 

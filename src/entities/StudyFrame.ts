@@ -59,7 +59,7 @@ export class StudyFrame {
    */
   @ManyToMany(() => Cycle)
   @JoinTable({
-    name: 'StudyFrame_Cycle',
+    name: 'studyFrame_cycle',
     joinColumn: { name: 'frameId', referencedColumnName: 'frameId' },
     inverseJoinColumn: { name: 'cycleId', referencedColumnName: 'cycleId' },
   })

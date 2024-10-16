@@ -17,11 +17,11 @@ export class SubjectService {
   }
 
   async getAll(): Promise<Subject[]> {
-    return this.subjectRepository.find({ relations: ['frame', 'createUser', 'lastModifyUser', 'subjectBefore'] });
+    return this.subjectRepository.find({ relations: ['frames', 'createUser', 'lastModifyUser', 'subjectBefore'] });
   }
 
   async getById(subjectId: string): Promise<Subject | null> {
-    const options: FindOneOptions<Subject> = { where: { subjectId }, relations: ['frame', 'createUser', 'lastModifyUser'] };
+    const options: FindOneOptions<Subject> = { where: { subjectId }, relations: ['frames', 'createUser', 'lastModifyUser'] };
     return await this.subjectRepository.findOne(options);
   }
 
@@ -33,7 +33,7 @@ export class SubjectService {
   }
 
   async delete(subjectIds: string[]): Promise<boolean> {
-    const result = await this.subjectRepository.delete({ subjectId : In(subjectIds)});
+    const result = await this.subjectRepository.delete({ subjectId: In(subjectIds) });
     return result.affected !== 0;
   }
 

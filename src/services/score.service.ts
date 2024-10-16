@@ -44,27 +44,27 @@ export class ScoreService {
   };
 
   public delete = async (ids: string[]): Promise<boolean> => {
-    const result = await this.scoreRepository.delete({id: In(ids)});
+    const result = await this.scoreRepository.delete({ id: In(ids) });
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   };
 
   public getScoreByStudentId = async (studentId: string): Promise<Score[]> => {
     const scores = await this.scoreRepository.find({
       where: { student: { userId: studentId } },
-      relations: ['subject','subject.frame', 'semester'],
+      relations: ['subject', 'subject.frames', 'semester'],
     });
-  
+
     const uniqueScores = scores.filter((score, index, self) =>
       index === self.findIndex((s) => (
         s.subject.subjectId === score.subject.subjectId &&
         s.semester.semesterId === score.semester.semesterId
       ))
     );
-  
+
     return uniqueScores;
   };
-  
-  
+
+
 
   public getScoreByStudentIdAndSemesterId = async (
     studentId: string,

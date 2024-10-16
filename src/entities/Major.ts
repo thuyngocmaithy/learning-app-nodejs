@@ -39,7 +39,7 @@ export class Major {
      */
     @ManyToMany(() => Cycle)
     @JoinTable({
-        name: 'Major_Cycle',
+        name: 'major_cycle',
         joinColumn: { name: 'majorId', referencedColumnName: 'majorId' },
         inverseJoinColumn: { name: 'cycleId', referencedColumnName: 'cycleId' },
     })
