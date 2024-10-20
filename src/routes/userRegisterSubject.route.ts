@@ -11,4 +11,7 @@ userRegisterSubjectRouter.post('/register', userRegisterSubjectController.regist
 // Route để lấy danh sách môn học đã đăng ký của user
 userRegisterSubjectRouter.get('/user/:userId', userRegisterSubjectController.getUserRegisteredSubjects);
 
+// Route để xóa đăng ký môn học của user
+userRegisterSubjectRouter.delete('/user/:userId/subject/:subjectId/semester/:semesterId', userRegisterSubjectController.deleteRegistration);
+
 export default userRegisterSubjectRouter;

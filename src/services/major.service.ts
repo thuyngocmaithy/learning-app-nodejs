@@ -44,6 +44,10 @@ export class MajorService {
       whereCondition.faculty = { facultyId: condition.facultyId };
     }
 
+    if (condition.facultyName) {
+      whereCondition.faculty = { facultyName: condition.facultyName };
+    }
+
     return this.majorRepository.find({
       where: whereCondition,
       relations: ['faculty']

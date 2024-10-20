@@ -21,7 +21,7 @@ export class User {
   fullname: string;
 
   /**
-   * Ngày sinh (không rỗng)
+   * Ngày sinh (có thể rỗng)
    */
   @Column({ nullable: true })
   dateOfBirth: Date;
