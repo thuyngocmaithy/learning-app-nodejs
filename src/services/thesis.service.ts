@@ -23,9 +23,9 @@ export class ThesisService {
     });
   }
 
-  public getById = async (id: string): Promise<Thesis | null> => {
+  public getById = async (thesisId: string): Promise<Thesis | null> => {
     const options: FindOneOptions<Thesis> = {
-      where: { id },
+      where: { thesisId },
       relations: ['supervisor', 'faculty', 'status', 'createUser', 'lastModifyUser', 'registrations']
     };
     return await this.thesisRepository.findOne(options);
@@ -57,7 +57,7 @@ export class ThesisService {
     const newId = await this.generateNewId(thesisData.facultyId);
 
     const thesis = this.thesisRepository.create({
-      id: newId,
+      thesisId: newId,
       title: thesisData.title,
       description: thesisData.description,
       startDate: thesisData.startDate,
@@ -77,14 +77,14 @@ export class ThesisService {
   private generateNewId = async (facultyId: string): Promise<string> => {
     // Find the last thesis for this faculty
     const lastThesis = await this.thesisRepository.findOne({
-      where: { id: Like(`${facultyId}%`) },
-      order: { id: 'DESC' }
+      where: { thesisId: Like(`${facultyId}%`) },
+      order: { thesisId: 'DESC' }
     });
 
     let numericPart = 1;
     if (lastThesis) {
       // Extract the numeric part and increment it
-      const lastNumericPart = parseInt(lastThesis.id.slice(facultyId.length), 10);
+      const lastNumericPart = parseInt(lastThesis.thesisId.slice(facultyId.length), 10);
       numericPart = lastNumericPart + 1;
     }
 
@@ -92,8 +92,8 @@ export class ThesisService {
     return `${facultyId}${numericPart.toString().padStart(3, '0')}`;
   }
 
-  public update = async (id: string, thesisData: any): Promise<Thesis> => {
-    const existingThesis = await this.thesisRepository.findOne({ where: { id } });
+  public update = async (thesisId: string, thesisData: any): Promise<Thesis> => {
+    const existingThesis = await this.thesisRepository.findOne({ where: { thesisId } });
     if (!existingThesis) {
       throw new Error('Thesis not found');
     }
@@ -136,7 +136,7 @@ export class ThesisService {
 
 
   public delete = async (ids: string[]): Promise<boolean> => {
-    const result = await this.thesisRepository.delete({id: In(ids)});
+    const result = await this.thesisRepository.delete({ thesisId: In(ids) });
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
 }

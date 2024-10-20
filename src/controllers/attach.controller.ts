@@ -12,12 +12,9 @@ export class AttachController {
   }
 
   public getAllAttachments = (req: Request, res: Response) => RequestHandler.getAll<Attach>(req, res, this.attachService);
-  
   public getAttachmentById = (req: Request, res: Response) => RequestHandler.getById<Attach>(req, res, this.attachService);
-
   public createAttachment = (req: Request, res: Response) => RequestHandler.create<Attach>(req, res, this.attachService);
-
   public updateAttachment = (req: Request, res: Response) => RequestHandler.update<Attach>(req, res, this.attachService);
-
   public deleteAttachment = (req: Request, res: Response) => RequestHandler.delete(req, res, this.attachService);
+  public getAttachmentWhere = (req: Request, res: Response) => RequestHandler.getWhere<Attach>(req, res, this.attachService);
 }

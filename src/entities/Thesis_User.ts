@@ -16,7 +16,7 @@ export class Thesis_User {
     /**
      * ID dự án (tham chiếu đến thực thể Thesis, không rỗng)
      */
-    @ManyToOne(() => Thesis, data => data.id, { nullable: false })
+    @ManyToOne(() => Thesis, data => data.thesisId, { nullable: false })
     thesis: Thesis;
 
     /**

@@ -35,4 +35,18 @@ export class MajorService {
     const result = await this.majorRepository.delete({ majorId: In(majorIds) });
     return result.affected !== 0;
   }
+
+  async getWhere(condition: any): Promise<Major[]> {
+    const whereCondition: any = {};
+
+
+    if (condition.facultyId) {
+      whereCondition.faculty = { facultyId: condition.facultyId };
+    }
+
+    return this.majorRepository.find({
+      where: whereCondition,
+      relations: ['faculty']
+    });
+  }
 }

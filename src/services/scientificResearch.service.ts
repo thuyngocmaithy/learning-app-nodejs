@@ -183,13 +183,13 @@ export class ScientificResearchService {
 		return this.scientificResearchRepository.find(options);
 	}
 
-	async getWhere(condition: Partial<ScientificResearch>): Promise<ScientificResearch[]> {
+	async getWhere(condition: any): Promise<ScientificResearch[]> {
 		const whereCondition: any = {};
 
 		if (condition.instructor) {
 			whereCondition.instructor = { userId: condition.instructor };
 		}
-		if (condition.scientificResearchGroup) {
+		if (condition.scientificResearchGroup && condition.scientificResearchGroup !== 'null') {
 			whereCondition.scientificResearchGroup = { scientificResearchGroupId: condition.scientificResearchGroup };
 		}
 
@@ -201,8 +201,16 @@ export class ScientificResearchService {
 
 
 	public getBySRGIdAndCheckApprove = async (scientificResearchGroupId: string, userId: string): Promise<any[]> => {
+		// Tạo điều kiện where theo scientificResearchGroupId
+		const whereCondition = (scientificResearchGroupId && scientificResearchGroupId !== "null")
+			? {
+				scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId },
+				isDisable: false
+			}
+			: { isDisable: false }; // Bỏ qua điều kiện scientificResearchGroup nếu scientificResearchGroupId là null
+
 		const options: FindManyOptions<ScientificResearch> = {
-			where: { scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId } },
+			where: whereCondition,
 			relations: [
 				'status',
 				'instructor',

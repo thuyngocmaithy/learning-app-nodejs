@@ -17,4 +17,5 @@ export class MajorController {
   public createMajor = (req: Request, res: Response) => RequestHandler.create<Major>(req, res, this.majorService);
   public updateMajor = (req: Request, res: Response) => RequestHandler.update<Major>(req, res, this.majorService);
   public deleteMajor = (req: Request, res: Response) => RequestHandler.delete(req, res, this.majorService);
+  public getMajorWhere = (req: Request, res: Response) => RequestHandler.getWhere<Major>(req, res, this.majorService);
 }
