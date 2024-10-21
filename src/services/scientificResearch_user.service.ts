@@ -169,7 +169,7 @@ export class ScientificResearch_UserService {
     if (condition.userId) {
       whereCondition.user = { userId: condition.userId };
     }
-    if (condition.srgroupId) {
+    if (condition.srgroupId && condition.srgroupId !== "null") {
       whereCondition.scientificResearch = { scientificResearchGroup: { scientificResearchGroupId: condition.srgroupId } };
     }
 

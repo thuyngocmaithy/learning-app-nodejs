@@ -2,7 +2,7 @@ import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
 import { Attach } from '../entities/Attach';
 
 export class AttachService {
-  private attachRepository: Repository<Attach>; 
+  private attachRepository: Repository<Attach>;
 
   constructor(dataSource: DataSource) {
     this.attachRepository = dataSource.getRepository(Attach);
@@ -32,4 +32,19 @@ export class AttachService {
     const result = await this.attachRepository.delete({ id: In(ids) });
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
+
+  async getWhere(condition: any): Promise<Attach[]> {
+    const whereCondition: any = {};
+
+
+    if (condition.SRId) {
+      whereCondition.scientificResearch = { scientificResearchId: condition.SRId };
+    }
+
+    return this.attachRepository.find({
+      where: whereCondition,
+      relations: ['createUser']
+    });
+  }
+
 }

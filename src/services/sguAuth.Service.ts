@@ -13,12 +13,6 @@ import { Subject } from '../entities/Subject';
 import { Semester } from '../entities/Semester';
 import * as puppeteer from 'puppeteer';
 import { Major } from '../entities/Major';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os'; // Sử dụng để lấy thư mục tạm của hệ điều hành
-
-// Lấy thư mục tạm của hệ điều hành
-const tempDir = os.tmpdir();
 
 const SGU_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/auth/login';
 const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/dkmh/w-locsinhvieninfo';
@@ -420,7 +414,8 @@ export class SguAuthService {
         fullname: user.fullname,
         avatar: user.avatar,
         email: user.email,
-        roles: loginData.roles
+        roles: loginData.roles,
+        faculty: user.faculty?.facultyId,
       },
     };
   }

@@ -30,7 +30,8 @@ export class Follower {
   /**
    * ID dự án (tham chiếu đến thực thể Khóa luận, có thể rỗng)
    */
-  @ManyToOne(() => Thesis, data => data.id, { nullable: true })
+  @ManyToOne(() => Thesis, data => data.thesisId, { nullable: true })
+  @JoinColumn({ name: 'thesisId' })
   thesis: Thesis;
 
   // Thêm cascade: true để xóa liên quan đến FollowerDetail khi xóa Follower

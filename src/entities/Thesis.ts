@@ -12,8 +12,8 @@ export class Thesis {
   /**
    * Khóa chính
    */
-  @PrimaryColumn()
-  id: string;
+  @PrimaryColumn({ type: 'varchar', length: 25 })
+  thesisId: string;
 
   /**
    * Tiêu đề khóa luận (không rỗng)

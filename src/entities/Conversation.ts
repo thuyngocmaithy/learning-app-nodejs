@@ -16,7 +16,7 @@ export class Conversation {
     /**
      * ID khóa luận (tham chiếu đến thực thể Thesis, có thể rỗng)
      */
-    @ManyToOne(() => Thesis, data => data.id, { nullable: true })
+    @ManyToOne(() => Thesis, data => data.thesisId, { nullable: true })
     thesis: Thesis;
 
     /**

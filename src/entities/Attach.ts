@@ -27,15 +27,10 @@ export class Attach {
   filename: string;
 
   /**
-   * Đường dẫn tập tin (không rỗng)
-   */
-  @Column({ nullable: false })
-  link: string;
-
-  /**
    * ID khóa luận (tham chiếu đến thực thể Thesis, có thể rỗng)
    */
-  @ManyToOne(() => Thesis, data => data.id, { nullable: true })
+  @ManyToOne(() => Thesis, data => data.thesisId, { nullable: true })
+  @JoinColumn({ name: 'thesisId' })
   thesis: Thesis;
 
   /**
@@ -49,6 +44,7 @@ export class Attach {
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
   @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'createUserId' })
   createUser: User;
 
   /**
@@ -56,16 +52,4 @@ export class Attach {
    */
   @CreateDateColumn()
   createDate: Date;
-
-  /**
-   * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
-   */
-  @ManyToOne(() => User, data => data.userId, { nullable: true })
-  lastModifyUser: User;
-
-  /**
-   * Ngày chỉnh sửa cuối cùng (không rỗng)
-   */
-  @UpdateDateColumn()
-  lastModifyDate: Date;
 }
