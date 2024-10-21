@@ -157,6 +157,7 @@ export class SguAuthService {
   }
 
   private async updateExistingUser(user: User, loginData: any, studentInfo: any, imageData: any, gpaData: number, account: Account): Promise<User> {
+
     user.fullname = studentInfo.ten_day_du;
     user.dateOfBirth = new Date(studentInfo.ngay_sinh?.split('/').reverse().join('-'));
     user.placeOfBirth = studentInfo.noi_sinh;
@@ -348,7 +349,7 @@ export class SguAuthService {
       user.email = studentInfo.email || loginData.principal;
       user.isStudent = studentInfo.hien_dien_sv === 'Đang học';
       user.class = studentInfo.lop;
-      user.faculty = { facultyId: studentInfo.khoi.substring(0, 3) } as any;
+      user.faculty = { facultyId: studentInfo.khoi?.substring(0, 3) } as any;
       user.stillStudy = user.isStudent;
       user.firstAcademicYear = parseInt(studentInfo.nhhk_vao.toString().substring(0, 4));
       user.lastAcademicYear = parseInt(studentInfo.nhhk_ra.toString().substring(0, 4));
@@ -447,7 +448,7 @@ export class SguAuthService {
       throw error;
     }
   }
-
+  
   async getScoreFromSGU(ua: string, access_token: string) { //Lấy điểm theo access token
     try {
       const response = await axios.post(`${SGU_DIEM_API_URL}?hien_thi_mon_theo_hkdk=false`, {}, {
