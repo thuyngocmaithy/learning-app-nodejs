@@ -52,5 +52,18 @@ export class FollowerController {
     }
   };
 
+  public getFollowerByUserId = async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId as string;
+
+      const follower = await this.followerService.getByUserId(userId);
+
+      return res.status(200).json({ message: 'success', data: follower });
+    } catch (error) {
+      const err = error as Error;
+      return res.status(500).json({ message: 'error', error: err.message });
+    }
+  };
+
 
 }
