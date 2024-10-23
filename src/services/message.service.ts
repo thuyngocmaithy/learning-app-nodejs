@@ -34,4 +34,24 @@ export class MessageService {
     const result = await this.messageRepository.delete({ id: In(ids) });
     return result.affected !== 0;
   }
+
+
+  async getWhere(condition: any): Promise<Message[]> {
+    const whereCondition: any = {};
+
+
+    if (condition.SRId) {
+      whereCondition.scientificResearch = { scientificResearchId: condition.SRId };
+    }
+
+    if (condition.thesisId) {
+      whereCondition.thesis = { thesisId: condition.thesisId };
+    }
+
+    return this.messageRepository.find({
+      order: { createDate: 'ASC' },
+      where: whereCondition,
+      relations: ['scientificResearch', 'sender', 'thesis']
+    });
+  }
 }

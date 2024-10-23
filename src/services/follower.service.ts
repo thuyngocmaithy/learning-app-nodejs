@@ -53,6 +53,30 @@ export class FollowerService {
     return this.followerRepository.findOne(options);
   }
 
+  public getByUserId = async (userId: string): Promise<Follower[] | null> => {
+    const options: FindManyOptions<FollowerDetail> = {
+      where: { user: { userId: userId } },
+      relations: ["follower"],
+    };
+
+    // Lấy danh sách các FollowerDetail theo userId
+    const followerDetailList = await this.followerDetailRepository.find(options);
+
+    if (!followerDetailList.length) {
+      return null; // Trả về null nếu không có follower nào
+    }
+
+    // Lấy danh sách followerId từ các FollowerDetail và loại bỏ các followerId bị lặp lại
+    const followerIds = [...new Set(followerDetailList.map(detail => detail.follower?.id))];
+
+    // Tìm các Follower dựa trên followerIds
+    return this.followerRepository.find({
+      where: { id: In(followerIds) },
+      relations: ['scientificResearch']
+    });
+  }
+
+
   public getFollowersByUserIdAndSRGroupId = async (userId: string, SRGroupId: string | null): Promise<Follower[] | null> => {
     let user = null;
     let SRGroup = null;

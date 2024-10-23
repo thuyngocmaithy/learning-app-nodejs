@@ -8,6 +8,7 @@ const followerRouter = Router();
 const followerController = new FollowerController(AppDataSource);
 
 followerRouter.get('/', followerController.getAllFollowers);
+followerRouter.get('/getByUserId', followerController.getFollowerByUserId);
 followerRouter.get('/getByScientificResearchId', followerController.getFollowerByScientificResearchId);
 followerRouter.get('/getFollowersByUserIdAndSRGroupId', followerController.getFollowersByUserIdAndSRGroupId);
 followerRouter.get('/:id', followerController.getFollowerById);

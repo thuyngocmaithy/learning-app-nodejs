@@ -17,4 +17,3 @@ export const AppDataSource = new DataSource({
     migrations: [__dirname + '/migrations/**{.js,.ts}'], // Đường dẫn đến các tệp di chuyển
     subscribers: [__dirname + '/subscribers/**{.js,.ts}'], // Đường dẫn đến các tệp phụ
 });
-    
