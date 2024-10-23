@@ -24,7 +24,7 @@ export class UserService {
 
 
   async getByUserId(userId: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { userId }, relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'] });
+    return this.userRepository.findOne({ where: { userId }, relations: ['faculty', 'major', 'account', 'account.permission' , 'createUser', 'lastModifyUser'] });
   }
 
 
