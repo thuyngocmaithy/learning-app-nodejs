@@ -1,5 +1,5 @@
 // scientificResearch.service.ts
-import { DataSource, Repository, FindOneOptions, Like, CreateDateColumn, FindManyOptions, In } from 'typeorm';
+import { DataSource, Repository, Like, FindManyOptions, In } from 'typeorm';
 import { ScientificResearch } from '../entities/ScientificResearch';
 import { Faculty } from '../entities/Faculty';
 import { User } from '../entities/User';
