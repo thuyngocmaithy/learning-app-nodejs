@@ -19,6 +19,7 @@ const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/dkmh/w-locsinhvi
 const SGU_IMAGE_ACCOUNT_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/sms/w-locthongtinimagesinhvien';
 const SGU_DIEM_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/srm/w-locdsdiemsinhvien';
 // https://thongtindaotao.sgu.edu.vn/api/srm/w-locdsdiemsinhvien?hien_thi_mon_theo_hkdk=false
+
 export class SguAuthService {
   private accountService: AccountService;
   private userService: UserService;
@@ -27,7 +28,7 @@ export class SguAuthService {
   private ScoreOfUser: any;
   private ImageOfUser: string;
   private GPAOfUser: number;
-  private tokenConfig: { [key: string]: { secret: string, role: string } };
+  private tokenConfig: { [key: string]: { secret: string; role: string; } };
 
 
   constructor() {
@@ -39,11 +40,95 @@ export class SguAuthService {
     this.ImageOfUser = "";
     this.GPAOfUser = 0;
     this.tokenConfig = {
-      ADMIN: { secret: 'TokenADMIN', role: 'ADMIN' },
-      SINHVIEN: { secret: 'TokenSINHVIEN', role: 'SINHVIEN' },
-      GIANGVIEN: { secret: 'TokenGIANGVIEN', role: 'GIANGVIEN' }
+      ADMIN: { 
+        secret: process.env.JWT_ADMIN_SECRET || 'TokenADMIN',
+        role: 'ADMIN',
+      },
+      SINHVIEN: { 
+        secret: process.env.JWT_STUDENT_SECRET || 'TokenSINHVIEN',
+        role: 'SINHVIEN',
+      },
+      GIANGVIEN: { 
+        secret: process.env.JWT_TEACHER_SECRET || 'TokenGIANGVIEN',
+        role: 'GIANGVIEN',
+      }
     };
   }
+
+
+  //MAIN ACTION - LOGIN
+
+  // async loginToSgu(username: string, password: string) {
+  //   try {
+  //     // Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
+  //     let account = await this.accountService.getByUsername(username);
+  //     let user = await this.userService.getByUserId(username);
+
+  //     if (account?.isSystem) {
+  //       // Xử lý đăng nhập cho tài khoản hệ thống
+  //       const isPasswordMatch = await bcrypt.compare(password, account.password);
+  //       if (!isPasswordMatch) {
+  //         throw new Error("Tên đăng nhập hoặc mật khẩu không chính xác");
+  //       }
+
+  //       // Tạo token mới cho tài khoản hệ thống
+  //       const updatedAccount = await this.updateAccountTokens(
+  //         account, 
+  //         account.permission.permissionId
+  //       );
+
+  //       return this.generateAuthResponse({
+  //         access_token: updatedAccount!.access_token,
+  //         refresh_token: updatedAccount!.refreshToken,
+  //         roles: account.permission.permissionId
+  //       }, user as User);
+  //     }
+
+  //     // Xử lý đăng nhập qua SGU
+  //     const loginData = await this.getInfoUserFromSGU(username, password, account ? true : false);
+  //     const CURRENT_USER = JSON.parse(loginData.CURRENT_USER || "");
+  //     const CURRENT_USER_INFO = JSON.parse(loginData.CURRENT_USER_INFO || "");
+
+  //     if (!account) {
+  //       // Tạo tài khoản mới
+  //       account = await this.createOrUpdateAccount(CURRENT_USER, password);
+        
+  //       if (user) {
+  //         user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
+  //       } else {
+  //         user = await this.createNewUser(CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
+  //       }
+
+  //       if (account.permission.permissionId === "SINHVIEN") {
+  //         await this.saveScoresForUserFromSgu(account.username);
+  //       }
+  //     }
+
+  //     // Cập nhật token cho tài khoản SGU
+  //     const updatedAccount = await this.updateAccountTokens(
+  //       account,
+  //       account.permission.permissionId
+  //     );
+
+  //     if (account.permission.permissionId === "SINHVIEN") {
+  //       await this.saveScoresForUserFromSgu(CURRENT_USER.userName);
+  //     }
+
+  //     // Cập nhật thông tin user nếu cần
+  //     if (user) {
+  //       user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
+  //     }
+
+  //     return this.generateAuthResponse({
+  //       access_token: updatedAccount!.access_token,
+  //       refresh_token: updatedAccount!.refreshToken,
+  //       roles: account.permission.permissionId
+  //     }, user as User);
+
+  //   } catch (error) {
+  //     this.handleError(error);
+  //   }
+  // }
 
   async loginToSgu(username: string, password: string) {
     try {
@@ -52,105 +137,340 @@ export class SguAuthService {
       let user = await this.userService.getByUserId(username);
 
       if (account?.isSystem) {
-        // Kiểm tra mật khẩu
+        // Xử lý đăng nhập cho tài khoản hệ thống
         const isPasswordMatch = await bcrypt.compare(password, account.password);
-
         if (!isPasswordMatch) {
           throw new Error("Tên đăng nhập hoặc mật khẩu không chính xác");
         }
 
-        // Update token
-        type PermissionId = keyof SguAuthService['tokenConfig'];
+        // Tạo token mới
+        const tokens = this.generateTokens(account);
+        
+        // Cập nhật refresh token trong database
+        account.refreshToken = tokens.refreshToken;
+        await this.accountService.update(account.id, account);
 
-        const permissionId = account.permission.permissionId as PermissionId;
-        const config = this.tokenConfig[permissionId];
-        if (!config) {
-          throw new Error("Invalid permissionId");
-        }
-
-        const updatedTokens = {
-          access_token: jwt.sign(
-            { id: account.id, role: config.role },
-            config.secret,
-            { expiresIn: '2h' }
-          ),
-          refresh_token: account.refreshToken,
-          roles: config.role
-        };
-
-
-        return this.generateAuthResponse(updatedTokens, user as User);
+        return this.generateAuthResponse(tokens, user as User);
       }
 
+      // Xử lý đăng nhập qua SGU
       const loginData = await this.getInfoUserFromSGU(username, password, account ? true : false);
-
-
       const CURRENT_USER = JSON.parse(loginData.CURRENT_USER || "");
       const CURRENT_USER_INFO = JSON.parse(loginData.CURRENT_USER_INFO || "");
 
       if (!account) {
-        // Tạo tài khoản mới trong cơ sở dữ liệu
         account = await this.createOrUpdateAccount(CURRENT_USER, password);
-
         if (user) {
-          // Nếu user đã tồn tại, cập nhật thông tin
           user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
         } else {
-          // Nếu user chưa tồn tại, tạo mới
           user = await this.createNewUser(CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
         }
-        if (account.permission.permissionId === "SINHVIEN")
+        if (account.permission.permissionId === "SINHVIEN") {
           await this.saveScoresForUserFromSgu(account.username);
-
-        return this.generateAuthResponse(CURRENT_USER, user as User);
-      }
-      // else {
-      if (account) {
-        console.log("tài khoản đã tồn tại\n");
-        // Tài khoản đã tồn tại, xóa access_token cũ và cập nhật token mới
-        // Update tài khoản trong cơ sở dữ liệu
-        account = await this.createOrUpdateAccount(CURRENT_USER, password);
-
-
-        type PermissionId = keyof SguAuthService['tokenConfig'];
-
-        const permissionId = account.permission.permissionId as PermissionId;
-        const config = this.tokenConfig[permissionId];
-        if (!config) {
-          throw new Error("Invalid permissionId");
         }
-
-        const updatedTokens = {
-          access_token: jwt.sign(
-            { id: account.id, role: config.role },
-            config.secret,
-            { expiresIn: '2h' }
-          ),
-          refresh_token: account.refreshToken,
-          roles: config.role
-        };
-
-        if (permissionId === "SINHVIEN")
+      } else {
+        account = await this.createOrUpdateAccount(CURRENT_USER, password);
+        if (account.permission.permissionId === "SINHVIEN") {
           await this.saveScoresForUserFromSgu(CURRENT_USER.userName);
-
-        // Lưu lại thay đổi
-        await this.accountService.update(account.id, account);
-
-        // Nếu user đã tồn tại, cập nhật thông tin user
-        if (user)
+        }
+        if (user) {
           user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
-
-        // Lấy thông tin người dùng từ cơ sở dữ liệu và trả về phản hồi
-        user = await this.userService.getByUserId(account.username);
-        return this.generateAuthResponse(updatedTokens, user as User);
-
+        }
       }
+
+      // Tạo token mới cho tài khoản
+      const tokens = this.generateTokens(account);
+      
+      // Cập nhật refresh token trong database
+      account.refreshToken = tokens.refreshToken;
+      await this.accountService.update(account.id, account);
+
+      // Lấy thông tin user từ database
+      user = await this.userService.getByUserId(account.username);
+      return this.generateAuthResponse(tokens, user as User);
+
     } catch (error) {
       this.handleError(error);
     }
   }
 
+  // NEW TOKEN METHODS
+  private generateTokens(account: Account) {
+    type PermissionId = keyof typeof this.tokenConfig;
+    const permissionId = account.permission.permissionId as PermissionId;
+    const config = this.tokenConfig[permissionId];
+    
+    if (!config) {
+      throw new Error("Invalid permissionId");
+    }
+  
+    // Tạo thời gian hết hạn cho access token (20 phút)
+    const accessTokenExpiry = '20m';
+    const accessTokenExpiryDate = new Date(Date.now() + 20 * 60 * 1000); // 20 phút tính bằng milliseconds
+  
+    // Tạo thời gian hết hạn cho refresh token (7 ngày)
+    const refreshTokenExpiry = '7d';
+    const refreshTokenExpiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 ngày tính bằng milliseconds
+  
+    const accessToken = jwt.sign(
+      { 
+        id: account.id,
+        username: account.username,
+        role: config.role 
+      },
+      config.secret,
+      { expiresIn: accessTokenExpiry }
+    );
+  
+    const refreshToken = jwt.sign(
+      { 
+        id: account.id,
+        username: account.username,
+        role: config.role 
+      },
+      config.secret + '_refresh',
+      { expiresIn: refreshTokenExpiry }
+    );
+  
+    return { 
+      accessToken, 
+      refreshToken,
+      accessTokenExpiry: accessTokenExpiryDate.getTime(),
+      refreshTokenExpiry: refreshTokenExpiryDate.getTime()
+    };
+  }
+  
+
+  private async verifyToken(token: string, type: 'access' | 'refresh' = 'access') {
+    try {
+      // Giải mã token để lấy role
+      const decoded = jwt.decode(token) as { role: string };
+      if (!decoded || !decoded.role) {
+        throw new Error('Invalid token');
+      }
+
+      const config = this.tokenConfig[decoded.role as keyof typeof this.tokenConfig];
+      if (!config) {
+        throw new Error('Invalid role in token');
+      }
+
+      // Verify token với secret tương ứng
+      const secret = type === 'refresh' ? config.secret + '_refresh' : config.secret;
+      return jwt.verify(token, secret);
+    } catch (error) {
+      throw new Error('Token verification failed');
+    }
+  }
+
+  private async updateAccountTokens(account: Account, role: string) {
+    const { accessToken, refreshToken } = this.generateTokens(account);
+    
+    account.access_token = accessToken;
+    account.refreshToken = refreshToken;
+    
+    return await this.accountService.update(account.id, account);
+  }
+  
+  async refreshToken(refreshToken: string) {
+    try {
+      // Verify refresh token
+      const decoded = await this.verifyToken(refreshToken, 'refresh') as any;
+      
+      // Lấy thông tin account
+      const account = await this.accountService.getById(decoded.id);
+      if (!account || account.refreshToken !== refreshToken) {
+        throw new Error('Invalid refresh token');
+      }
+
+      // Tạo cặp token mới
+      const tokens = this.generateTokens(account);
+      
+      // Cập nhật refresh token mới vào database
+      account.refreshToken = tokens.refreshToken;
+      await this.accountService.update(account.id, account);
+
+      return tokens;
+    } catch (error) {
+      throw new Error('Failed to refresh token');
+    }
+  } 
+
+
+
+
+
+  //BACKUP - OLD METHOD  - NOT USED OR EDIT
+  private async performSguLogin(username: string, password: string) {
+    try {
+      const response = await axios.post(SGU_API_URL, {
+        username,
+        password,
+        grant_type: 'password',
+      }, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+      });
+
+      const data = response.data;
+      if (data.code !== '200') {
+        throw new Error('Đăng nhập SGU không thành công');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw new Error('Đăng nhập SGU thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
+    }
+  }
+
+  private async refreshSguTokens(username: string, password: string) {
+    try {
+      console.log('Attempting re-login to SGU');
+      const response = await axios.post(SGU_API_URL, {
+        username,
+        password,
+        grant_type: 'password',
+      }, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+      });
+
+      const data = response.data;
+      if (data.code !== '200') {
+        throw new Error('Đăng nhập SGU không thành công');
+      }
+
+      return {
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_in: data.expires_in,
+        roles: data.roles,
+      };
+    } catch (error) {
+      console.error('SGU re-login failed:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+      }
+      throw new Error('Không thể lấy token mới từ SGU. Vui lòng thử lại.');
+    }
+  }
+
+  private async fetchStudentInfo(accessToken: string) {
+    try {
+      const response = await axios.post(SGU_INFO_API_URL, {}, {
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      if (!response.data || !response.data.data) {
+        throw new Error('Invalid student info response');
+      }
+
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching student info:', error);
+      if (error instanceof AxiosError && error.response?.status === 401) {
+        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+      throw new Error('Không thể lấy thông tin sinh viên. Vui lòng thử lại sau.');
+    }
+  }
+
+
+
+
+
+  //CREATE OR UPDATE METHOD
+  
+  //create new user
+  private async createNewUser(loginData: any, studentInfo: any, imageData: any, gpaData: number, account: Account): Promise<User> {
+    const studentId = studentInfo.ma_sv;
+    let user = await this.userService.getByUserId(studentId);
+    const majorKTPM = await this.majorRepository.findOneBy({ majorId: "KTPM" });
+    const majorHTTT = await this.majorRepository.findOneBy({ majorId: "HTTT" });
+    const majorKHMT = await this.majorRepository.findOneBy({ majorId: "KHMT" });
+    const majorKTMT = await this.majorRepository.findOneBy({ majorId: "KTMT" });
+
+    if (!user) {
+      user = new User();
+      user.userId = studentId;
+      user.createDate = new Date();
+      user.fullname = studentInfo.ten_day_du;
+      user.dateOfBirth = new Date(studentInfo.ngay_sinh.split('/').reverse().join('-'));
+      user.placeOfBirth = studentInfo.noi_sinh;
+      user.phone = studentInfo.dien_thoai;
+      user.email = studentInfo.email || loginData.principal;
+      user.isStudent = studentInfo.hien_dien_sv === 'Đang học';
+      user.class = studentInfo.lop;
+      user.faculty = { facultyId: studentInfo.khoi?.substring(0, 3) } as any;
+      user.stillStudy = user.isStudent;
+      user.firstAcademicYear = parseInt(studentInfo.nhhk_vao.toString().substring(0, 4));
+      user.lastAcademicYear = parseInt(studentInfo.nhhk_ra.toString().substring(0, 4));
+      user.isActive = true;
+      user.avatar = imageData;
+      user.account = account;
+      user.lastModifyDate = new Date();
+      user.nien_khoa = studentInfo.nien_khoa;
+      user.sex = studentInfo.gioi_tinh;
+      user.dan_toc = studentInfo.dan_toc;
+      user.ton_giao = studentInfo.ton_giao;
+      user.quoc_tich = studentInfo.quoc_tich;
+      user.cccd = studentInfo.so_cmnd;
+      user.ho_khau_thuong_tru = studentInfo.ho_khau_thuong_tru;
+      user.khu_vuc = studentInfo.khu_vuc;
+      user.khoi = studentInfo.khoi;
+      user.bac_he_dao_tao = studentInfo.bac_he_dao_tao;
+      user.ma_cvht = studentInfo.ma_cvht;
+      user.ho_ten_cvht = studentInfo.ho_ten_cvht;
+      user.email_cvht = studentInfo.email_cvht;
+      user.dien_thoai_cvht = studentInfo.dien_thoai_cvht;
+      user.ma_cvht_ng2 = studentInfo.ma_cvht_ng2;
+      user.ho_ten_cvht_ng2 = studentInfo.ho_ten_cvht_ng2;
+      user.email_cvht_ng2 = studentInfo.email_cvht_ng2;
+      user.dien_thoai_cvht_ng2 = studentInfo.dien_thoai_cvht_ng2;
+      user.ma_truong = studentInfo.ma_truong;
+      user.ten_truong = studentInfo.ten_truong;
+      user.hoc_vi = studentInfo.hoc_vi;
+      user.GPA = gpaData;
+      switch (true) {
+        case studentInfo.bo_mon === 'Kỹ thuật phần mềm' || studentInfo.chuyen_nganh === 'Kỹ thuật phần mềm':
+          if (majorKTPM)
+            user.major = majorKTPM;
+          break;
+
+        case studentInfo.bo_mon === 'Kỹ thuật máy tính' || studentInfo.chuyen_nganh === 'Kỹ thuật máy tính':
+          if (majorKTMT)
+            user.major = majorKTMT;
+          break;
+
+        case studentInfo.bo_mon === 'Hệ thống thông tin' || studentInfo.chuyen_nganh === 'Hệ thống thông tin':
+          if (majorHTTT)
+            user.major = majorHTTT;
+          break;
+
+        case studentInfo.bo_mon === 'Khoa học máy tính' || studentInfo.chuyen_nganh === 'Khoa học máy tính':
+          if (majorKHMT)
+            user.major = majorKHMT;
+          break;
+
+        default:
+          break;
+      }
+    }
+
+
+    return await this.userService.create(user) as User;
+  }
+
+  //update user
   private async updateExistingUser(user: User, loginData: any, studentInfo: any, imageData: any, gpaData: number, account: Account): Promise<User> {
+
     user.fullname = studentInfo.ten_day_du;
     user.dateOfBirth = new Date(studentInfo.ngay_sinh?.split('/').reverse().join('-'));
     user.placeOfBirth = studentInfo.noi_sinh;
@@ -213,31 +533,7 @@ export class SguAuthService {
     return await this.userService.update(user.userId, user) as User;
   }
 
-
-  private async performSguLogin(username: string, password: string) {
-    try {
-      const response = await axios.post(SGU_API_URL, {
-        username,
-        password,
-        grant_type: 'password',
-      }, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-      });
-
-      const data = response.data;
-      if (data.code !== '200') {
-        throw new Error('Đăng nhập SGU không thành công');
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Login error:', error);
-      throw new Error('Đăng nhập SGU thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
-    }
-  }
-
+  //creat or update account
   private async createOrUpdateAccount(loginData: any, password: string): Promise<Account> {
     const { userName, principal, access_token, roles } = loginData;
     let account = await this.accountService.getByUsername(userName);
@@ -265,160 +561,38 @@ export class SguAuthService {
     }
   }
 
-  private async refreshSguTokens(username: string, password: string) {
-    try {
-      console.log('Attempting re-login to SGU');
-      const response = await axios.post(SGU_API_URL, {
-        username,
-        password,
-        grant_type: 'password',
-      }, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-      });
-
-      const data = response.data;
-      if (data.code !== '200') {
-        throw new Error('Đăng nhập SGU không thành công');
-      }
-
-      return {
-        access_token: data.access_token,
-        refresh_token: data.refresh_token,
-        expires_in: data.expires_in,
-        roles: data.roles,
-      };
-    } catch (error) {
-      console.error('SGU re-login failed:', error);
-      if (axios.isAxiosError(error) && error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-        console.error('Error headers:', error.response.headers);
-      }
-      throw new Error('Không thể lấy token mới từ SGU. Vui lòng thử lại.');
-    }
-  }
-
-  private async fetchStudentInfo(accessToken: string) {
-    try {
-      const response = await axios.post(SGU_INFO_API_URL, {}, {
-        headers: {
-          "Content-Type": "application/json",
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-
-      if (!response.data || !response.data.data) {
-        throw new Error('Invalid student info response');
-      }
-
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching student info:', error);
-      if (error instanceof AxiosError && error.response?.status === 401) {
-        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-      }
-      throw new Error('Không thể lấy thông tin sinh viên. Vui lòng thử lại sau.');
-    }
-  }
-
-  private async createNewUser(loginData: any, studentInfo: any, imageData: any, gpaData: number, account: Account): Promise<User> {
-    const studentId = studentInfo.ma_sv;
-    let user = await this.userService.getByUserId(studentId);
-    const majorKTPM = await this.majorRepository.findOneBy({ majorId: "KTPM" });
-    const majorHTTT = await this.majorRepository.findOneBy({ majorId: "HTTT" });
-    const majorKHMT = await this.majorRepository.findOneBy({ majorId: "KHMT" });
-    const majorKTMT = await this.majorRepository.findOneBy({ majorId: "KTMT" });
-
+  //RESPONSE TO FRONTEND
+  private generateAuthResponse(
+    tokens: { 
+      accessToken: string; 
+      refreshToken: string; 
+      accessTokenExpiry: number;
+      refreshTokenExpiry: number;
+    }, 
+    user: User
+  ) {
     if (!user) {
-      user = new User();
-      user.userId = studentId;
-      user.createDate = new Date();
-      user.fullname = studentInfo.ten_day_du;
-      user.dateOfBirth = new Date(studentInfo.ngay_sinh.split('/').reverse().join('-'));
-      user.placeOfBirth = studentInfo.noi_sinh;
-      user.phone = studentInfo.dien_thoai;
-      user.email = studentInfo.email || loginData.principal;
-      user.isStudent = studentInfo.hien_dien_sv === 'Đang học';
-      user.class = studentInfo.lop;
-      user.faculty = { facultyId: studentInfo.khoi.substring(0, 3) } as any;
-      user.stillStudy = user.isStudent;
-      user.firstAcademicYear = parseInt(studentInfo.nhhk_vao.toString().substring(0, 4));
-      user.lastAcademicYear = parseInt(studentInfo.nhhk_ra.toString().substring(0, 4));
-      user.isActive = true;
-      user.avatar = imageData;
-      user.account = account;
-      user.lastModifyDate = new Date();
-      user.nien_khoa = studentInfo.nien_khoa;
-      user.sex = studentInfo.gioi_tinh;
-      user.dan_toc = studentInfo.dan_toc;
-      user.ton_giao = studentInfo.ton_giao;
-      user.quoc_tich = studentInfo.quoc_tich;
-      user.cccd = studentInfo.so_cmnd;
-      user.ho_khau_thuong_tru = studentInfo.ho_khau_thuong_tru;
-      user.khu_vuc = studentInfo.khu_vuc;
-      user.khoi = studentInfo.khoi;
-      user.bac_he_dao_tao = studentInfo.bac_he_dao_tao;
-      user.ma_cvht = studentInfo.ma_cvht;
-      user.ho_ten_cvht = studentInfo.ho_ten_cvht;
-      user.email_cvht = studentInfo.email_cvht;
-      user.dien_thoai_cvht = studentInfo.dien_thoai_cvht;
-      user.ma_cvht_ng2 = studentInfo.ma_cvht_ng2;
-      user.ho_ten_cvht_ng2 = studentInfo.ho_ten_cvht_ng2;
-      user.email_cvht_ng2 = studentInfo.email_cvht_ng2;
-      user.dien_thoai_cvht_ng2 = studentInfo.dien_thoai_cvht_ng2;
-      user.ma_truong = studentInfo.ma_truong;
-      user.ten_truong = studentInfo.ten_truong;
-      user.hoc_vi = studentInfo.hoc_vi;
-      user.GPA = gpaData;
-      switch (true) {
-        case studentInfo.bo_mon === 'Kỹ thuật phần mềm' || studentInfo.chuyen_nganh === 'Kỹ thuật phần mềm':
-          if (majorKTPM)
-            user.major = majorKTPM;
-          break;
-
-        case studentInfo.bo_mon === 'Kỹ thuật máy tính' || studentInfo.chuyen_nganh === 'Kỹ thuật máy tính':
-          if (majorKTMT)
-            user.major = majorKTMT;
-          break;
-
-        case studentInfo.bo_mon === 'Hệ thống thông tin' || studentInfo.chuyen_nganh === 'Hệ thống thông tin':
-          if (majorHTTT)
-            user.major = majorHTTT;
-          break;
-
-        case studentInfo.bo_mon === 'Khoa học máy tính' || studentInfo.chuyen_nganh === 'Khoa học máy tính':
-          if (majorKHMT)
-            user.major = majorKHMT;
-          break;
-
-        default:
-          break;
-      }
+      throw new Error('User data is required for authentication response');
     }
-
-
-    return await this.userService.create(user) as User;
-  }
-
-  private generateAuthResponse(loginData: any, user: User) {
+  
     return {
-      // status: loginData.code,
-      accessToken: loginData.access_token,
-      refreshToken: loginData.refresh_token,
-      expiresIn: loginData.expires_in,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresIn: {
+        accessToken: tokens.accessTokenExpiry,
+        refreshToken: tokens.refreshTokenExpiry
+      },
       user: {
         userId: user.userId,
         fullname: user.fullname,
         avatar: user.avatar,
         email: user.email,
-        roles: loginData.roles,
+        roles: user.account?.permission?.permissionId,
         faculty: user.faculty?.facultyId,
       },
     };
   }
-
+  
   private handleError(error: any) {
     console.error('Error in SguAuthService:', error);
     if (error instanceof Error) {
@@ -428,6 +602,12 @@ export class SguAuthService {
     }
   }
 
+
+
+
+  //GET FROM SGU
+  
+  //get image
   async getImageAccount(access_token: string, ma_sv: string) {
     try {
       const response = await axios.post(`${SGU_IMAGE_ACCOUNT_API_URL}?MaSV=${ma_sv}`, {}, {
@@ -442,7 +622,8 @@ export class SguAuthService {
       throw error;
     }
   }
-
+  
+  //get score
   async getScoreFromSGU(ua: string, access_token: string) { //Lấy điểm theo access token
     try {
       const response = await axios.post(`${SGU_DIEM_API_URL}?hien_thi_mon_theo_hkdk=false`, {}, {
@@ -459,6 +640,7 @@ export class SguAuthService {
     }
   }
 
+  //save score
   async saveScoresForUserFromSgu(userId: string) {
     try {
       const scoreRepository = AppDataSource.getRepository(Score);
@@ -551,7 +733,7 @@ export class SguAuthService {
     }
   }
 
-
+  //get info
   async getInfoUserFromSGU(username: string, password: string, isExistAccount: boolean) {
     // Khởi tạo trình duyệt Puppeteer
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null });
