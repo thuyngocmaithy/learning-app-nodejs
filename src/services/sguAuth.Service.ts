@@ -240,7 +240,6 @@ export class SguAuthService {
     };
   }
   
-
   private async verifyToken(token: string, type: 'access' | 'refresh' = 'access') {
     try {
       // Giải mã token để lấy role
@@ -276,24 +275,43 @@ export class SguAuthService {
       // Verify refresh token
       const decoded = await this.verifyToken(refreshToken, 'refresh') as any;
       
-      // Lấy thông tin account
+      // Lấy thông tin account và user
       const account = await this.accountService.getById(decoded.id);
       if (!account || account.refreshToken !== refreshToken) {
         throw new Error('Invalid refresh token');
       }
-
+  
+      // Kiểm tra xem refresh token có hết hạn chưa
+      try {
+        jwt.verify(refreshToken, this.tokenConfig[account.permission.permissionId].secret + '_refresh');
+      } catch (error) {
+        if (error instanceof jwt.TokenExpiredError) {
+          // Nếu refresh token hết hạn, yêu cầu login lại
+          throw new Error('Refresh token expired. Please login again.');
+        }
+        throw error;
+      }
+  
       // Tạo cặp token mới
       const tokens = this.generateTokens(account);
       
       // Cập nhật refresh token mới vào database
       account.refreshToken = tokens.refreshToken;
       await this.accountService.update(account.id, account);
-
-      return tokens;
-    } catch (error) {
+  
+      // Lấy thông tin user để trả về response giống như login
+      const user = await this.userService.getByUserId(account.username);
+      
+      // Trả về response với format giống như login
+      return this.generateAuthResponse(tokens, user as User);
+  
+    } catch (error : any) {
+      if (error.message === 'Refresh token expired. Please login again.') {
+        throw error;
+      }
       throw new Error('Failed to refresh token');
     }
-  } 
+  }
 
 
 
