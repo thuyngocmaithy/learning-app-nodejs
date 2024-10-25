@@ -54,25 +54,25 @@ export class StudyFrame {
   @Column({ nullable: true })
   creditHour: string;
 
-  /**
-   * Khung ctr đào tạo áp dụng được cho nhiều chu kỳ
-   */
-  @ManyToMany(() => Cycle)
-  @JoinTable({
-    name: 'studyFrame_cycle',
-    joinColumn: { name: 'frameId', referencedColumnName: 'frameId' },
-    inverseJoinColumn: { name: 'cycleId', referencedColumnName: 'cycleId' },
-  })
-  cycles: Cycle[];
+  // /**
+  //  * Khung ctr đào tạo áp dụng được cho nhiều chu kỳ
+  //  */
+  // @ManyToMany(() => Cycle)
+  // @JoinTable({
+  //   name: 'studyFrame_cycle',
+  //   joinColumn: { name: 'frameId', referencedColumnName: 'frameId' },
+  //   inverseJoinColumn: { name: 'cycleId', referencedColumnName: 'cycleId' },
+  // })
+  // cycles: Cycle[];
 
-  /**
-   * Khung ctr đào tạo áp dụng được cho nhiều ngành
-   */
-  @ManyToMany(() => Faculty)
-  @JoinTable({
-    name: 'studyFrame_faculty',
-    joinColumn: { name: 'frameId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'facultyId', referencedColumnName: 'facultyId' },
-  })
-  facultys: Faculty[];
+  // /**
+  //  * Khung ctr đào tạo áp dụng được cho nhiều ngành
+  //  */
+  // @ManyToMany(() => Faculty)
+  // @JoinTable({
+  //   name: 'studyFrame_faculty',
+  //   joinColumn: { name: 'frameId', referencedColumnName: 'id' },
+  //   inverseJoinColumn: { name: 'facultyId', referencedColumnName: 'facultyId' },
+  // })
+  // facultys: Faculty[];
 }
