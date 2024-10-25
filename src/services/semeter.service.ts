@@ -13,7 +13,7 @@ export class SemesterService {
   }
 
   async create(data: any): Promise<Semester> {
-    const cycle = await this.cycleRepository.findOneBy({id: data.cycle});
+    const cycle = await this.cycleRepository.findOneBy({cycleId: data.cycle});
     if(!cycle)
     {
       throw new Error('SemesterService - create - Not found cycle');
@@ -42,7 +42,7 @@ export class SemesterService {
 
   async update(semesterId: string, data: any): Promise<Semester | null> {
     // Tìm entity cycle
-    const cycle = await this.cycleRepository.findOneBy({id: data.cycle});
+    const cycle = await this.cycleRepository.findOneBy({cycleId: data.cycle});
     if(!cycle)
     {
       throw new Error('SemesterService - create - Not found cycle');

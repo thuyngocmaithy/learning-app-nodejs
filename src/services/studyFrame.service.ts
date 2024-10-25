@@ -25,11 +25,11 @@ export class StudyFrameService {
   }
 
   async getById(id: string): Promise<StudyFrame | null> {
-    return this.studyFrameRepository.findOne({ where: { id } });
+    return this.studyFrameRepository.findOne({ where: { frameId: id } });
   }
 
   async update(id: string, data: Partial<StudyFrame>): Promise<StudyFrame | null> {
-    const studyFrame = await this.studyFrameRepository.findOne({ where: { id } });
+    const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: id } });
     if (!studyFrame) {
       return null;
     }
@@ -38,7 +38,7 @@ export class StudyFrameService {
   }
 
   async delete(ids: string[]): Promise<boolean> {
-    const result = await this.studyFrameRepository.delete({ id: In(ids) });
+    const result = await this.studyFrameRepository.delete({ frameId: In(ids) });
     return result.affected !== 0;
   }
 

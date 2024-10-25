@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany, UpdateDateColumn, JoinColumn, CreateDateColumn, PrimaryColumn, JoinTable } from 'typeorm';
-import { StudyFrame } from './StudyFrame';
+import { StudyFrame, StudyFrame_Component } from './StudyFrame';
 import { User } from './User';
 import { Major } from './Major';
 
@@ -61,15 +61,15 @@ export class Subject {
   majors: Major[];
 
   /**
-    * ID khung học tập (tham chiếu đến thực thể StudyFrame)
+    * ID thành phần khung đào tạo (tham chiếu đến thực thể StudyFrame_Component)
     */
-  @ManyToMany(() => StudyFrame)
+  @ManyToMany(() => StudyFrame_Component)
   @JoinTable({
-    name: 'subject_studyFrame',
+    name: 'subject_studyFrameComponent',
     joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
-    inverseJoinColumn: { name: 'frameId', referencedColumnName: 'frameId' },
+    inverseJoinColumn: { name: 'frameComponentId', referencedColumnName: 'frameComponentId' },
   })
-  frames: StudyFrame[];
+  frameComponents: StudyFrame_Component[];
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)

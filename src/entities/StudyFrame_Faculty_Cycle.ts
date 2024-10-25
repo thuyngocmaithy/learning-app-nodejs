@@ -1,7 +1,4 @@
-import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Column } from 'typeorm';
-import { User } from './User';
-import { Subject } from './Subject';
-import { Semester } from './Semester';
+import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn} from 'typeorm';
 import { StudyFrame } from './StudyFrame';
 import { Faculty } from './Faculty';
 import { Cycle } from './Cycle';
@@ -20,7 +17,8 @@ export class StudyFrame_Faculty_Cycle {
   /**
    * Mã Khung ctr đào tạo
    */
-  @ManyToOne(() => StudyFrame, studyFrame => studyFrame.id, { nullable: false })
+  @ManyToOne(() => StudyFrame, studyFrame => studyFrame.frameId, { nullable: false })
+  @JoinColumn({ name: 'studyFrameId' })
   studyFrame: StudyFrame;
 
   /**

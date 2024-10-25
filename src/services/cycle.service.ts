@@ -27,11 +27,11 @@ export class CycleService {
   }
 
   async getById(id: string): Promise<Cycle | null> {
-    return this.cycleRepository.findOne({ where: { id } });
+    return this.cycleRepository.findOne({ where: { cycleId: id } });
   }
 
   async update(id: string, data: Partial<Cycle>): Promise<Cycle | null> {
-    const cycle = await this.cycleRepository.findOne({ where: { id } });
+    const cycle = await this.cycleRepository.findOne({ where: { cycleId: id } });
     if (!cycle) {
       return null;
     }
@@ -41,7 +41,7 @@ export class CycleService {
   }
 
   async delete(ids: string[]): Promise<boolean> {
-    const result = await this.cycleRepository.delete({ id: In(ids) });
+    const result = await this.cycleRepository.delete({ cycleId: In(ids) });
     return result.affected !== 0;
   }
 

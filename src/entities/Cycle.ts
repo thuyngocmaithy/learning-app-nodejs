@@ -1,6 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { StudyFrame } from './StudyFrame';
-import { Major } from './Major';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, PrimaryColumn } from 'typeorm';
 import { Semester } from './Semester';
 
 /**
@@ -9,10 +7,7 @@ import { Semester } from './Semester';
  */
 @Entity()
 export class Cycle {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
-
-    @Column({ unique: true, nullable: false })
+    @PrimaryColumn({ type: 'varchar', length: 25 })
     cycleId: string;
 
     /**

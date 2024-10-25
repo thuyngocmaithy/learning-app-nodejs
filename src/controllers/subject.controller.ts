@@ -1,9 +1,11 @@
 // src/controllers/subject.controller.ts
 import { Request, Response } from 'express';
 import { SubjectService } from '../services/subject.service';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { RequestHandler } from '../utils/requestHandler';
 import { Subject } from '../entities/Subject';
+import { User } from '../entities/User';
+import { AppDataSource } from '../data-source';
 
 export class SubjectController {
   private subjectService: SubjectService;
@@ -20,7 +22,14 @@ export class SubjectController {
 
   public callKhungCTDT = async (req: Request, res: Response): Promise<void> => {
     try {
-      const result = await this.subjectService.callKhungCTDT();
+      // Lấy ngành và chu kỳ học của user để tìm studyFrame
+      const userId = req.query.userId as string;
+      if (!userId) {
+        res.status(400).json({ message: 'userId is required' });
+        return;
+      }
+
+      const result = await this.subjectService.callKhungCTDT(userId);
       if (!result || result.length === 0) {
         res.status(404).json({ message: 'No data found for KhungCTDT' });
         return;
@@ -34,3 +43,4 @@ export class SubjectController {
     }
   }
 }
+

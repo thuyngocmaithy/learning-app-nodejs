@@ -1,16 +1,28 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
-import { Cycle } from './Cycle';
-import { Major } from './Major';
-import { Faculty } from './Faculty';
-
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
 
 /**
  * Thực thể Khung đào tạo
- * Một khung đào tạo có thể thuộc nhiều chu kỳ  
- * Một khung đào tạo có thể áp dụng cho nhiều chuyên ngành
  */
 @Entity()
 export class StudyFrame {
+  /**
+   * Mã khung (duy nhất, không rỗng)
+   */
+  @PrimaryColumn({ type: 'varchar', length: 25 })
+  frameId: string;
+
+  /**
+   * Tên khung
+   */
+  @Column({ nullable: false })
+  frameName: string;
+}
+
+/**
+ * Thực thể thành phần khung đào tạo
+ */
+@Entity("studyFrame_component")
+export class StudyFrame_Component {
   /**
    * Khóa chính
    */
@@ -18,16 +30,16 @@ export class StudyFrame {
   id: string;
 
   /**
-   * Mã khung (duy nhất, không rỗng)
+   * Mã thành phần khung (duy nhất, không rỗng)
    */
   @Column({ unique: true, nullable: false })
-  frameId: string;
+  frameComponentId: string;
 
   /**
-   * Tên khung (không rỗng)
+   * Tên thành phần khung (không rỗng)
    */
   @Column({ nullable: false })
-  frameName: string;
+  frameComponentName: string;
 
 
   /**
@@ -43,10 +55,10 @@ export class StudyFrame {
   orderNo: number;
 
   /**
-   * ID khung cha (tham chiếu đến thực thể StudyFrame, có thể rỗng)
+   * ID thành phần khung cha (tham chiếu đến thực thể StudyFrame_Component, có thể rỗng)
    */
-  @ManyToOne(() => StudyFrame, data => data.id, { nullable: true })
-  parentFrame: StudyFrame;
+  @ManyToOne(() => StudyFrame_Component, data => data.id, { nullable: true })
+  parentFrameComponent: StudyFrame_Component;
 
   /**
    * Số tín chỉ yêu cầu, có thể rỗng
@@ -54,25 +66,11 @@ export class StudyFrame {
   @Column({ nullable: true })
   creditHour: string;
 
-  // /**
-  //  * Khung ctr đào tạo áp dụng được cho nhiều chu kỳ
-  //  */
-  // @ManyToMany(() => Cycle)
-  // @JoinTable({
-  //   name: 'studyFrame_cycle',
-  //   joinColumn: { name: 'frameId', referencedColumnName: 'frameId' },
-  //   inverseJoinColumn: { name: 'cycleId', referencedColumnName: 'cycleId' },
-  // })
-  // cycles: Cycle[];
-
-  // /**
-  //  * Khung ctr đào tạo áp dụng được cho nhiều ngành
-  //  */
-  // @ManyToMany(() => Faculty)
-  // @JoinTable({
-  //   name: 'studyFrame_faculty',
-  //   joinColumn: { name: 'frameId', referencedColumnName: 'id' },
-  //   inverseJoinColumn: { name: 'facultyId', referencedColumnName: 'facultyId' },
-  // })
-  // facultys: Faculty[];
+  /**
+   * ID khung đào tạo (tham chiếu đến thực thể StudyFrame, không rỗng)
+   * Nhớ đổi lại nullable false
+   */
+  @ManyToOne(() => StudyFrame, data => data.frameId, { nullable: true })
+  @JoinColumn({ name: 'studyFrameId' })
+  studyFrame: StudyFrame;
 }
