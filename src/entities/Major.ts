@@ -1,11 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn, ManyToMany, JoinTable } from 'typeorm';
-import { User } from './User';
+import { Entity, Column, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
 import { Faculty } from './Faculty';
-import { Cycle } from './Cycle';
 
 /**
  * Thực thể chuyên ngành
- * Liên kết với 1 khoa và thuộc nhiều chu kỳ
+ * Liên kết với 1 khoa
  */
 @Entity()
 export class Major {
@@ -33,15 +31,4 @@ export class Major {
     @ManyToOne(() => Faculty, data => data.facultyId, { nullable: true })
     @JoinColumn({ name: 'facultyId' })
     faculty: Faculty;
-
-    /**
-     * Liên kết với nhiều chu kỳ
-     */
-    @ManyToMany(() => Cycle)
-    @JoinTable({
-        name: 'major_cycle',
-        joinColumn: { name: 'majorId', referencedColumnName: 'majorId' },
-        inverseJoinColumn: { name: 'cycleId', referencedColumnName: 'cycleId' },
-    })
-    cycles: Cycle[];
 }

@@ -44,6 +44,8 @@ import sguAuthRouter from './routes/sguAuth.route';
 import scientificResearchGroupRoute from './routes/scientificResearchGroup.route';
 import userRegisterSubjectRouter from './routes/userRegisterSubject.route';
 import megaRoutes from './routes/mega.route';
+import cycleRoutes from './routes/cycle.route';
+
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
@@ -142,7 +144,7 @@ app.use('/api/features', featureRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/user-register-subject', userRegisterSubjectRouter);
 app.use('/api/mega', megaRoutes);
-
+app.use('/api/cycles', cycleRoutes);
 
 
 

@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { Cycle } from './Cycle';
 import { Major } from './Major';
+import { Faculty } from './Faculty';
 
 
 /**
@@ -54,8 +55,7 @@ export class StudyFrame {
   creditHour: string;
 
   /**
-   * Liên kết với nhiều chu kỳ
-   * Nhớ đổi lại nulable false
+   * Khung ctr đào tạo áp dụng được cho nhiều chu kỳ
    */
   @ManyToMany(() => Cycle)
   @JoinTable({
@@ -68,11 +68,11 @@ export class StudyFrame {
   /**
    * Khung ctr đào tạo áp dụng được cho nhiều ngành
    */
-  @ManyToMany(() => Major)
+  @ManyToMany(() => Faculty)
   @JoinTable({
-    name: 'studyFrame_major',
+    name: 'studyFrame_faculty',
     joinColumn: { name: 'frameId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'majorId', referencedColumnName: 'majorId' },
+    inverseJoinColumn: { name: 'facultyId', referencedColumnName: 'facultyId' },
   })
-  majors: Major[];
+  facultys: Faculty[];
 }
