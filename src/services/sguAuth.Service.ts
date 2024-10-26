@@ -40,15 +40,15 @@ export class SguAuthService {
     this.ImageOfUser = "";
     this.GPAOfUser = 0;
     this.tokenConfig = {
-      ADMIN: { 
+      ADMIN: {
         secret: process.env.JWT_ADMIN_SECRET || 'TokenADMIN',
         role: 'ADMIN',
       },
-      SINHVIEN: { 
+      SINHVIEN: {
         secret: process.env.JWT_STUDENT_SECRET || 'TokenSINHVIEN',
         role: 'SINHVIEN',
       },
-      GIANGVIEN: { 
+      GIANGVIEN: {
         secret: process.env.JWT_TEACHER_SECRET || 'TokenGIANGVIEN',
         role: 'GIANGVIEN',
       }
@@ -92,7 +92,7 @@ export class SguAuthService {
   //     if (!account) {
   //       // Tạo tài khoản mới
   //       account = await this.createOrUpdateAccount(CURRENT_USER, password);
-        
+
   //       if (user) {
   //         user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
   //       } else {
@@ -145,7 +145,7 @@ export class SguAuthService {
 
         // Tạo token mới
         const tokens = this.generateTokens(account);
-        
+
         // Cập nhật refresh token trong database
         account.refreshToken = tokens.refreshToken;
         await this.accountService.update(account.id, account);
@@ -180,7 +180,7 @@ export class SguAuthService {
 
       // Tạo token mới cho tài khoản
       const tokens = this.generateTokens(account);
-      
+
       // Cập nhật refresh token trong database
       account.refreshToken = tokens.refreshToken;
       await this.accountService.update(account.id, account);
@@ -199,47 +199,47 @@ export class SguAuthService {
     type PermissionId = keyof typeof this.tokenConfig;
     const permissionId = account.permission.permissionId as PermissionId;
     const config = this.tokenConfig[permissionId];
-    
+
     if (!config) {
       throw new Error("Invalid permissionId");
     }
-  
+
     // Tạo thời gian hết hạn cho access token (20 phút)
     const accessTokenExpiry = '20m';
     const accessTokenExpiryDate = new Date(Date.now() + 20 * 60 * 1000); // 20 phút tính bằng milliseconds
-  
+
     // Tạo thời gian hết hạn cho refresh token (7 ngày)
     const refreshTokenExpiry = '7d';
     const refreshTokenExpiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 ngày tính bằng milliseconds
-  
+
     const accessToken = jwt.sign(
-      { 
+      {
         id: account.id,
         username: account.username,
-        role: config.role 
+        role: config.role
       },
       config.secret,
       { expiresIn: accessTokenExpiry }
     );
-  
+
     const refreshToken = jwt.sign(
-      { 
+      {
         id: account.id,
         username: account.username,
-        role: config.role 
+        role: config.role
       },
       config.secret + '_refresh',
       { expiresIn: refreshTokenExpiry }
     );
-  
-    return { 
-      accessToken, 
+
+    return {
+      accessToken,
       refreshToken,
       accessTokenExpiry: accessTokenExpiryDate.getTime(),
       refreshTokenExpiry: refreshTokenExpiryDate.getTime()
     };
   }
-  
+
 
   private async verifyToken(token: string, type: 'access' | 'refresh' = 'access') {
     try {
@@ -264,18 +264,18 @@ export class SguAuthService {
 
   private async updateAccountTokens(account: Account, role: string) {
     const { accessToken, refreshToken } = this.generateTokens(account);
-    
+
     account.access_token = accessToken;
     account.refreshToken = refreshToken;
-    
+
     return await this.accountService.update(account.id, account);
   }
-  
+
   async refreshToken(refreshToken: string) {
     try {
       // Verify refresh token
       const decoded = await this.verifyToken(refreshToken, 'refresh') as any;
-      
+
       // Lấy thông tin account
       const account = await this.accountService.getById(decoded.id);
       if (!account || account.refreshToken !== refreshToken) {
@@ -284,7 +284,7 @@ export class SguAuthService {
 
       // Tạo cặp token mới
       const tokens = this.generateTokens(account);
-      
+
       // Cập nhật refresh token mới vào database
       account.refreshToken = tokens.refreshToken;
       await this.accountService.update(account.id, account);
@@ -293,7 +293,7 @@ export class SguAuthService {
     } catch (error) {
       throw new Error('Failed to refresh token');
     }
-  } 
+  }
 
 
 
@@ -387,7 +387,7 @@ export class SguAuthService {
 
 
   //CREATE OR UPDATE METHOD
-  
+
   //create new user
   private async createNewUser(loginData: any, studentInfo: any, imageData: any, gpaData: number, account: Account): Promise<User> {
     const studentId = studentInfo.ma_sv;
@@ -563,18 +563,18 @@ export class SguAuthService {
 
   //RESPONSE TO FRONTEND
   private generateAuthResponse(
-    tokens: { 
-      accessToken: string; 
-      refreshToken: string; 
+    tokens: {
+      accessToken: string;
+      refreshToken: string;
       accessTokenExpiry: number;
       refreshTokenExpiry: number;
-    }, 
+    },
     user: User
   ) {
     if (!user) {
       throw new Error('User data is required for authentication response');
     }
-  
+
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
@@ -592,7 +592,7 @@ export class SguAuthService {
       },
     };
   }
-  
+
   private handleError(error: any) {
     console.error('Error in SguAuthService:', error);
     if (error instanceof Error) {
@@ -606,7 +606,7 @@ export class SguAuthService {
 
 
   //GET FROM SGU
-  
+
   //get image
   async getImageAccount(access_token: string, ma_sv: string) {
     try {
@@ -622,7 +622,7 @@ export class SguAuthService {
       throw error;
     }
   }
-  
+
   //get score
   async getScoreFromSGU(ua: string, access_token: string) { //Lấy điểm theo access token
     try {
@@ -687,7 +687,6 @@ export class SguAuthService {
             subject.subjectName = subjectData.ten_mon;
             subject.creditHour = parseInt(subjectData.so_tin_chi);
             subject.isCompulsory = false;
-            subject.frameComponents = [];
             subject.createDate = new Date();
             subject.lastModifyDate = new Date();
             subject.createUser = user; // Gán người tạo

@@ -49,27 +49,27 @@ export class Subject {
   @Column({ type: 'boolean', nullable: false })
   isCompulsory: boolean;
 
-  /**
-    * ID chuyên ngành (tham chiếu đến thực thể Major)
-    */
-  @ManyToMany(() => Major)
-  @JoinTable({
-    name: 'subject_major',
-    joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
-    inverseJoinColumn: { name: 'majorId', referencedColumnName: 'majorId' },
-  })
-  majors: Major[];
+  // /**
+  //   * ID chuyên ngành (tham chiếu đến thực thể Major)
+  //   */
+  // @ManyToMany(() => Major)
+  // @JoinTable({
+  //   name: 'subject_major',
+  //   joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
+  //   inverseJoinColumn: { name: 'majorId', referencedColumnName: 'majorId' },
+  // })
+  // majors: Major[];
 
-  /**
-    * ID thành phần khung đào tạo (tham chiếu đến thực thể StudyFrame_Component)
-    */
-  @ManyToMany(() => StudyFrame_Component)
-  @JoinTable({
-    name: 'subject_studyFrameComponent',
-    joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
-    inverseJoinColumn: { name: 'frameComponentId', referencedColumnName: 'frameComponentId' },
-  })
-  frameComponents: StudyFrame_Component[];
+  // /**
+  //   * ID thành phần khung đào tạo (tham chiếu đến thực thể StudyFrame_Component)
+  //   */
+  // @ManyToMany(() => StudyFrame_Component)
+  // @JoinTable({
+  //   name: 'subject_studyFrameComponent',
+  //   joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
+  //   inverseJoinColumn: { name: 'frameComponentId', referencedColumnName: 'frameComponentId' },
+  // })
+  // frameComponents: StudyFrame_Component[];
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)

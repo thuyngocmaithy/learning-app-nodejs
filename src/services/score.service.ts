@@ -51,7 +51,7 @@ export class ScoreService {
   public getScoreByStudentId = async (studentId: string): Promise<Score[]> => {
     const scores = await this.scoreRepository.find({
       where: { student: { userId: studentId } },
-      relations: ['subject', 'subject.frameComponents', 'semester'],
+      relations: ['subject', 'semester'],
     });
 
     const uniqueScores = scores.filter((score, index, self) =>

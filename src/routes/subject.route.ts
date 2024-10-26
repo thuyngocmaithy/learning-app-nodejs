@@ -7,7 +7,6 @@ const subjectRouter = Router();
 const subjectController = new SubjectController(AppDataSource);
 
 subjectRouter.get('/', subjectController.getAllSubjects);
-subjectRouter.get('/listSubjectToFrame', subjectController.callKhungCTDT);
 subjectRouter.get('/:id', subjectController.getSubjectById);
 subjectRouter.post('/', subjectController.createSubject);
 subjectRouter.put('/:id', subjectController.updateSubject);

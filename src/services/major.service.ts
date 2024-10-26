@@ -1,12 +1,15 @@
 // major.service.ts
 import { DataSource, In, Repository } from 'typeorm';
 import { Major } from '../entities/Major';
+import { User } from '../entities/User';
 
 export class MajorService {
   private majorRepository: Repository<Major>;
+  private userRepository: Repository<User>;
 
   constructor(dataSource: DataSource) {
     this.majorRepository = dataSource.getRepository(Major);
+    this.userRepository = dataSource.getRepository(User);
   }
 
   async create(data: Partial<Major>): Promise<Major> {
@@ -39,6 +42,16 @@ export class MajorService {
   async getWhere(condition: any): Promise<Major[]> {
     const whereCondition: any = {};
 
+    if (condition.userId) {
+      const user = await this.userRepository.findOne({
+        where: { userId: condition.userId },
+        relations: ["faculty"]
+      })
+      if (!user) {
+        throw new Error('Not found entity user');
+      }
+      whereCondition.faculty = { facultyId: user.faculty.facultyId }
+    }
 
     if (condition.facultyId) {
       whereCondition.faculty = { facultyId: condition.facultyId };
