@@ -105,4 +105,20 @@ export class ScientificResearchGroupService {
     return `${facultyId}RTG${numericPart.toString().padStart(3, '0')}`;
   }
 
+  async getWhere(condition: Partial<ScientificResearchGroup>): Promise<ScientificResearchGroup[]> {
+    const whereCondition: any = {};
+
+    if (condition.faculty) {
+      whereCondition.faculty = { facultyId: condition.faculty }
+    }
+
+    if (condition.scientificResearchGroupId) {
+      whereCondition.scientificResearchGroupId = Like(`%${condition.scientificResearchGroupId}%`);
+    }
+
+    return this.scientificResearchGroupRepository.find({
+      where: whereCondition,
+      relations: ['status', 'faculty', 'createUser', 'lastModifyUser']
+    });
+  }
 }

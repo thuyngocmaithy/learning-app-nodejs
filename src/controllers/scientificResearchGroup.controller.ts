@@ -16,4 +16,5 @@ export class ScientificResearchGroupController {
   public createScientificResearchGroup = (req: Request, res: Response) => RequestHandler.create<ScientificResearchGroup>(req, res, this.scientificResearchGroupService);
   public updateScientificResearchGroup = (req: Request, res: Response) => RequestHandler.update<ScientificResearchGroup>(req, res, this.scientificResearchGroupService);
   public deleteScientificResearchGroup = (req: Request, res: Response) => RequestHandler.delete(req, res, this.scientificResearchGroupService);
+  public getSRGWhere = (req: Request, res: Response) => RequestHandler.getWhere<ScientificResearchGroup>(req, res, this.scientificResearchGroupService);
 }

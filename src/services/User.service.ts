@@ -74,5 +74,4 @@ export class UserService {
       relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
     });
   }
-
 }

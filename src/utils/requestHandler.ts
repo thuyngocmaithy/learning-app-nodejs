@@ -49,6 +49,14 @@ export class RequestHandler {
     ) {
         try {
             const condition = req.query as Partial<T>;
+            
+            // Loại bỏ chuỗi 'undefined' từ các thuộc tính của `condition`
+            for (const key in condition) {
+                if (condition[key] === 'undefined') {
+                    condition[key] = undefined;
+                }
+            }
+
             const result = await service.getWhere(condition);
             if (result !== null && result.length > 0) {
                 return RequestHandler.sendResponse(res, StatusCodes.OK, "success", result);
