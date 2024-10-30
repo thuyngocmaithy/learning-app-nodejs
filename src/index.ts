@@ -45,6 +45,7 @@ import scientificResearchGroupRoute from './routes/scientificResearchGroup.route
 import userRegisterSubjectRouter from './routes/userRegisterSubject.route';
 import megaRoutes from './routes/mega.route';
 import cycleRoutes from './routes/cycle.route';
+import studyFrameComponentRoutes from './routes/studyFrame_component.route';
 
 
 // Nạp các biến môi trường từ file .env
@@ -134,6 +135,7 @@ app.use('/api/scores', scoreRoute);
 app.use('/api/semesters', semesterRoute);
 app.use('/api/statuses', statusRoute);
 app.use('/api/study-frames', studyFrameRoute);
+app.use('/api/study-frame-components', studyFrameComponentRoutes);
 app.use('/api/subjects', subjectRoute);
 app.use('/api/thesis-user', thesisUserRoutes);
 app.use('/api/thesis', thesisRoute);
