@@ -46,6 +46,8 @@ import userRegisterSubjectRouter from './routes/userRegisterSubject.route';
 import megaRoutes from './routes/mega.route';
 import cycleRoutes from './routes/cycle.route';
 import studyFrameComponentRoutes from './routes/studyFrame_component.route';
+import frameStructureRoutes from './routes/frameStucture.route';
+import subject_studyFrameComp_majorRoutes from './routes/subject_studyFrameComp_major.route';
 
 
 // Nạp các biến môi trường từ file .env
@@ -147,6 +149,8 @@ app.use('/api/upload', uploadRouter);
 app.use('/api/user-register-subject', userRegisterSubjectRouter);
 app.use('/api/mega', megaRoutes);
 app.use('/api/cycles', cycleRoutes);
+app.use('/api/frameStructures', frameStructureRoutes);
+app.use('/api/subject_studyFrameComp_majors', subject_studyFrameComp_majorRoutes);
 
 
 
