@@ -1,13 +1,24 @@
 // src/services/subject.service.ts
-import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, In, MoreThan, LessThanOrEqual } from 'typeorm';
 import { Subject } from '../entities/Subject';
+import { User } from '../entities/User';
+import { AppDataSource } from '../data-source';
+import { Cycle } from '../entities/Cycle';
+import { StudyFrame_Faculty_Cycle } from '../entities/StudyFrame_Faculty_Cycle';
 
 export class SubjectService {
   private subjectRepository: Repository<Subject>;
+  private userRepository: Repository<User>;
+  private cycleRepository: Repository<Cycle>;
+  private studyFrame_Faculty_Cycle_Repository: Repository<StudyFrame_Faculty_Cycle>;
   private dataSource: DataSource;
+
 
   constructor(dataSource: DataSource) {
     this.subjectRepository = dataSource.getRepository(Subject);
+    this.userRepository = AppDataSource.getRepository(User);
+    this.cycleRepository = AppDataSource.getRepository(Cycle);
+    this.studyFrame_Faculty_Cycle_Repository = AppDataSource.getRepository(StudyFrame_Faculty_Cycle);
     this.dataSource = dataSource;
   }
 
@@ -17,11 +28,11 @@ export class SubjectService {
   }
 
   async getAll(): Promise<Subject[]> {
-    return this.subjectRepository.find({ relations: ['frames', 'createUser', 'lastModifyUser', 'subjectBefore'] });
+    return this.subjectRepository.find({ relations: ['createUser', 'lastModifyUser', 'subjectBefore'] });
   }
 
   async getById(subjectId: string): Promise<Subject | null> {
-    const options: FindOneOptions<Subject> = { where: { subjectId }, relations: ['frames', 'createUser', 'lastModifyUser'] };
+    const options: FindOneOptions<Subject> = { where: { subjectId }, relations: ['createUser', 'lastModifyUser', 'subjectBefore'] };
     return await this.subjectRepository.findOne(options);
   }
 
@@ -37,15 +48,15 @@ export class SubjectService {
     return result.affected !== 0;
   }
 
-  // Gọi store lấy danh sách môn theo khung
-  async callKhungCTDT(): Promise<any> {
+  async getSubjectByFacultyId(facultyId: string): Promise<Subject[]> {
     try {
-      const query = 'CALL KhungCTDT()';
-      return await this.dataSource.query(query);
+        const subjects = await this.dataSource.query('CALL GetSubjectsByFaculty(?)', [facultyId]);
+        return subjects; // Adapt based on how the result is returned
     } catch (error) {
-      console.error('Lỗi khi gọi stored procedure callKhungCTDT', error);
-      throw new Error('Lỗi khi gọi stored procedure');
+        console.error('Error fetching subjects by faculty ID:', error);
+        throw new Error('Unable to fetch subjects. Please try again later.'); // Optionally, you can throw a custom error
     }
   }
+
 
 }

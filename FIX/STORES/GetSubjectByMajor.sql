@@ -1,16 +1,16 @@
-CREATE DEFINER=`maithy`@`%` PROCEDURE `GetSubjectByMajor`(IN p_majorId VARCHAR(10))
+CREATE DEFINER=`maithy`@`%` PROCEDURE `GetSubjectByMajor`(IN p_majorId VARCHAR(10), IN p_studyFrameId VARCHAR(255))
 BEGIN
     SELECT * 
     FROM (
-        -- Select frames with frameId 'CHUYENNGANH' and filter by majorId
+        -- Select frames with frameComponentId 'CHUYENNGANH' and filter by majorId
         SELECT 
             sf.id,
-            sf.frameId, 
-            sf.frameName, 
+            sf.frameComponentId, 
+            sf.frameComponentName, 
             sf.creditHour,
-            sf.parentFrameId,
+            sf.parentframeComponentId,
             sf.orderNo,
-            m.majorName,
+            GROUP_CONCAT(DISTINCT m.majorName) AS majorNames,  -- Gộp tên chuyên ngành nếu có nhiều
             IFNULL(
                 JSON_ARRAYAGG(
                     IF(
@@ -26,22 +26,24 @@ BEGIN
                 ),
                 JSON_ARRAY()
             ) AS subjectInfo
-        FROM study_frame sf
-        LEFT JOIN subject sj ON sj.frameId = sf.id
-        LEFT JOIN major m ON m.majorId = sj.majorId
-        WHERE sf.frameId LIKE 'CN_%'
-          AND sj.majorId = p_majorId
-        GROUP BY sf.id, sf.frameId, sf.frameName, sf.creditHour, sf.parentFrameId, sf.orderNo, m.majorName
+        FROM studyFrame_component sf
+        LEFT JOIN subject_studyFrameComp_major ssm ON ssm.studyFrameComponentId = sf.frameComponentId
+        LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId
+        LEFT JOIN major m ON m.majorId = ssm.majorId
+        WHERE sf.studyFrameId = p_studyFrameId
+		AND sf.frameComponentId LIKE 'CN_%'
+		AND ssm.majorId = p_majorId
+        GROUP BY sf.id, sf.frameComponentId, sf.frameComponentName, sf.creditHour, sf.parentframeComponentId, sf.orderNo, m.majorName
         
         UNION ALL
         
-        -- Select frames with frameId other than those starting with 'CN_'
+        -- Select frames with frameComponentId other than those starting with 'CN_'
         SELECT 
             sf.id,
-            sf.frameId, 
-            sf.frameName, 
+            sf.frameComponentId, 
+            sf.frameComponentName, 
             sf.creditHour,
-            sf.parentFrameId,
+            sf.parentframeComponentId,
             sf.orderNo,
             NULL as majorName,
             IFNULL(
@@ -59,10 +61,12 @@ BEGIN
                 ),
                 JSON_ARRAY()
             ) AS subjectInfo
-        FROM study_frame sf
-        LEFT JOIN subject sj ON sj.frameId = sf.id
-        WHERE sf.frameId NOT LIKE 'CN_%'
-        GROUP BY sf.id, sf.frameId, sf.frameName, sf.creditHour, sf.parentFrameId, sf.orderNo
+        FROM studyFrame_component sf
+        LEFT JOIN subject_studyFrameComp_major ssm ON ssm.studyFrameComponentId = sf.frameComponentId
+        LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId
+        WHERE sf.studyFrameId = p_studyFrameId
+		AND sf.frameComponentId NOT LIKE 'CN_%'
+        GROUP BY sf.id, sf.frameComponentId, sf.frameComponentName, sf.creditHour, sf.parentframeComponentId, sf.orderNo
     ) AS combined_results
     ORDER BY combined_results.orderNo;
 END

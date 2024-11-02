@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany, UpdateDateColumn, JoinColumn, CreateDateColumn, PrimaryColumn, JoinTable } from 'typeorm';
-import { StudyFrame } from './StudyFrame';
+import { StudyFrame, StudyFrame_Component } from './StudyFrame';
 import { User } from './User';
 import { Major } from './Major';
 
@@ -49,27 +49,27 @@ export class Subject {
   @Column({ type: 'boolean', nullable: false })
   isCompulsory: boolean;
 
-  /**
-    * ID chuyên ngành (tham chiếu đến thực thể Major)
-    */
-  @ManyToMany(() => Major)
-  @JoinTable({
-    name: 'subject_major',
-    joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
-    inverseJoinColumn: { name: 'majorId', referencedColumnName: 'majorId' },
-  })
-  majors: Major[];
+  // /**
+  //   * ID chuyên ngành (tham chiếu đến thực thể Major)
+  //   */
+  // @ManyToMany(() => Major)
+  // @JoinTable({
+  //   name: 'subject_major',
+  //   joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
+  //   inverseJoinColumn: { name: 'majorId', referencedColumnName: 'majorId' },
+  // })
+  // majors: Major[];
 
-  /**
-    * ID khung học tập (tham chiếu đến thực thể StudyFrame)
-    */
-  @ManyToMany(() => StudyFrame)
-  @JoinTable({
-    name: 'subject_studyFrame',
-    joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
-    inverseJoinColumn: { name: 'frameId', referencedColumnName: 'frameId' },
-  })
-  frames: StudyFrame[];
+  // /**
+  //   * ID thành phần khung đào tạo (tham chiếu đến thực thể StudyFrame_Component)
+  //   */
+  // @ManyToMany(() => StudyFrame_Component)
+  // @JoinTable({
+  //   name: 'subject_studyFrameComponent',
+  //   joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
+  //   inverseJoinColumn: { name: 'frameComponentId', referencedColumnName: 'frameComponentId' },
+  // })
+  // frameComponents: StudyFrame_Component[];
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)

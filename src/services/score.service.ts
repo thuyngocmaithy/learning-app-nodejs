@@ -1,10 +1,29 @@
-import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, In, getRepository } from 'typeorm';
 import { Score, ComponentScore } from '../entities/Score';
 import { Semester } from '../entities/Semester';
 import { Subject } from '../entities/Subject';
 import { User } from '../entities/User';
+import { StudyFrame_Component } from '../entities/StudyFrame';
+interface SubjectInfo {
+  subjectId: string;
+  subjectName: string;
+  creditHour: number;
+  isCompulsory: boolean;
+}
 
+interface FrameComponentResponse {
+  id: string;
+  frameComponentId: string;
+  frameComponentName: string;
+  description: string;
+  orderNo: number;
+  creditHour: string;
+  parentFrameComponentId: string | null;
+  subjectInfo?: SubjectInfo[];
+}
 export class ScoreService {
+  
+
   private scoreRepository: Repository<Score>;
   private componentScoreRepository: Repository<ComponentScore>;
   private dataSource: DataSource;
@@ -51,7 +70,7 @@ export class ScoreService {
   public getScoreByStudentId = async (studentId: string): Promise<Score[]> => {
     const scores = await this.scoreRepository.find({
       where: { student: { userId: studentId } },
-      relations: ['subject', 'subject.frames', 'semester'],
+      relations: ['subject', 'semester'],
     });
 
     const uniqueScores = scores.filter((score, index, self) =>
@@ -95,4 +114,85 @@ export class ScoreService {
       throw new Error('Lỗi khi gọi stored procedure');
     }
   }
+
+
+  
+  public getStudentFrameScores = async (studentId: string): Promise<FrameComponentResponse[]> => {
+    try {
+      // First get the study frame components
+      const frameComponentRepo = getRepository(StudyFrame_Component);
+      const frameComponents = await frameComponentRepo.find({
+        relations: ['parentFrameComponent', 'studyFrame'],
+        order: {
+          orderNo: 'ASC',
+        },
+      });
+  
+      // Get all scores for the student
+      const scores = await getRepository(Score).find({
+        where: { student: { userId: studentId } },
+        relations: ['subject', 'semester'],
+      });
+  
+      // Get all subjects
+      const subjects = await getRepository(Subject).find();
+  
+
+      const subjectsByFrame = new Map<string, SubjectInfo[]>();
+  
+
+      const findFrameComponentForSubject = (subject: Subject): string | null => {
+        if (subject.isCompulsory) {
+          return 'COMPULSORY'; // Replace with actual frame component ID
+        }
+        return 'ELECTIVE'; // Replace with actual frame component ID
+      };
+  
+
+      subjects.forEach(subject => {
+        const frameComponentId = findFrameComponentForSubject(subject);
+        if (frameComponentId) {
+          if (!subjectsByFrame.has(frameComponentId)) {
+            subjectsByFrame.set(frameComponentId, []);
+          }
+          
+          const score = scores.find(s => s.subject.subjectId === subject.subjectId);
+          
+          subjectsByFrame.get(frameComponentId)?.push({
+            subjectId: subject.subjectId,
+            subjectName: subject.subjectName,
+            creditHour: subject.creditHour,
+            isCompulsory: subject.isCompulsory,
+          });
+        }
+      });
+  
+      const response: FrameComponentResponse[] = frameComponents.map(component => ({
+        id: component.id,
+        frameComponentId: component.frameComponentId,
+        frameComponentName: component.frameComponentName,
+        description: component.description,
+        orderNo: component.orderNo,
+        creditHour: component.creditHour,
+        parentFrameComponentId: component.parentFrameComponent?.id || null,
+        subjectInfo: subjectsByFrame.get(component.frameComponentId) || [],
+      }));
+  
+    
+      const buildTree = (items: FrameComponentResponse[], parentId: string | null = null): FrameComponentResponse[] => {
+        return items
+          .filter(item => item.parentFrameComponentId === parentId)
+          .map(item => ({
+            ...item,
+            children: buildTree(items, item.id),
+          }));
+      };
+  
+      return buildTree(response);
+  
+    } catch (error) {
+      console.error('Error in getStudentFrameScores:', error);
+      throw error;
+    }
+  };
 }
