@@ -8,8 +8,8 @@ BEGIN
             sf.frameComponentId, 
             sf.frameComponentName, 
             sf.creditHour,
-            sf.parentframeComponentId,
-            sf.orderNo,
+            frame.studyFrameComponentParentId,
+            frame.orderNo,
             GROUP_CONCAT(DISTINCT m.majorName) AS majorNames,  -- Gộp tên chuyên ngành nếu có nhiều
             IFNULL(
                 JSON_ARRAYAGG(
@@ -26,14 +26,15 @@ BEGIN
                 ),
                 JSON_ARRAY()
             ) AS subjectInfo
-        FROM studyFrame_component sf
+        FROM frameStructure frame
+		LEFT JOIN studyFrame_component sf ON frame.studyFrameComponentId = sf.frameComponentId
         LEFT JOIN subject_studyFrameComp_major ssm ON ssm.studyFrameComponentId = sf.frameComponentId
         LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId
         LEFT JOIN major m ON m.majorId = ssm.majorId
-        WHERE sf.studyFrameId = p_studyFrameId
+        WHERE frame.studyFrameId = p_studyFrameId
 		AND sf.frameComponentId LIKE 'CN_%'
 		AND ssm.majorId = p_majorId
-        GROUP BY sf.id, sf.frameComponentId, sf.frameComponentName, sf.creditHour, sf.parentframeComponentId, sf.orderNo, m.majorName
+        GROUP BY sf.id, sf.frameComponentId, sf.frameComponentName, sf.creditHour, frame.studyFrameComponentParentId, frame.orderNo, m.majorName
         
         UNION ALL
         
@@ -43,8 +44,8 @@ BEGIN
             sf.frameComponentId, 
             sf.frameComponentName, 
             sf.creditHour,
-            sf.parentframeComponentId,
-            sf.orderNo,
+            frame.studyFrameComponentParentId,
+            frame.orderNo,
             NULL as majorName,
             IFNULL(
                 JSON_ARRAYAGG(
@@ -61,12 +62,13 @@ BEGIN
                 ),
                 JSON_ARRAY()
             ) AS subjectInfo
-        FROM studyFrame_component sf
+        FROM frameStructure frame
+		LEFT JOIN studyFrame_component sf ON frame.studyFrameComponentId = sf.frameComponentId
         LEFT JOIN subject_studyFrameComp_major ssm ON ssm.studyFrameComponentId = sf.frameComponentId
         LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId
-        WHERE sf.studyFrameId = p_studyFrameId
+        WHERE frame.studyFrameId = p_studyFrameId
 		AND sf.frameComponentId NOT LIKE 'CN_%'
-        GROUP BY sf.id, sf.frameComponentId, sf.frameComponentName, sf.creditHour, sf.parentframeComponentId, sf.orderNo
+        GROUP BY sf.id, sf.frameComponentId, sf.frameComponentName, sf.creditHour, frame.studyFrameComponentParentId, frame.orderNo
     ) AS combined_results
     ORDER BY combined_results.orderNo;
 END

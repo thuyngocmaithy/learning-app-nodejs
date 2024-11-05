@@ -67,4 +67,34 @@ export class UserController {
   public createUser = (req: Request, res: Response) => RequestHandler.create<User>(req, res, this.userService);
   public updateUser = (req: Request, res: Response) => RequestHandler.update<User>(req, res, this.userService);
   public deleteUser = (req: Request, res: Response) => RequestHandler.delete(req, res, this.userService);
+
+  public addUserFromExcel = async (req: Request, res: Response) => {
+    try {
+        const users: Partial<User>[] = req.body; // Lấy danh sách người dùng
+
+        if (!Array.isArray(users) || users.length === 0) {
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'No users provided' });
+        }
+
+        // Lưu từng người dùng vào db
+        for (const user of users) {
+            // Kiểm tra xem userId có giá trị hợp lệ hay không trước khi tạo người dùng
+            if (!user.userId) {
+                continue; // Bỏ qua nếu userId không có
+            }
+            // Kiểm tra và chuyển đổi ngày tháng
+             if (user.dateOfBirth) {
+              const date = new Date(user.dateOfBirth);
+              user.dateOfBirth = date;
+            }
+
+            await this.userService.create(user);
+        }
+
+        res.status(StatusCodes.CREATED).json({ message: 'Users imported successfully', data: users });
+    } catch (error) {
+        console.error('Error importing users:', error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error importing users', error: (error as Error).message });
+    }
+  };
 }

@@ -49,28 +49,8 @@ export class StudyFrame_Component {
   description: string;
 
   /**
-   * Thứ tự, có thể rỗng
-   */
-  @Column({ nullable: true })
-  orderNo: number;
-
-  /**
-   * ID thành phần khung cha (tham chiếu đến thực thể StudyFrame_Component, có thể rỗng)
-   */
-  @ManyToOne(() => StudyFrame_Component, data => data.id, { nullable: true })
-  parentFrameComponent: StudyFrame_Component;
-
-  /**
    * Số tín chỉ yêu cầu, có thể rỗng
    */
   @Column({ nullable: true })
   creditHour: string;
-
-  /**
-   * ID khung đào tạo (tham chiếu đến thực thể StudyFrame, không rỗng)
-   * Nhớ đổi lại nullable false
-   */
-  @ManyToOne(() => StudyFrame, data => data.frameId, { nullable: true })
-  @JoinColumn({ name: 'studyFrameId' })
-  studyFrame: StudyFrame;
 }

@@ -8,8 +8,8 @@ BEGIN
 		    sf_comp.frameComponentId, 
 		    sf_comp.frameComponentName, 
 		    sf_comp.creditHour,
-		    sf_comp.parentFrameComponentId,
-		    sf_comp.orderNo,
+		    frame.studyFrameComponentParentId,
+		    frame.orderNo,
 		    GROUP_CONCAT(DISTINCT m.majorName) AS majorNames,  -- Gộp tên chuyên ngành nếu có nhiều
 		    IFNULL(
 		        (
@@ -28,13 +28,14 @@ BEGIN
 		        ),
 		        JSON_ARRAY()
 		    ) AS subjectInfo
-		FROM studyFrame_component sf_comp
+		FROM frameStructure frame
+		LEFT JOIN studyFrame_component sf_comp ON frame.studyFrameComponentId = sf_comp.frameComponentId
 		LEFT JOIN subject_studyFrameComp_major ssm ON ssm.studyFrameComponentId = sf_comp.frameComponentId  -- Kết nối với bảng gộp subject_studyFrameComp_major
 		LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId  -- Kết nối với bảng môn học
 		LEFT JOIN major m ON m.majorId = ssm.majorId  -- Kết nối với bảng chuyên ngành từ bảng gộp
-		WHERE sf_comp.studyFrameId = p_studyFrameId
+		WHERE frame.studyFrameId = p_studyFrameId
 		AND sf_comp.frameComponentId = 'CHUYENNGANH'    
-		GROUP BY sf_comp.id, sf_comp.frameComponentId, sf_comp.frameComponentName, sf_comp.creditHour, sf_comp.parentFrameComponentId, sf_comp.orderNo
+		GROUP BY sf_comp.id, sf_comp.frameComponentId, sf_comp.frameComponentName, sf_comp.creditHour, frame.studyFrameComponentParentId, frame.orderNo
 
 
         
@@ -46,8 +47,8 @@ BEGIN
 		    sf_comp.frameComponentId, 
 		    sf_comp.frameComponentName, 
 		    sf_comp.creditHour,
-		    sf_comp.parentFrameComponentId,
-		    sf_comp.orderNo,
+		    frame.studyFrameComponentParentId,
+		    frame.orderNo,
 		    GROUP_CONCAT(DISTINCT m.majorName) AS majorNames,  -- Gộp tên chuyên ngành nếu có nhiều
 		    IFNULL(
 		        (
@@ -66,13 +67,14 @@ BEGIN
 		        ),
 		        JSON_ARRAY()
 		    ) AS subjectInfo
-		FROM studyFrame_component sf_comp
+		FROM frameStructure frame
+		LEFT JOIN studyFrame_component sf_comp ON frame.studyFrameComponentId = sf_comp.frameComponentId
 		LEFT JOIN subject_studyFrameComp_major ssm ON ssm.studyFrameComponentId = sf_comp.frameComponentId  -- Kết nối với bảng gộp subject_studyFrameComp_major
 		LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId  -- Kết nối với bảng môn học
 		LEFT JOIN major m ON m.majorId = ssm.majorId  -- Kết nối với bảng chuyên ngành từ bảng gộp
-		WHERE sf_comp.studyFrameId = p_studyFrameId
+		WHERE frame.studyFrameId = p_studyFrameId
 		AND sf_comp.frameComponentId <> 'CHUYENNGANH'    
-		GROUP BY sf_comp.id, sf_comp.frameComponentId, sf_comp.frameComponentName, sf_comp.creditHour, sf_comp.parentFrameComponentId, sf_comp.orderNo
+		GROUP BY sf_comp.id, sf_comp.frameComponentId, sf_comp.frameComponentName, sf_comp.creditHour, frame.studyFrameComponentParentId, frame.orderNo
 
     ) AS combined_results
     ORDER BY combined_results.orderNo; -- Sắp xếp kết quả theo thứ tự
