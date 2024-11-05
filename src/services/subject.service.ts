@@ -71,8 +71,28 @@ export class SubjectService {
   }
 
   async delete(subjectIds: string[]): Promise<boolean> {
-    const result = await this.subjectRepository.delete({ subjectId: In(subjectIds) });
-    return result.affected !== 0;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+  
+    try {
+      await queryRunner.manager.delete(Subject_StudyFrameComp_Major, {
+        subject: { subjectId: In(subjectIds) }
+      });
+  
+      const result = await queryRunner.manager.delete(Subject, {
+        subjectId: In(subjectIds)
+      });
+  
+      await queryRunner.commitTransaction();
+      return result.affected !== 0;
+  
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getAll(): Promise<Subject[]> {

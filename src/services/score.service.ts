@@ -16,9 +16,7 @@ interface FrameComponentResponse {
   frameComponentId: string;
   frameComponentName: string;
   description: string;
-  orderNo: number;
   creditHour: string;
-  parentFrameComponentId: string | null;
   subjectInfo?: SubjectInfo[];
 }
 export class ScoreService {
@@ -117,38 +115,27 @@ export class ScoreService {
 
 
   
+
   public getStudentFrameScores = async (studentId: string): Promise<FrameComponentResponse[]> => {
     try {
-      // First get the study frame components
       const frameComponentRepo = getRepository(StudyFrame_Component);
-      const frameComponents = await frameComponentRepo.find({
-        relations: ['parentFrameComponent', 'studyFrame'],
-        order: {
-          orderNo: 'ASC',
-        },
-      });
+      const frameComponents = await frameComponentRepo.find();
   
-      // Get all scores for the student
       const scores = await getRepository(Score).find({
         where: { student: { userId: studentId } },
         relations: ['subject', 'semester'],
       });
   
-      // Get all subjects
       const subjects = await getRepository(Subject).find();
-  
-
       const subjectsByFrame = new Map<string, SubjectInfo[]>();
   
-
       const findFrameComponentForSubject = (subject: Subject): string | null => {
         if (subject.isCompulsory) {
-          return 'COMPULSORY'; // Replace with actual frame component ID
+          return 'COMPULSORY';
         }
-        return 'ELECTIVE'; // Replace with actual frame component ID
+        return 'ELECTIVE';
       };
   
-
       subjects.forEach(subject => {
         const frameComponentId = findFrameComponentForSubject(subject);
         if (frameComponentId) {
@@ -172,27 +159,16 @@ export class ScoreService {
         frameComponentId: component.frameComponentId,
         frameComponentName: component.frameComponentName,
         description: component.description,
-        orderNo: component.orderNo,
         creditHour: component.creditHour,
-        parentFrameComponentId: component.parentFrameComponent?.id || null,
         subjectInfo: subjectsByFrame.get(component.frameComponentId) || [],
       }));
   
-    
-      const buildTree = (items: FrameComponentResponse[], parentId: string | null = null): FrameComponentResponse[] => {
-        return items
-          .filter(item => item.parentFrameComponentId === parentId)
-          .map(item => ({
-            ...item,
-            children: buildTree(items, item.id),
-          }));
-      };
-  
-      return buildTree(response);
+      // Vì không có cấu trúc parent-child, trả về response trực tiếp
+      return response;
   
     } catch (error) {
       console.error('Error in getStudentFrameScores:', error);
       throw error;
     }
-  };
+};
 }
