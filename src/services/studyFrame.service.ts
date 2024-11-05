@@ -1,7 +1,7 @@
 import { Major } from './../entities/Major';
 // studyFrame.service.ts
 import { DataSource, In, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
-import { StudyFrame } from '../entities/StudyFrame';
+import { StudyFrame,  StudyFrame_Component } from '../entities/StudyFrame';
 import { User } from '../entities/User';
 import { Cycle } from '../entities/Cycle';
 import { StudyFrame_Faculty_Cycle } from '../entities/StudyFrame_Faculty_Cycle';
@@ -12,6 +12,7 @@ export class StudyFrameService {
   private userRepository: Repository<User>;
   private cycleRepository: Repository<Cycle>;
   private studyFrame_Faculty_Cycle_Repository: Repository<StudyFrame_Faculty_Cycle>;
+  private studyFrameComponentRepository: Repository<StudyFrame_Component>;
   private dataSource: DataSource;
 
   constructor(dataSource: DataSource) {
@@ -19,6 +20,7 @@ export class StudyFrameService {
     this.userRepository = AppDataSource.getRepository(User);
     this.cycleRepository = AppDataSource.getRepository(Cycle);
     this.studyFrame_Faculty_Cycle_Repository = AppDataSource.getRepository(StudyFrame_Faculty_Cycle);
+    this.studyFrameComponentRepository = dataSource.getRepository(StudyFrame_Component);
     this.dataSource = dataSource;
   }
 
@@ -260,5 +262,16 @@ export class StudyFrameService {
     }
   }
 
+  async getAllComponents(): Promise<StudyFrame_Component[]> {
+    return this.studyFrameComponentRepository.find({
+      select: [
+        'id',
+        'frameComponentId',
+        'frameComponentName',
+        'description',
+        'creditHour',
+      ]
+    });
+  }
 
 }

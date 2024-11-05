@@ -9,6 +9,7 @@ const studyFrameController = new StudyFrameController(AppDataSource);
 studyFrameRouter.get('/major/:userId', studyFrameController.GetSubjectByMajor);
 studyFrameRouter.get('/listSubjectToFrame', studyFrameController.callKhungCTDT);
 studyFrameRouter.get('/listSubjectToFrameDepartment', studyFrameController.callKhungCTDTDepartment);
+studyFrameRouter.get('/components', studyFrameController.getAllStudyFrameComponents);
 studyFrameRouter.get('/', studyFrameController.getAllStudyFrames);
 studyFrameRouter.get('/:id', studyFrameController.getStudyFrameById);
 studyFrameRouter.post('/', studyFrameController.createStudyFrame);

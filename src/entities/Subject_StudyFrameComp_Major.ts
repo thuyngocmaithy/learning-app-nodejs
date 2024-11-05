@@ -7,7 +7,7 @@ import { Major } from './Major';
  * Thực thể môn học thuộc: thành phần khung đào tạo, chuyên ngành
  */
 @Entity('subject_studyFrameComp_major')
-export class StudyFrame_Faculty_Cycle {
+export class Subject_StudyFrameComp_Major {
   /**
    * Khóa chính tự động tạo
    */
