@@ -2,27 +2,62 @@
 import { DataSource, In, Repository } from 'typeorm';
 import { Major } from '../entities/Major';
 import { User } from '../entities/User';
+import { Faculty} from '../entities/Faculty';
 
 export class MajorService {
   private majorRepository: Repository<Major>;
   private userRepository: Repository<User>;
+  private facultyRepository: Repository<Faculty>
 
   constructor(dataSource: DataSource) {
     this.majorRepository = dataSource.getRepository(Major);
     this.userRepository = dataSource.getRepository(User);
-  }
-
-  async create(data: Partial<Major>): Promise<Major> {
-    const major = this.majorRepository.create(data);
-    return this.majorRepository.save(major);
+    this.facultyRepository = dataSource.getRepository(Faculty);
   }
 
   async getAll(): Promise<Major[]> {
-    return this.majorRepository.find();
-  }
-
+    return this.majorRepository.find({
+        relations: ['faculty'], 
+    });
+}
   async getById(majorId: string): Promise<Major | null> {
     return this.majorRepository.findOneBy({ majorId });
+  }
+
+  async getMaxOrderNoByFaculty(facultyId: string): Promise<number> {
+    const result = await this.majorRepository
+      .createQueryBuilder('major')
+      .leftJoin('major.faculty', 'faculty')
+      .where('faculty.facultyId = :facultyId', { facultyId })
+      .select('MAX(major.orderNo)', 'maxOrderNo')
+      .getRawOne();
+    return result.maxOrderNo || 0;
+  }
+
+
+  async create(data: Partial<Major>): Promise<Major> {
+    console.log(data);
+    if (!data.faculty?.facultyId) {
+      throw new Error('Faculty ID is required');
+    }
+
+    const faculty = await this.facultyRepository.findOneBy({ 
+      facultyId: data.faculty.facultyId 
+    });
+    
+    if (!faculty) {
+      throw new Error('Faculty not found');
+    }
+
+    const maxOrderNo = await this.getMaxOrderNoByFaculty(faculty.facultyId);
+    
+    const major = this.majorRepository.create({
+      ...data,
+      faculty: faculty,
+      orderNo: maxOrderNo + 1
+    });
+    
+    return this.majorRepository.save(major);
   }
 
   async update(majorId: string, data: Partial<Major>): Promise<Major | null> {
