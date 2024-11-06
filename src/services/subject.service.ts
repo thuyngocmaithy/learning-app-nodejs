@@ -6,7 +6,7 @@ import { AppDataSource } from '../data-source';
 import { Cycle } from '../entities/Cycle';
 import { StudyFrame_Faculty_Cycle } from '../entities/StudyFrame_Faculty_Cycle';
 import { StudyFrame_Component } from '../entities/StudyFrame';
-import { Subject_StudyFrameComp_Major } from '../entities/Subject_StudyFrameComp_Major';
+import { Subject_StudyFrameComp } from '../entities/Subject_StudyFrameComp';
 
 export class SubjectService {
   private subjectRepository: Repository<Subject>;
@@ -14,7 +14,7 @@ export class SubjectService {
   private cycleRepository: Repository<Cycle>;
   private studyFrame_Faculty_Cycle_Repository: Repository<StudyFrame_Faculty_Cycle>;
   private studyFrameComponentRepository: Repository<StudyFrame_Component>;
-  private Subject_StudyFrameComp_Major_Repository: Repository<Subject_StudyFrameComp_Major>;
+  private Subject_StudyFrameComp_Repository: Repository<Subject_StudyFrameComp>;
   private dataSource: DataSource;
 
 
@@ -24,7 +24,7 @@ export class SubjectService {
     this.cycleRepository = AppDataSource.getRepository(Cycle);
     this.studyFrame_Faculty_Cycle_Repository = AppDataSource.getRepository(StudyFrame_Faculty_Cycle);
     this.studyFrameComponentRepository = dataSource.getRepository(StudyFrame_Component);
-    this.Subject_StudyFrameComp_Major_Repository = dataSource.getRepository(Subject_StudyFrameComp_Major);
+    this.Subject_StudyFrameComp_Repository = dataSource.getRepository(Subject_StudyFrameComp);
     this.dataSource = dataSource;
   }
 
@@ -34,30 +34,9 @@ export class SubjectService {
     await queryRunner.startTransaction();
 
     try {
-      
+
       const subject = this.subjectRepository.create(data);
       const savedSubject = await queryRunner.manager.save(Subject, subject);
-
-     
-      if (data.frameComponentName) {
-        
-        const frameComponent = await this.studyFrameComponentRepository.findOne({
-          where: { frameComponentId: data.frameComponentName }
-        });
-
-        if (frameComponent) {
-          const relation = new Subject_StudyFrameComp_Major();
-          relation.subject = savedSubject;
-          relation.studyFrameComponent = frameComponent;
-          
-          // Add major if provided
-          if (data.majorId) {
-            relation.major = { majorId: data.majorId } as any;
-          }
-
-          await queryRunner.manager.save(Subject_StudyFrameComp_Major, relation);
-        }
-      }
 
       await queryRunner.commitTransaction();
       return savedSubject;
@@ -74,19 +53,19 @@ export class SubjectService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-  
+
     try {
-      await queryRunner.manager.delete(Subject_StudyFrameComp_Major, {
+      await queryRunner.manager.delete(Subject_StudyFrameComp, {
         subject: { subjectId: In(subjectIds) }
       });
-  
+
       const result = await queryRunner.manager.delete(Subject, {
         subjectId: In(subjectIds)
       });
-  
+
       await queryRunner.commitTransaction();
       return result.affected !== 0;
-  
+
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -113,41 +92,9 @@ export class SubjectService {
       // Update the subject
       const subject = await this.subjectRepository.findOne({ where: { subjectId } });
       if (!subject) return null;
-      
+
       this.subjectRepository.merge(subject, data);
       const updatedSubject = await queryRunner.manager.save(Subject, subject);
-
-      // Update or create the relation
-      if (data.frameComponentName) {
-        // Find existing relation
-        const existingRelation = await this.Subject_StudyFrameComp_Major_Repository.findOne({
-          where: { subject: { subjectId } }
-        });
-
-        const frameComponent = await this.studyFrameComponentRepository.findOne({
-          where: { frameComponentId: data.frameComponentName }
-        });
-
-        if (frameComponent) {
-          if (existingRelation) {
-            // Update existing relation
-            existingRelation.studyFrameComponent = frameComponent;
-            if (data.majorId) {
-              existingRelation.major = { majorId: data.majorId } as any;
-            }
-            await queryRunner.manager.save(Subject_StudyFrameComp_Major, existingRelation);
-          } else {
-            // Create new relation
-            const newRelation = new Subject_StudyFrameComp_Major();
-            newRelation.subject = updatedSubject;
-            newRelation.studyFrameComponent = frameComponent;
-            if (data.majorId) {
-              newRelation.major = { majorId: data.majorId } as any;
-            }
-            await queryRunner.manager.save(Subject_StudyFrameComp_Major, newRelation);
-          }
-        }
-      }
 
       await queryRunner.commitTransaction();
       return updatedSubject;
@@ -164,20 +111,20 @@ export class SubjectService {
 
   async getSubjectByFacultyId(facultyId: string): Promise<Subject[]> {
     try {
-        const subjects = await this.dataSource.query('CALL GetSubjectsByFaculty(?)', [facultyId]);
-        return subjects; // Adapt based on how the result is returned
+      const subjects = await this.dataSource.query('CALL GetSubjectsByFaculty(?)', [facultyId]);
+      return subjects; // Adapt based on how the result is returned
     } catch (error) {
-        console.error('Error fetching subjects by faculty ID:', error);
-        throw new Error('Unable to fetch subjects. Please try again later.'); // Optionally, you can throw a custom error
+      console.error('Error fetching subjects by faculty ID:', error);
+      throw new Error('Unable to fetch subjects. Please try again later.'); // Optionally, you can throw a custom error
     }
   }
 
   async getAllSubjectDetail(): Promise<Subject[]> {
-    try{
+    try {
       const subjects = await this.dataSource.query('CALL GetSubjectsWithDetails()');
       return subjects;
-    } 
-    catch(error){
+    }
+    catch (error) {
       console.error('Error fetching subject Detail:', error);
       throw new Error('Unable to fetch subjects. Please try again later.'); // Optionally, you can throw a custom error
     }

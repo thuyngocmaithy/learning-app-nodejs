@@ -46,7 +46,7 @@ export class Subject {
   /**
     * Có bắt buộc không (không rỗng)
     */
-  @Column({ type: 'boolean', nullable: false })
+  @Column({ type: 'boolean', default: false, nullable: false })
   isCompulsory: boolean;
 
   // /**
