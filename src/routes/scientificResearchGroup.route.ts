@@ -14,5 +14,6 @@ scientificResearchGroupRoute.post('/', scientificResearchGroupController.createS
 scientificResearchGroupRoute.put('/:id', scientificResearchGroupController.updateScientificResearchGroup);
 scientificResearchGroupRoute.delete('/', scientificResearchGroupController.deleteScientificResearchGroup);
 
+
 export default scientificResearchGroupRoute;
 
