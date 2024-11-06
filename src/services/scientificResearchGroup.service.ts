@@ -112,8 +112,24 @@ export class ScientificResearchGroupService {
       whereCondition.faculty = { facultyId: condition.faculty }
     }
 
+    if (condition.status) {
+      whereCondition.status = { statusId: condition.status }
+    }
+
     if (condition.scientificResearchGroupId) {
       whereCondition.scientificResearchGroupId = Like(`%${condition.scientificResearchGroupId}%`);
+    }
+
+    if (condition.scientificResearchGroupName) {
+      whereCondition.scientificResearchGroupName = Like(`%${condition.scientificResearchGroupName}%`);
+    }
+
+    if (condition.startYear) {
+      whereCondition.startYear = Like(`%${condition.startYear}%`);
+    }
+
+    if (condition.finishYear) {
+      whereCondition.startYear = Like(`%${condition.finishYear}%`);
     }
 
     return this.scientificResearchGroupRepository.find({

@@ -28,12 +28,12 @@ BEGIN
             ) AS subjectInfo
         FROM frameStructure frame
 		LEFT JOIN studyFrame_component sf ON frame.studyFrameComponentId = sf.frameComponentId
-        LEFT JOIN subject_studyFrameComp_major ssm ON ssm.studyFrameComponentId = sf.frameComponentId
-        LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId
-        LEFT JOIN major m ON m.majorId = ssm.majorId
+        LEFT JOIN subject_studyFrameComp ss ON ss.studyFrameComponentId = sf.frameComponentId
+        LEFT JOIN subject sj ON sj.subjectId = ss.subjectId
+        LEFT JOIN major m ON m.majorId = sf.majorId
         WHERE frame.studyFrameId = p_studyFrameId
 		AND sf.frameComponentId LIKE 'CN_%'
-		AND ssm.majorId = p_majorId
+		AND sf.majorId = p_majorId
         GROUP BY sf.id, sf.frameComponentId, sf.frameComponentName, sf.creditHour, frame.studyFrameComponentParentId, frame.orderNo, m.majorName
         
         UNION ALL
@@ -64,8 +64,8 @@ BEGIN
             ) AS subjectInfo
         FROM frameStructure frame
 		LEFT JOIN studyFrame_component sf ON frame.studyFrameComponentId = sf.frameComponentId
-        LEFT JOIN subject_studyFrameComp_major ssm ON ssm.studyFrameComponentId = sf.frameComponentId
-        LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId
+        LEFT JOIN subject_studyFrameComp ss ON ss.studyFrameComponentId = sf.frameComponentId
+        LEFT JOIN subject sj ON sj.subjectId = ss.subjectId
         WHERE frame.studyFrameId = p_studyFrameId
 		AND sf.frameComponentId NOT LIKE 'CN_%'
         GROUP BY sf.id, sf.frameComponentId, sf.frameComponentName, sf.creditHour, frame.studyFrameComponentParentId, frame.orderNo

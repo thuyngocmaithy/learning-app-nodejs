@@ -186,10 +186,28 @@ export class ScientificResearchService {
 	async getWhere(condition: any): Promise<ScientificResearch[]> {
 		const whereCondition: any = {};
 
-		if (condition.instructor) {
-			whereCondition.instructor = { userId: condition.instructor };
+		if(condition.scientificResearchId){
+			whereCondition.scientificResearchId = Like(`%${condition.scientificResearchId}%`);
 		}
-		if (condition.scientificResearchGroup && condition.scientificResearchGroup !== 'null') {
+		if(condition.scientificResearchName){
+			whereCondition.scientificResearchName = Like(`%${condition.scientificResearchName}%`);
+		}
+		if(condition.level){
+			whereCondition.level = condition.level;
+		}
+		if(condition.status){
+			whereCondition.status = {statusId: condition.status};
+		}
+		if(condition.isDisable){
+			whereCondition.isDisable = condition.isDisable;
+		}
+		if (condition.instructorId) {
+			whereCondition.instructor = { userId: condition.instructorId };
+		}
+		if (condition.instructorName) {
+			whereCondition.instructor = { fullname: Like(`%${condition.instructorName}%`) };
+		}
+		if (condition.scientificResearchGroup) {
 			whereCondition.scientificResearchGroup = { scientificResearchGroupId: condition.scientificResearchGroup };
 		}
 

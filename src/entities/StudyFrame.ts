@@ -1,4 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, PrimaryColumn, OneToMany } from 'typeorm';
+import { Major } from './Major';
+import { Subject_StudyFrameComp } from './Subject_StudyFrameComp';
 
 /**
  * Thực thể Khung đào tạo
@@ -53,4 +55,15 @@ export class StudyFrame_Component {
    */
   @Column({ nullable: true })
   creditHour: string;
+
+  /**
+    * Mã chuyên ngành
+    */
+  @ManyToOne(() => Major, major => major.majorId, { nullable: true })
+  @JoinColumn({ name: 'majorId' })
+  major: Major;
+
+  // Thêm cascade: true để xóa liên quan đến Subject_StudyFrameComp khi xóa StudyFrameComp
+  @OneToMany(() => Subject_StudyFrameComp, ssm => ssm.studyFrameComponent, { cascade: ['insert', 'update', 'remove'] })
+  ssm: Subject_StudyFrameComp[];
 }
