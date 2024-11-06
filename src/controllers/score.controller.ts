@@ -1,8 +1,8 @@
-import { Request, Response } from 'express';
-import { ScoreService } from '../services/score.service';
-import { DataSource } from 'typeorm';
-import { RequestHandler } from '../utils/requestHandler';
-import { Score } from '../entities/Score';
+import { Request, Response } from "express";
+import { ScoreService } from "../services/score.service";
+import { DataSource } from "typeorm";
+import { RequestHandler } from "../utils/requestHandler";
+import { Score } from "../entities/Score";
 
 export class ScoreController {
   private scoreService: ScoreService;
@@ -32,15 +32,38 @@ export class ScoreController {
     res.status(200).json(scores);
   };
 
-  public getScoreByStudentIdAndSemesterId = async (req: Request, res: Response) => {
+  public getScoreByStudentIdAndSemesterId = async (
+    req: Request,
+    res: Response
+  ) => {
     const { studentId, semesterId } = req.params;
-    const scores = await this.scoreService.getScoreByStudentIdAndSemesterId(studentId, semesterId);
+    const scores = await this.scoreService.getScoreByStudentIdAndSemesterId(
+      studentId,
+      semesterId
+    );
     res.status(200).json(scores);
   };
 
-  public getScoreByStudentIdAndSubjectId = async (req: Request, res: Response) => {
+  public getScoreByStudentIdAndSubjectId = async (
+    req: Request,
+    res: Response
+  ) => {
     const { studentId, subjectId } = req.params;
-    const score = await this.scoreService.getScoreByStudentIdAndSubjectId(studentId, subjectId);
+    const score = await this.scoreService.getScoreByStudentIdAndSubjectId(
+      studentId,
+      subjectId
+    );
     res.status(200).json(score);
+  };
+
+  public getStudentFrameScoresController = async (req: any, res: any) => {
+    try {
+      const { studentId } = req.params;
+      const frameScores = await this.scoreService.getStudentFrameScores(studentId);
+      return res.status(200).json(frameScores);
+    } catch (error) {
+      console.error('Error in getStudentFrameScoresController:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
   };
 }

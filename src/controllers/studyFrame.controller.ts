@@ -20,7 +20,7 @@ export class StudyFrameController {
 
   public GetSubjectByMajor = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = req.query.userId as string;
+      const userId = req.params.userId as string;
       if (!userId) {
         res.status(400).json({ message: 'userId is required' });
         return;
@@ -107,5 +107,14 @@ export class StudyFrameController {
     }
   }
 
+  public getAllStudyFrameComponents = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const components = await this.studyFrameService.getAllComponents();
+      res.json(components);
+    } catch (error) {
+      console.error('Error in getAllStudyFrameComponents:', error);
+      res.status(500).json({ error: 'Error fetching study frame components' });
+    }
+  }
 
 }
