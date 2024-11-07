@@ -22,17 +22,17 @@ BEGIN
 		                        'creditHour', sj.creditHour
 		                    )
 		                )
-		            FROM subject_studyFrameComp_major ssm
-		            LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId
-		            WHERE ssm.studyFrameComponentId = sf_comp.frameComponentId
+		            FROM subject_studyFrameComp ss
+		            LEFT JOIN subject sj ON sj.subjectId = ss.subjectId
+		            WHERE ss.studyFrameComponentId = sf_comp.frameComponentId
 		        ),
 		        JSON_ARRAY()
 		    ) AS subjectInfo
 		FROM frameStructure frame
 		LEFT JOIN studyFrame_component sf_comp ON frame.studyFrameComponentId = sf_comp.frameComponentId
-		LEFT JOIN subject_studyFrameComp_major ssm ON ssm.studyFrameComponentId = sf_comp.frameComponentId  -- Kết nối với bảng gộp subject_studyFrameComp_major
-		LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId  -- Kết nối với bảng môn học
-		LEFT JOIN major m ON m.majorId = ssm.majorId  -- Kết nối với bảng chuyên ngành từ bảng gộp
+		LEFT JOIN subject_studyFrameComp ss ON ss.studyFrameComponentId = sf_comp.frameComponentId  -- Kết nối với bảng gộp subject_studyFrameComp
+		LEFT JOIN subject sj ON sj.subjectId = ss.subjectId  -- Kết nối với bảng môn học
+		LEFT JOIN major m ON m.majorId = sf_comp.majorId  -- Kết nối với bảng chuyên ngành từ bảng gộp
 		WHERE frame.studyFrameId = p_studyFrameId
 		AND sf_comp.frameComponentId = 'CHUYENNGANH'    
 		GROUP BY sf_comp.id, sf_comp.frameComponentId, sf_comp.frameComponentName, sf_comp.creditHour, frame.studyFrameComponentParentId, frame.orderNo
@@ -61,17 +61,17 @@ BEGIN
 		                        'creditHour', sj.creditHour
 		                    )
 		                )
-		            FROM subject_studyFrameComp_major ssm
-		            LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId
-		            WHERE ssm.studyFrameComponentId = sf_comp.frameComponentId
+		            FROM subject_studyFrameComp ss
+		            LEFT JOIN subject sj ON sj.subjectId = ss.subjectId
+		            WHERE ss.studyFrameComponentId = sf_comp.frameComponentId
 		        ),
 		        JSON_ARRAY()
 		    ) AS subjectInfo
 		FROM frameStructure frame
 		LEFT JOIN studyFrame_component sf_comp ON frame.studyFrameComponentId = sf_comp.frameComponentId
-		LEFT JOIN subject_studyFrameComp_major ssm ON ssm.studyFrameComponentId = sf_comp.frameComponentId  -- Kết nối với bảng gộp subject_studyFrameComp_major
-		LEFT JOIN subject sj ON sj.subjectId = ssm.subjectId  -- Kết nối với bảng môn học
-		LEFT JOIN major m ON m.majorId = ssm.majorId  -- Kết nối với bảng chuyên ngành từ bảng gộp
+		LEFT JOIN subject_studyFrameComp ss ON ss.studyFrameComponentId = sf_comp.frameComponentId  -- Kết nối với bảng gộp subject_studyFrameComp
+		LEFT JOIN subject sj ON sj.subjectId = ss.subjectId  -- Kết nối với bảng môn học
+		LEFT JOIN major m ON m.majorId = sf_comp.majorId  -- Kết nối với bảng chuyên ngành từ bảng gộp
 		WHERE frame.studyFrameId = p_studyFrameId
 		AND sf_comp.frameComponentId <> 'CHUYENNGANH'    
 		GROUP BY sf_comp.id, sf_comp.frameComponentId, sf_comp.frameComponentName, sf_comp.creditHour, frame.studyFrameComponentParentId, frame.orderNo

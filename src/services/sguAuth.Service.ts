@@ -757,6 +757,10 @@ export class SguAuthService {
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null });
     const pages = await browser.pages(); // Lấy danh sách các tab hiện có
     const page = pages[0] || await browser.newPage(); // Sử dụng tab đầu tiên hoặc tạo mới
+    // Khởi tạo lại biến
+    this.GPAOfUser = 0;
+    this.ImageOfUser = "";
+    this.ScoreOfUser = new Object();
 
     // Bắt các phản hồi (response) từ server
     page.on('response', async response => {
@@ -771,7 +775,7 @@ export class SguAuthService {
 
       // Kiểm tra phản hồi có phải là API lấy ảnh không
       if (url.includes('/api/sms/w-locthongtinimagesinhvien')) {
-        const imageData = await response.json(); // Đọc nội dung phản hồi dưới dạng JSON
+        const imageData = await response.json(); // Đọc nội dung phản hồi dưới dạng JSON        
         this.ImageOfUser = imageData.data.thong_tin_sinh_vien.image; // Lưu ảnh của người dùng
       }
     });

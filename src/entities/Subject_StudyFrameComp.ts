@@ -1,13 +1,12 @@
 import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn } from 'typeorm';
 import { StudyFrame_Component } from './StudyFrame';
 import { Subject } from './Subject';
-import { Major } from './Major';
 
 /**
  * Thực thể môn học thuộc: thành phần khung đào tạo, chuyên ngành
  */
-@Entity('subject_studyFrameComp_major')
-export class Subject_StudyFrameComp_Major {
+@Entity('subject_studyFrameComp')
+export class Subject_StudyFrameComp {
   /**
    * Khóa chính tự động tạo
    */
@@ -25,15 +24,7 @@ export class Subject_StudyFrameComp_Major {
   /**
    * Mã thành phần Khung ctr đào tạo 
    */
-  @ManyToOne(() => StudyFrame_Component, studyFrame_Component => studyFrame_Component.frameComponentId, { nullable: false })
+  @ManyToOne(() => StudyFrame_Component, studyFrame_Component => studyFrame_Component.frameComponentId, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'studyFrameComponentId', referencedColumnName: 'frameComponentId' })
   studyFrameComponent: StudyFrame_Component;
-
-
-  /**
-   * Mã chuyên ngành
-   */
-  @ManyToOne(() => Major, major => major.majorId, { nullable: true })
-  @JoinColumn({ name: 'majorId' })
-  major: Major;
 }
