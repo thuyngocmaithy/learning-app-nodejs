@@ -56,11 +56,13 @@ dotenv.config();
 // Khởi tạo ứng dụng Express
 const app = express();
 
+const corsOrigin = process.env.CORS_ORIGIN || '*'; // Dùng '*' cho mọi origin trong phát triển
+
 const server = http.createServer(app);
 const io = new Server(server, {
     path: '/socket.io',
     cors: {
-        origin: 'https://learning-app-ashy.vercel.app', // Allow frontend origin,
+        origin: corsOrigin, // Allow frontend origin,
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -71,7 +73,7 @@ setupSockets(io);
 
 
 app.use(cors({
-    origin: 'https://learning-app-ashy.vercel.app', // Allow frontend origin
+    origin: corsOrigin,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
