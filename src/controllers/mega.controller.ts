@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { MegaService } from '../services/mega.service'; // Nhập MegaService
+import { MegaService } from '../services/mega.service';
 import path from 'path';
 import fs from 'fs';
 import { DataSource, Repository } from 'typeorm';
-import multer from 'multer'; // Nhập multer để xử lý upload file
+import multer from 'multer';
 import { AttachService } from '../services/attach.service';
 import { Attach } from '../entities/Attach';
 import { ScientificResearch } from '../entities/ScientificResearch';
@@ -11,10 +11,11 @@ import { AppDataSource } from '../data-source';
 import { Thesis } from '../entities/Thesis';
 import { User } from '../entities/User';
 
+// Sử dụng thư mục /tmp để lưu file tạm thời trong môi trường serverless như AWS Lambda
 const storage = multer.diskStorage({
-    destination: path.join(__dirname, '../../temp'),
+    destination: '/tmp', // Thư mục /tmp có thể ghi trong môi trường serverless
     filename: (req, file, cb) => {
-        cb(null, file.originalname); // Tên file giữ nguyên
+        cb(null, file.originalname); // Giữ nguyên tên file
     }
 });
 
@@ -33,83 +34,80 @@ export class MegaController {
         this.scientificResearchRepository = AppDataSource.getRepository(ScientificResearch);
         this.thesisRepository = AppDataSource.getRepository(Thesis);
         this.userRepository = AppDataSource.getRepository(User);
-
     }
 
     // Hàm upload nhiều file
     public uploadFiles = async (req: any, res: Response) => {
         upload(req, res, async (err) => {
             if (err) {
-                return res.status(500).json({ message: 'Upload error', error: err.message });
+                return res.status(500).json({ message: 'Lỗi upload file', error: err.message });
             }
 
-            const files = req.files as Express.Multer.File[]; // Chuyển đổi kiểu
+            const files = req.files as Express.Multer.File[];
 
             if (!files || files.length === 0) {
-                return res.status(400).json({ message: 'No files uploaded.' });
+                return res.status(400).json({ message: 'Không có file nào được tải lên.' });
             }
 
-            const uploadedFiles: any[] = []; // Mảng lưu thông tin file đã tải lên
+            const uploadedFiles: any[] = []; // Mảng lưu thông tin các file đã upload
 
-            // Tải lên từng file
             for (const file of files) {
                 try {
-                    const filePath = file.path; // Lấy đường dẫn file tạm trên server
-                    const uploadedFile = await this.megaService.uploadFile(filePath); // Tải lên MEGA
+                    const filePath = file.path; // Lấy đường dẫn file tạm
+                    const uploadedFile = await this.megaService.uploadFile(filePath); // Gọi MegaService để tải file lên MEGA
 
-                    // Kiểm tra kết quả upload
                     if (uploadedFile) {
-                        uploadedFiles.push(uploadedFile); // Thêm file đã tải lên vào mảng
+                        uploadedFiles.push(uploadedFile); // Thêm file đã tải lên thành công vào mảng
                     } else {
-                        console.log(uploadedFile)
-                        console.warn(`Upload failed for file: ${file.originalname}`);
+                        console.warn(`Upload thất bại cho file: ${file.originalname}`);
                     }
                 } catch (error) {
-                    console.error(`Error uploading file ${file.originalname}:`, error);
+                    console.error(`Lỗi khi upload file ${file.originalname}:`, error);
                 } finally {
-                    // Xóa file tạm sau khi upload
+                    // Xóa file tạm sau khi đã upload xong
                     fs.unlinkSync(file.path);
 
-                    const scientificResearchId = req.body.scientificResearchId;
-                    const thesisId = req.body.thesisId;
-                    const userId = req.body.userId;
-                    // Lưu thông tin file vào db
+                    const { scientificResearchId, thesisId, userId } = req.body;
                     const attach = new Attach();
-                    const scientificResearch = scientificResearchId && await this.scientificResearchRepository.findOneBy({ scientificResearchId: scientificResearchId });
-                    const thesis = req.thesis && await this.thesisRepository.findOneBy({ thesisId: thesisId });
-                    const user = await this.userRepository.findOneBy({ userId: userId });
+                    const scientificResearch = scientificResearchId && await this.scientificResearchRepository.findOneBy({ scientificResearchId });
+                    const thesis = thesisId && await this.thesisRepository.findOneBy({ thesisId });
+                    const user = await this.userRepository.findOneBy({ userId });
 
+                    // Kiểm tra nếu không có scientificResearch hoặc thesis thì trả về lỗi
                     if (!scientificResearch && !thesis) {
-                        return res.status(404).json({ message: 'Maga.controller - upload file: Not found scientificResearch or thesis' });
+                        return res.status(404).json({ message: 'Không tìm thấy scientificResearch hoặc thesis' });
                     }
 
+                    // Kiểm tra nếu không tìm thấy user thì trả về lỗi
                     if (!user) {
-                        return res.status(404).json({ message: 'Maga.controller - upload file: Not found user' });
+                        return res.status(404).json({ message: 'Không tìm thấy user' });
                     }
 
+                    // Gán các thông tin file đã tải lên cho thực thể Attach
                     attach.filename = file.originalname;
-                    attach.scientificResearch = scientificResearch || null; // Cho phép scientificResearch null
-                    attach.thesis = thesis || null; // Cho phép thesis null
+                    attach.scientificResearch = scientificResearch || null;
+                    attach.thesis = thesis || null;
                     attach.createUser = user;
 
+                    // Lưu thông tin file vào database
                     await this.attachService.create(attach);
                 }
             }
 
-            return res.status(200).json({ message: 'success' });
+            return res.status(200).json({ message: 'Thành công' });
         });
     }
 
-    // Hàm download file
+    // Hàm tải file xuống
     public downloadFile = async (req: Request, res: Response) => {
         try {
             const { fileId } = req.params;
 
-            // Tạo đường dẫn tạm thời trên server để lưu file trước khi gửi tới client
-            const tempDir = path.join(__dirname, '../../temp');
+            // Tạo đường dẫn tạm thời để lưu file trước khi gửi tới client
+            const tempDir = '/tmp';
             const destinationPath = path.join(tempDir, `${fileId}`);
 
-            // Kiểm tra và tạo thư mục tạm thời nếu chưa tồn tại
+            // Kiểm tra và tạo thư mục tạm nếu chưa tồn tại
             if (!fs.existsSync(tempDir)) {
                 fs.mkdirSync(tempDir, { recursive: true });
             }
@@ -117,21 +115,18 @@ export class MegaController {
             // Tải file từ MEGA về thư mục tạm trên server
             await this.megaService.downloadFile(fileId, destinationPath);
 
-            // Sử dụng res.download để gửi file về cho client
+            // Sử dụng res.download để gửi file tới client
             res.download(destinationPath, (err) => {
                 if (err) {
-                    return res.status(500).json({ message: 'Error downloading file', error: err.message });
+                    return res.status(500).json({ message: 'Lỗi khi tải file', error: err.message });
                 }
 
-                // Xóa file tạm sau khi tải xong
+                // Xóa file tạm sau khi đã tải xong
                 fs.unlinkSync(destinationPath);
             });
         } catch (error) {
             const err = error as Error;
-            return res.status(500).json({ message: 'Error', error: err.message });
-        }
-        finally {
-
+            return res.status(500).json({ message: 'Lỗi', error: err.message });
         }
     }
 }
