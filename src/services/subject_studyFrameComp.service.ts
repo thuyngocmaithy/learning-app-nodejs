@@ -134,7 +134,7 @@ export class Subject_StudyFrameCompService {
 
 		return this.subject_studyFrameCompRepository.find({
 			where: whereCondition,
-			relations: ['studyFrameComponent', 'subject']
+			relations: ['studyFrameComponent', 'subject', 'subject.subjectBefore']
 		});
 	}
 }

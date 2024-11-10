@@ -128,6 +128,7 @@ export class FeatureService {
     try {
       // Chuyển đổi cấu trúc cây thành danh sách phẳng
       const flattenedData = this.flattenTreeData(treeData);
+      console.log(flattenedData);
 
       // Lưu đối tượng cha và các phần tử con
       await Promise.all(
