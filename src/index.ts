@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import compression from 'compression';
 // import authRouter from './routes/authRoutes';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { response } from './utils/responseHelper';
@@ -57,13 +58,14 @@ dotenv.config();
 const app = express();
 
 // Cấu hình CORS
-const corsOptions = {
-    origin: process.env.CORS_ORIGIN || '*', // Sử dụng '*' cho tất cả các origin
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type"],
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || '*', // Cho phép từ origin cụ thể
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Các phương thức HTTP được phép
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // Các header được phép
     credentials: true
-};
-app.use(cors(corsOptions));
+}));
+app.options('*', cors()); // Xử lý các yêu cầu preflight
+app.use(compression());
 
 // Cấu hình body parser để xử lý JSON payload
 app.use(bodyParser.json());
@@ -96,14 +98,6 @@ connectDB().then(() => {
     console.error('Không thể kết nối cơ sở dữ liệu:', error);
 });
 
-// Middleware CORS bổ sung nếu cần
-app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    res.setHeader('Access-Control-Allow-Credentials', "true");
-    next();
-});
 
 // Route được bảo vệ để kiểm tra xác thực
 app.get('/api/protected', authMiddleware, async (req, res) => {
