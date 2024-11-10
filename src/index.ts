@@ -67,6 +67,19 @@ app.use(cors({
 app.options('*', cors()); // Xử lý các yêu cầu preflight
 app.use(compression());
 
+const allowedOrigins = ['https://learning-app-ashy.vercel.app'];
+const corsOptions = {
+    origin: (origin: any, callback: any) => {
+        if (allowedOrigins.includes(origin) || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    }
+};
+
+app.use(cors(corsOptions));
+
 // Cấu hình body parser để xử lý JSON payload
 app.use(bodyParser.json());
 
