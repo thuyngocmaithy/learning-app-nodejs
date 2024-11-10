@@ -92,53 +92,40 @@ export class MegaService {
             return undefined;
         }
     }
+
     async uploadFileFromBuffer(fileBuffer: Buffer, fileName: string): Promise<File | undefined> {
-        const storage = await this.loginToMega();
-        const fileSize = fileBuffer.length; // Lấy kích thước của buffer
+        try {
+            const storage = await this.loginToMega();
+            const folder = storage.root.navigate(megaConfig.folder as string);
 
-        // Lấy thư mục đích
-        const folder = storage.root.navigate(megaConfig.folder as string);
-        if (folder) {
-            // Lưu danh sách tên file trong một Set
-            const existingFiles = new Set(folder.children?.map(file => file.name).filter((name): name is string => name !== null));
+            if (!folder) {
+                throw new Error(`Thư mục không tồn tại: ${megaConfig.folder}`);
+            }
 
-            // Kiểm tra và tạo tên file mới nếu đã tồn tại
-            const newFileName = this.getUniqueFileName(existingFiles, fileName);
-
-            // Tạo upload stream cho file trong thư mục đã chọn
+            // Upload file từ buffer
             const uploadStream = folder.upload({
-                name: newFileName,
-                size: fileSize,
-                maxConnections: 10, // Có thể điều chỉnh tùy thuộc vào băng thông
+                name: fileName,
+                size: fileBuffer.length,
             });
 
             return new Promise<File | undefined>((resolve, reject) => {
-                // Lắng nghe sự kiện complete để lấy thông tin file
                 uploadStream.on('complete', (file: File) => {
-                    resolve(file); // Gọi resolve khi upload hoàn tất
+                    resolve(file); // Upload thành công
                 });
 
-                // Lắng nghe sự kiện error để xử lý lỗi
-                uploadStream.on('error', (error) => {
-                    console.error("Lỗi trong quá trình upload:", error);
-                    reject(error); // Gọi reject khi có lỗi
+                uploadStream.on('error', (err: any) => {
+                    reject(new Error(`Lỗi khi upload file: ${err.message}`)); // Xử lý lỗi
                 });
 
-                // Sử dụng pipeline để đọc buffer và upload
-                pipelineAsync(
-                    // Tạo stream từ buffer
-                    fs.createReadStream(fileBuffer),
-                    uploadStream
-                ).catch((err) => {
-                    console.error("Lỗi trong quá trình upload:", err);
-                    reject(err); // Gọi reject nếu pipeline có lỗi
-                });
+                // Dòng dữ liệu buffer sẽ được gửi tới Mega
+                uploadStream.end(fileBuffer);
             });
-        } else {
-            console.error("Thư mục không tồn tại:", megaConfig.folder);
-            return undefined;
+        } catch (error) {
+            console.error('Lỗi khi upload file từ buffer:', error);
+            throw error;  // Ném lại lỗi sau khi ghi log
         }
     }
+
 
 
     // Hàm kiểm tra và tạo tên file mới

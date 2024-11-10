@@ -95,7 +95,7 @@ export class MegaController {
             const { fileId } = req.params;
 
             // Tạo đường dẫn tạm thời để lưu file trước khi gửi tới client
-            const tempDir = '/tmp';
+            const tempDir = '/tmp';  // Đảm bảo sử dụng /tmp cho lưu trữ có thể ghi
             const destinationPath = path.join(tempDir, `${fileId}`);
 
             // Kiểm tra và tạo thư mục tạm nếu chưa tồn tại
