@@ -61,13 +61,13 @@ const app = express();
 app.use(cors({
     origin: process.env.CORS_ORIGIN || '*', // Cho phép từ origin cụ thể
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Các phương thức HTTP được phép
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // Các header được phép
+    allowedHeaders: ['X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'], // Các header được phép
     credentials: true
 }));
 app.options('*', cors({
     origin: process.env.CORS_ORIGIN || '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'],
     credentials: true
 }));
 app.use(compression());
