@@ -109,6 +109,19 @@ app.get('/api/protected', authMiddleware, async (req, res) => {
     await response(res, 200, 'success', { account: req.account }, 'Xác thực thành công!');
 });
 
+
+
+// Endpoint kiểm tra trạng thái kết nối cơ sở dữ liệu
+app.get('/statusConnection', async (req, res) => {
+    try {
+        await connectDB();
+        res.status(200).json({ status: 'ok' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'Database connection failed' });
+    }
+});
+
+
 // Route chính
 app.get('/', (req, res) => {
     res.send('Chào mừng đến với API của chúng tôi!');
