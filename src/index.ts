@@ -73,7 +73,10 @@ setupSockets(io);
 
 
 app.use(cors({
-    origin: "http://localhost:3000",
+    origin: [
+        'https://learning-app-ashy.vercel.app', // URL frontend
+        'http://localhost:3000' // Cấu hình cho môi trường phát triển (local)
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
