@@ -60,9 +60,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
     path: '/socket.io',
     cors: {
-        origin: [
-            'https://learning-app-ashy.vercel.app', // URL frontend
-        ],
+        origin: 'https://learning-app-ashy.vercel.app', // Allow frontend origin,
         methods: ["GET", "POST"]
     }
 });
@@ -72,9 +70,7 @@ setupSockets(io);
 
 
 app.use(cors({
-    origin: [
-        'https://learning-app-ashy.vercel.app', // URL frontend
-    ],
+    origin: 'https://learning-app-ashy.vercel.app', // Allow frontend origin
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
