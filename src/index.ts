@@ -95,17 +95,17 @@ app.use(express.static(getPublicDir()));
 
 
 // Tạo thư mục uploads nếu chưa tồn tại
-const uploadDir = path.join(__dirname, '..', 'public', 'uploads');
+// const uploadDir = path.join(__dirname, '..', 'public', 'uploads');
 
-async function createUploadDir() {
-    try {
-        await fs.mkdir(uploadDir, { recursive: true });
-    } catch (error) {
-        console.error('Error creating upload directory:', error);
-    }
-}
+// async function createUploadDir() {
+//     try {
+//         await fs.mkdir(uploadDir, { recursive: true });
+//     } catch (error) {
+//         console.error('Error creating upload directory:', error);
+//     }
+// }
 
-createUploadDir();
+// createUploadDir();
 
 // Route được bảo vệ để kiểm tra xác thực
 app.get('/api/protected', authMiddleware, async (req, res) => {

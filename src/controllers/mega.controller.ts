@@ -11,14 +11,8 @@ import { AppDataSource } from '../data-source';
 import { Thesis } from '../entities/Thesis';
 import { User } from '../entities/User';
 
-// Sử dụng thư mục /tmp để lưu file tạm thời trong môi trường serverless như AWS Lambda
-const storage = multer.diskStorage({
-    destination: '/tmp', // Thư mục /tmp có thể ghi trong môi trường serverless
-    filename: (req, file, cb) => {
-        cb(null, file.originalname); // Giữ nguyên tên file
-    }
-});
-
+// Sử dụng bộ nhớ tạm cho file thay vì ghi đĩa
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage }).array('files');
 
 export class MegaController {
@@ -53,19 +47,14 @@ export class MegaController {
 
             for (const file of files) {
                 try {
-                    const filePath = file.path; // Lấy đường dẫn file tạm
-                    const uploadedFile = await this.megaService.uploadFile(filePath); // Gọi MegaService để tải file lên MEGA
+                    // Upload trực tiếp từ buffer
+                    const uploadedFile = await this.megaService.uploadFileFromBuffer(file.buffer, file.originalname);
 
                     if (uploadedFile) {
-                        uploadedFiles.push(uploadedFile); // Thêm file đã tải lên thành công vào mảng
+                        uploadedFiles.push(uploadedFile);
                     } else {
                         console.warn(`Upload thất bại cho file: ${file.originalname}`);
                     }
-                } catch (error) {
-                    console.error(`Lỗi khi upload file ${file.originalname}:`, error);
-                } finally {
-                    // Xóa file tạm sau khi đã upload xong
-                    fs.unlinkSync(file.path);
 
                     const { scientificResearchId, thesisId, userId } = req.body;
                     const attach = new Attach();
@@ -91,6 +80,8 @@ export class MegaController {
 
                     // Lưu thông tin file vào database
                     await this.attachService.create(attach);
+                } catch (error) {
+                    console.error(`Lỗi khi upload file ${file.originalname}:`, error);
                 }
             }
 
