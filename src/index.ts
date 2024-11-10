@@ -72,12 +72,12 @@ const io = new Server(server, {
 setupSockets(io);
 
 
-app.use(cors({
-    origin: '*',
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
-}));
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    next();
+})
 
 app.use(bodyParser.json());
 
