@@ -56,50 +56,38 @@ dotenv.config();
 // Khởi tạo ứng dụng Express
 const app = express();
 
-const corsOrigin = process.env.CORS_ORIGIN || '*'; // Dùng '*' cho mọi origin trong phát triển
+// Cấu hình CORS
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN || '*', // Sử dụng '*' cho tất cả các origin
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type"],
+    credentials: true
+};
+app.use(cors(corsOptions));
 
+// Cấu hình body parser để xử lý JSON payload
+app.use(bodyParser.json());
+
+// Khởi tạo server HTTP và Socket.io
 const server = http.createServer(app);
 const io = new Server(server, {
     path: '/socket.io',
     cors: {
-        origin: '*', // Allow frontend origin,
+        origin: process.env.CORS_ORIGIN || '*', // Thiết lập origin frontend
         methods: ["GET", "POST"],
         credentials: true
     }
 });
 
-// Thiết lập các sự kiện socket
+// Cấu hình socket
 setupSockets(io);
 
-
-app.use((req, res, next) => {
-    res.setHeader(
-        "Access-Control-Allow-Origin",
-        corsOrigin
-    );
-    res.setHeader(
-        "Access-Control-Allow-Methods",
-        "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,CONNECT,TRACE"
-    );
-    res.setHeader(
-        "Access-Control-Allow-Headers",
-        "Content-Type, Authorization, X-Content-Type-Options, Accept, X-Requested-With, Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
-    );
-    res.setHeader("Access-Control-Allow-Credentials", 'true');
-    res.setHeader("Access-Control-Allow-Private-Network", 'true');
-    //  Firefox caps this at 24 hours (86400 seconds). Chromium (starting in v76) caps at 2 hours (7200 seconds). The default value is 5 seconds.
-    res.setHeader("Access-Control-Max-Age", 7200);
-
-    next();
-});
-app.use(bodyParser.json());
-
-const PORT = process.env.PORT || 5000;
-
+// Cấu hình thư mục public để phục vụ các file tĩnh
+app.use(express.static(getPublicDir()));
 
 // Kết nối cơ sở dữ liệu với TypeORM
 connectDB().then(() => {
-    // Chỉ khởi động server sau khi kết nối cơ sở dữ liệu thành công
+    const PORT = process.env.PORT || 5000;
     server.listen(PORT, () => {
         console.log(`Server đang chạy trên cổng ${PORT}`);
     });
@@ -107,21 +95,14 @@ connectDB().then(() => {
     console.error('Không thể kết nối cơ sở dữ liệu:', error);
 });
 
-app.use(express.static(getPublicDir()));
-
-
-// Tạo thư mục uploads nếu chưa tồn tại
-// const uploadDir = path.join(__dirname, '..', 'public', 'uploads');
-
-// async function createUploadDir() {
-//     try {
-//         await fs.mkdir(uploadDir, { recursive: true });
-//     } catch (error) {
-//         console.error('Error creating upload directory:', error);
-//     }
-// }
-
-// createUploadDir();
+// Middleware CORS bổ sung nếu cần
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader('Access-Control-Allow-Credentials', "true");
+    next();
+});
 
 // Route được bảo vệ để kiểm tra xác thực
 app.get('/api/protected', authMiddleware, async (req, res) => {
