@@ -84,7 +84,7 @@ const io = new Server(server, {
         origin: process.env.CORS_ORIGIN || '*', // Thiết lập origin frontend
         methods: ["GET", "POST"],
     },
-    transports: ["polling"],
+    transports: ["websocket", "polling"],
 });
 
 // Cấu hình socket
