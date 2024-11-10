@@ -62,7 +62,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
     path: '/socket.io',
     cors: {
-        origin: corsOrigin, // Allow frontend origin,
+        origin: '*', // Allow frontend origin,
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -73,7 +73,7 @@ setupSockets(io);
 
 
 app.use(cors({
-    origin: corsOrigin,
+    origin: '*',
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
