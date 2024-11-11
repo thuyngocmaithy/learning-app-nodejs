@@ -7,6 +7,9 @@ export const connectDB = async (): Promise<void> => {
     console.log('Cơ sở dữ liệu MySQL được kết nối thành công');
   } catch (error) {
     console.error('Không thể kết nối với cơ sở dữ liệu MySQL:', error);
-    process.exit(1);
+    setTimeout(connectDB, 5000); // Cố gắng kết nối lại sau 5 giây
   }
 };
+
+
+
