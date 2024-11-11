@@ -80,7 +80,9 @@ const io = new Server(server, {
         methods: ["GET", "POST"],
     },
     transports: ["polling"],
-    addTrailingSlash: false
+    addTrailingSlash: false,
+    connectTimeout: 10000,  // Thời gian timeout khi kết nối
+    pingTimeout: 10000
 });
 
 // Cấu hình socket
