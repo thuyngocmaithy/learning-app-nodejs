@@ -69,7 +69,7 @@ app.use(compression());
 
 
 // Cấu hình body parser để xử lý JSON payload
-app.use(bodyParser.json());
+app.use(express.json());
 
 // Khởi tạo server HTTP và Socket.io
 const server = http.createServer(app);
