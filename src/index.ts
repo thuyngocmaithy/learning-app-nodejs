@@ -79,7 +79,7 @@ const io = new Server(server, {
         origin: process.env.CORS_ORIGIN || '*', // Thiết lập origin frontend
         methods: ["GET", "POST"],
     },
-    transports: ["polling"],
+    transports: ["websocket"],
     addTrailingSlash: false,
     connectTimeout: 10000,  // Thời gian timeout khi kết nối
     pingTimeout: 10000
