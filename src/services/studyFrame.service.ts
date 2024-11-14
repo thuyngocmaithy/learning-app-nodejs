@@ -1,7 +1,7 @@
 import { Major } from './../entities/Major';
 // studyFrame.service.ts
 import { DataSource, In, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
-import { StudyFrame,  StudyFrame_Component } from '../entities/StudyFrame';
+import { StudyFrame, StudyFrame_Component } from '../entities/StudyFrame';
 import { User } from '../entities/User';
 import { Cycle } from '../entities/Cycle';
 import { StudyFrame_Faculty_Cycle } from '../entities/StudyFrame_Faculty_Cycle';

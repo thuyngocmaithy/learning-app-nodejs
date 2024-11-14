@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import compression from 'compression';
 // import authRouter from './routes/authRoutes';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { response } from './utils/responseHelper';
@@ -39,7 +40,6 @@ import messageRouter from './routes/message.route';
 import participantRouter from './routes/participant.route';
 import featureRouter from './routes/feature.route';
 import fs from 'fs/promises';
-import uploadRouter from './routes/upload.routes';
 import sguAuthRouter from './routes/sguAuth.route';
 import scientificResearchGroupRoute from './routes/scientificResearchGroup.route';
 import userRegisterSubjectRouter from './routes/userRegisterSubject.route';
@@ -48,6 +48,7 @@ import cycleRoutes from './routes/cycle.route';
 import studyFrameComponentRoutes from './routes/studyFrame_component.route';
 import frameStructureRoutes from './routes/frameStucture.route';
 import subject_studyFrameCompRoutes from './routes/subject_studyFrameComp.route';
+import studyFrame_faculty_cycle from './routes/studyFrame_faculty_cycle.route';
 
 
 // Nạp các biến môi trường từ file .env
@@ -56,33 +57,43 @@ dotenv.config();
 // Khởi tạo ứng dụng Express
 const app = express();
 
+// Cấu hình CORS
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || '*', // Cho phép từ origin cụ thể
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Các phương thức HTTP được phép
+    allowedHeaders: ['X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version', 'Authorization',], // Các header được phép
+    credentials: true
+}));
+app.options('*', cors());
+app.use(compression());
+
+
+// Cấu hình body parser để xử lý JSON payload
+app.use(express.json());
+
+// Khởi tạo server HTTP và Socket.io
 const server = http.createServer(app);
 const io = new Server(server, {
     path: '/socket.io',
     cors: {
-        origin: "http://localhost:3000",
-        methods: ["GET", "POST"]
-    }
+        origin: process.env.CORS_ORIGIN || '*', // Thiết lập origin frontend
+        methods: ["GET", "POST"],
+    },
+    transports: ["websocket"],
+    addTrailingSlash: false,
+    connectTimeout: 10000,  // Thời gian timeout khi kết nối
+    pingTimeout: 10000
 });
 
-// Thiết lập các sự kiện socket
+// Cấu hình socket
 setupSockets(io);
 
-
-app.use(cors({
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-}));
-
-app.use(bodyParser.json());
-
-const PORT = process.env.PORT || 5000;
-
+// Cấu hình thư mục public để phục vụ các file tĩnh
+app.use(express.static(getPublicDir()));
 
 // Kết nối cơ sở dữ liệu với TypeORM
 connectDB().then(() => {
-    // Chỉ khởi động server sau khi kết nối cơ sở dữ liệu thành công
+    const PORT = process.env.PORT || 5000;
     server.listen(PORT, () => {
         console.log(`Server đang chạy trên cổng ${PORT}`);
     });
@@ -90,26 +101,24 @@ connectDB().then(() => {
     console.error('Không thể kết nối cơ sở dữ liệu:', error);
 });
 
-app.use(express.static(getPublicDir()));
-
-
-// Tạo thư mục uploads nếu chưa tồn tại
-const uploadDir = path.join(__dirname, '..', 'public', 'uploads');
-
-async function createUploadDir() {
-    try {
-        await fs.mkdir(uploadDir, { recursive: true });
-    } catch (error) {
-        console.error('Error creating upload directory:', error);
-    }
-}
-
-createUploadDir();
 
 // Route được bảo vệ để kiểm tra xác thực
 app.get('/api/protected', authMiddleware, async (req, res) => {
     await response(res, 200, 'success', { account: req.account }, 'Xác thực thành công!');
 });
+
+
+
+// Endpoint kiểm tra trạng thái kết nối cơ sở dữ liệu
+app.get('/statusConnection', async (req, res) => {
+    try {
+        await connectDB();
+        res.status(200).json({ status: 'ok' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'Database connection failed' });
+    }
+});
+
 
 // Route chính
 app.get('/', (req, res) => {
@@ -145,12 +154,12 @@ app.use('/api/conversations', conversationRouter);
 app.use('/api/messages', messageRouter);
 app.use('/api/participants', participantRouter);
 app.use('/api/features', featureRouter);
-app.use('/api/upload', uploadRouter);
 app.use('/api/user-register-subject', userRegisterSubjectRouter);
 app.use('/api/mega', megaRoutes);
 app.use('/api/cycles', cycleRoutes);
 app.use('/api/frameStructures', frameStructureRoutes);
 app.use('/api/subject_studyFrameComps', subject_studyFrameCompRoutes);
+app.use('/api/studyFrame_faculty_cycles', studyFrame_faculty_cycle);
 
 
 
