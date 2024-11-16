@@ -20,14 +20,14 @@ export class Status {
 
     @Column({
         type: 'enum',
-        enum: ['Tiến độ đề tài NCKH', 'Tiến độ khóa luận', 'Tiến độ nhóm đề tài NCKH'],
+        enum: ['Tiến độ nhóm đề tài NCKH', 'Tiến độ đề tài NCKH', 'Tiến độ nhóm đề tài khóa luận', 'Tiến độ đề tài khóa luận'],
     })
-    type: 'Tiến độ đề tài NCKH' | 'Tiến độ khóa luận' | 'Tiến độ nhóm đề tài NCKH' = "Tiến độ đề tài NCKH";
+    type: 'Tiến độ đề tài NCKH' | 'Tiến độ đề tài khóa luận' | 'Tiến độ nhóm đề tài NCKH' | 'Tiến độ nhóm đề tài khóa luận' = "Tiến độ đề tài NCKH";
 
     /**
      * Số thứ tự (không rỗng)
      */
-    @Column('int', { nullable: false })
+    @Column('int', { nullable: false, default: '999' })
     orderNo: number;
 
     /**
@@ -55,4 +55,10 @@ export class Status {
      */
     @UpdateDateColumn()
     lastModifyDate: Date;
+
+    /**
+     * Màu
+     */
+    @Column({ nullable: true })
+    color: string;
 }

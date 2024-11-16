@@ -36,22 +36,21 @@ export const setupMessageSocket = (io: Server) => {
                     return;
                 }
 
-                const SR = await srRepository.findOneBy({ scientificResearchId: room as string });
-                const thesis = await thesisRepository.findOneBy({ thesisId: room as string });
-
-                if (!SR && !thesis) {
-                    console.error("messageSocket: Not found entity thesis and SR");
-                    return;
-                }
-
-                const messageEntity = new Message();
+                var messageEntity = new Message();
                 messageEntity.content = messageContent;
                 messageEntity.sender = user;
+
+                const SR = await srRepository.findOneBy({ scientificResearchId: room as string });
                 if (SR) {
                     messageEntity.scientificResearch = SR;
-                }
-                if (thesis) {
-                    messageEntity.thesis = thesis;
+                } else {
+                    const thesis = await thesisRepository.findOneBy({ thesisId: room as string });
+                    if (thesis) {
+                        messageEntity.thesis = thesis;
+                    } else {
+                        console.error("Room không tồn tại trong cả scientificResearch và thesis.");
+                        return;
+                    }
                 }
 
                 const createdMessage = await messageService.create(messageEntity)
@@ -61,11 +60,18 @@ export const setupMessageSocket = (io: Server) => {
             }
         });
 
-        // Xử lý yêu cầu lấy danh sách message theo SRId
-        socket.on('getMessages', async (SRId: string) => {
+        // Xử lý yêu cầu lấy danh sách message theo SRId và thesisId
+        socket.on('getMessages', async (id) => {
             try {
-                const messages = await messageService.getWhere({ SRId: SRId });
-                messageIo.to(SRId).emit('messagesList', SRId, messages);
+                let messages;
+                if (id.key === 'srId') {
+                    messages = await messageService.getWhere({ SRId: id.value });
+                    messageIo.to(id.value).emit('messagesList', id.value, messages);
+                }
+                if (id.key === 'thesisId') {
+                    messages = await messageService.getWhere({ thesisId: id.value });
+                    messageIo.to(id.value).emit('messagesList', id.value, messages);
+                }
             } catch (error) {
                 console.error('Lỗi khi lấy messages:', error);
                 socket.emit('messagesList', []);

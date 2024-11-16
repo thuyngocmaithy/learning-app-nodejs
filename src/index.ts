@@ -39,7 +39,7 @@ import conversationRouter from './routes/conversation.route';
 import messageRouter from './routes/message.route';
 import participantRouter from './routes/participant.route';
 import featureRouter from './routes/feature.route';
-import fs from 'fs/promises';
+// import fs from 'fs/promises';
 import sguAuthRouter from './routes/sguAuth.route';
 import scientificResearchGroupRoute from './routes/scientificResearchGroup.route';
 import userRegisterSubjectRouter from './routes/userRegisterSubject.route';
@@ -48,6 +48,7 @@ import cycleRoutes from './routes/cycle.route';
 import studyFrameComponentRoutes from './routes/studyFrame_component.route';
 import frameStructureRoutes from './routes/frameStucture.route';
 import subject_studyFrameCompRoutes from './routes/subject_studyFrameComp.route';
+import thesisGroupRoute from './routes/thesisGroup.route';
 
 
 // Nạp các biến môi trường từ file .env
@@ -151,6 +152,7 @@ app.use('/api/study-frame-components', studyFrameComponentRoutes);
 app.use('/api/subjects', subjectRoute);
 app.use('/api/thesis-user', thesisUserRoutes);
 app.use('/api/thesis', thesisRoute);
+app.use('/api/thesisGroups', thesisGroupRoute);
 app.use('/api/conversations', conversationRouter);
 app.use('/api/messages', messageRouter);
 app.use('/api/participants', participantRouter);

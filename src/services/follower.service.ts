@@ -53,6 +53,14 @@ export class FollowerService {
     return this.followerRepository.findOne(options);
   }
 
+  public getByThesisId = async (thesisId: string): Promise<Follower | null> => {
+    const options: FindOneOptions<Follower> = {
+      where: { thesis: { thesisId } },
+      relations: ['thesis', 'followerDetails']
+    };
+    return this.followerRepository.findOne(options);
+  }
+
   public getByUserId = async (userId: string): Promise<Follower[] | null> => {
     const options: FindManyOptions<FollowerDetail> = {
       where: { user: { userId: userId } },
@@ -72,7 +80,7 @@ export class FollowerService {
     // Tìm các Follower dựa trên followerIds
     return this.followerRepository.find({
       where: { id: In(followerIds) },
-      relations: ['scientificResearch']
+      relations: ['scientificResearch', 'thesis']
     });
   }
 
@@ -110,7 +118,7 @@ export class FollowerService {
               }
             })
           },
-          relations: ['scientificResearch', 'followerDetails', 'scientificResearch.status']
+          relations: ['scientificResearch', 'followerDetails', 'scientificResearch.status', 'thesis', 'thesis.status']
         };
         return this.followerRepository.find(options);
       }

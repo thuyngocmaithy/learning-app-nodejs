@@ -40,6 +40,9 @@ export class AttachService {
     if (condition.SRId) {
       whereCondition.scientificResearch = { scientificResearchId: condition.SRId };
     }
+    if (condition.thesisId) {
+      whereCondition.thesis = { thesisId: condition.thesisId };
+    }
 
     return this.attachRepository.find({
       where: whereCondition,

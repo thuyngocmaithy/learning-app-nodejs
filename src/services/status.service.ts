@@ -9,26 +9,25 @@ export class StatusService {
     this.statusRepository = dataSource.getRepository(Status);
   }
 
-  async getMaxOrderNoByType(type: 'Tiến độ đề tài NCKH' | 'Tiến độ khóa luận' | 'Tiến độ nhóm đề tài NCKH'): Promise<number> {
-    const result = await this.statusRepository
-      .createQueryBuilder("status")
-      .select("MAX(status.orderNo)", "maxOrderNo")
-      .where("status.type = :type", { type })
-      .getRawOne();
-      
-    return result?.maxOrderNo ?? 0;
-  }
-
   async create(data: Partial<Status>): Promise<Status> {
-    const maxOrderNo = await this.getMaxOrderNoByType(data.type as Status["type"]);
-    data.orderNo = maxOrderNo + 1;
-
     const status = this.statusRepository.create(data);
     return this.statusRepository.save(status);
   }
 
   async getAll(): Promise<Status[]> {
-    return this.statusRepository.find();
+    return this.statusRepository
+      .createQueryBuilder("status")
+      .orderBy(
+        `CASE 
+          WHEN status.type = 'Tiến độ nhóm đề tài NCKH' THEN 1
+          WHEN status.type = 'Tiến độ đề tài NCKH' THEN 2
+          WHEN status.type = 'Tiến độ nhóm đề tài khóa luận' THEN 3          
+          WHEN status.type = 'Tiến độ đề tài khóa luận' THEN 4
+          ELSE 5
+        END`
+      )
+      .addOrderBy("status.orderNo", "ASC")
+      .getMany();
   }
 
   async getById(statusId: string): Promise<Status | null> {
@@ -49,7 +48,7 @@ export class StatusService {
     return result.affected !== 0;
   }
 
-  async getByType(type: 'Tiến độ đề tài NCKH' | 'Tiến độ khóa luận' | 'Tiến độ nhóm đề tài NCKH'): Promise<Status[]> {
+  async getByType(type: 'Tiến độ đề tài NCKH' | 'Tiến độ đề tài khóa luận' | 'Tiến độ nhóm đề tài NCKH' | 'Tiến độ nhóm đề tài khóa luận'): Promise<Status[]> {
     return this.statusRepository.find({ where: { type } });
   }
 }

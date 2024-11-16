@@ -85,7 +85,6 @@ export class ScientificResearchService {
 			scientificResearchId: newId,
 			scientificResearchName: scientificResearchData.scientificResearchName,
 			description: scientificResearchData.description,
-			executionTime: scientificResearchData.executionTime,
 			numberOfMember: scientificResearchData.numberOfMember,
 			instructor: instructor,
 			status: status,
@@ -96,7 +95,9 @@ export class ScientificResearchService {
 				{
 					followerDetails: followerDetails
 				}
-			]
+			],
+			startDate: scientificResearchData.startDate,
+			finishDate: scientificResearchData.finishDate
 		});
 
 		const savedScientificResearch = await this.scientificResearchRepository.save(scientificResearch);

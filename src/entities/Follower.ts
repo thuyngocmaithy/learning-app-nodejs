@@ -26,11 +26,7 @@ export class Follower {
   @JoinColumn({ name: 'scientificResearchId' })
   scientificResearch: ScientificResearch;
 
-
-  /**
-   * ID dự án (tham chiếu đến thực thể Khóa luận, có thể rỗng)
-   */
-  @ManyToOne(() => Thesis, data => data.thesisId, { nullable: true })
+  @ManyToOne(() => Thesis, thesis => thesis.follower, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'thesisId' })
   thesis: Thesis;
 

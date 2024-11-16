@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, OneToMany, BeforeInsert, DataSource } from 'typeorm';
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn, OneToMany, JoinColumn } from 'typeorm';
 import { User } from './User';
-import { Faculty } from './Faculty';
 import { Status } from './Status';
+import { Follower } from './Follower';
+import { ThesisGroup } from './ThesisGroup';
 import { Thesis_User } from './Thesis_User';
 
 /**
@@ -10,67 +11,61 @@ import { Thesis_User } from './Thesis_User';
 @Entity()
 export class Thesis {
   /**
-   * Khóa chính
+   * Mã khóa luận (duy nhất, không rỗng)
    */
   @PrimaryColumn({ type: 'varchar', length: 25 })
   thesisId: string;
 
   /**
-   * Tiêu đề khóa luận (không rỗng)
+   * Tên khóa luận (không rỗng)
    */
   @Column({ nullable: false })
-  title: string;
+  thesisName: string;
 
   /**
-   * Mô tả khóa luận (không rỗng)
+   * Mô tả (không rỗng)
    */
-  @Column({ nullable: false })
+  @Column({ nullable: false, length: 999 })
   description: string;
 
   /**
-   * Ngày bắt đầu (không rỗng)
+   * Số lượng thành viên (không rỗng)
    */
-  @Column({ nullable: false })
-  startDate: Date;
-
-  /**
-   * Ngày kết thúc (không rỗng)
-   */
-  @Column({ nullable: false })
-  endDate: Date;
-
-  /**
-   * ID người hướng dẫn (tham chiếu đến thực thể User, không rỗng)
-   */
-  @ManyToOne(() => User, data => data.userId, { nullable: true })
-  @JoinColumn({ name: 'supervisor' })
-  supervisor: User;
-
-  /**
-   * ID khoa (tham chiếu đến thực thể Faculty, không rỗng)
-   */
-  @ManyToOne(() => Faculty, faculty => faculty.facultyId, { nullable: false })
-  @JoinColumn({ name: 'facultyId' })
-  faculty: Faculty;
-
-  /**
-   * Số lượng người đăng ký
-   */
-  @Column({ default: 0, nullable: true })
-  registrationCount: number;
-
-  /**
-   * Danh sách user đã đăng ký (quan hệ một-nhiều với Thesis_User)
-   */
-  @OneToMany(() => Thesis_User, thesisUser => thesisUser.thesis, { nullable: false })
-  registrations: Thesis_User[];
+  @Column('int', { nullable: false })
+  numberOfMember: number;
 
   /**
    * Trạng thái (tham chiếu đến thực thể Status, không rỗng)
    */
-  @ManyToOne(() => Status, status => status.statusId, { nullable: false })
+  @ManyToOne(() => Status, data => data.statusId, { nullable: false })
   @JoinColumn({ name: 'statusId' })
   status: Status;
+
+  /**
+   * Ngày bắt đầu (không rỗng)
+   */
+  @Column({ nullable: true })
+  startDate: Date;
+
+  /**
+   * Ngày kết thúc (có thể rỗng)
+   */
+  @Column({ nullable: true })
+  finishDate: Date;
+
+  /**
+   * Người hướng dẫn (tham chiếu đến thực thể User, không rỗng)
+   */
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
+  @JoinColumn({ name: 'instructorId' })
+  instructor: User;
+
+
+  /**
+   * Số lượng đã đăng ký (có thể rỗng)
+   */
+  @Column('decimal', { precision: 15, scale: 2, nullable: true })
+  budget: number;
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
@@ -88,7 +83,7 @@ export class Thesis {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
-  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
   @JoinColumn({ name: 'lastModifyUserId' })
   lastModifyUser: User;
 
@@ -98,4 +93,24 @@ export class Thesis {
   @UpdateDateColumn()
   lastModifyDate: Date;
 
+  // Thêm cascade: true để xóa liên quan đến Follower khi xóa Thesis
+  @OneToMany(() => Follower, follower => follower.thesis, { cascade: ['insert', 'update', 'remove'] })
+  follower: Follower[];
+
+  // Thêm cascade: true để xóa liên quan đến thesis_user khi xóa Thesis
+  @OneToMany(() => Thesis_User, object => object.thesis, { cascade: ['insert', 'update', 'remove'] })
+  thesis_user: Thesis_User[];
+
+  /**
+   * Nhóm đề tài Khóa luận
+   */
+  @ManyToOne(() => ThesisGroup, data => data.thesisGroupId, { nullable: true })
+  @JoinColumn({ name: 'thesisGroupId' })
+  thesisGroup: ThesisGroup;
+
+  /**
+   * Hiển thị
+   */
+  @Column({ nullable: false, default: false })
+  isDisable: boolean;
 }

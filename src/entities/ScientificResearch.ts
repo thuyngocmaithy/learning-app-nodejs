@@ -43,12 +43,6 @@ export class ScientificResearch {
   status: Status;
 
   /**
-   * Thời gian thực hiện (có thể rỗng)
-   */
-  @Column({ nullable: true })
-  executionTime: String;
-
-  /**
    * Ngày bắt đầu (không rỗng)
    */
   @Column({ nullable: true })
