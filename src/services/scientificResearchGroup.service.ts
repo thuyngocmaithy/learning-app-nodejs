@@ -1,5 +1,5 @@
 // scientificResearchGroup.service.ts
-import { DataSource, Repository, FindOneOptions, Like, CreateDateColumn, In } from 'typeorm';
+import { DataSource, Repository, FindOneOptions, Like, CreateDateColumn, In, LessThanOrEqual, MoreThan, MoreThanOrEqual, LessThan, IsNull } from 'typeorm';
 import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 import { Faculty } from '../entities/Faculty';
 import { User } from '../entities/User';
@@ -8,13 +8,11 @@ import { Status } from '../entities/Status';
 export class ScientificResearchGroupService {
   private scientificResearchGroupRepository: Repository<ScientificResearchGroup>;
   private facultyRepository: Repository<Faculty>;
-  private userRepository: Repository<User>;
   private statusRepository: Repository<Status>;
 
   constructor(dataSource: DataSource) {
     this.scientificResearchGroupRepository = dataSource.getRepository(ScientificResearchGroup);
     this.facultyRepository = dataSource.getRepository(Faculty);
-    this.userRepository = dataSource.getRepository(User);
     this.statusRepository = dataSource.getRepository(Status);
   }
 
@@ -46,6 +44,8 @@ export class ScientificResearchGroupService {
       finishYear: scientificResearchGroupData.finishYear,
       faculty: faculty,
       status: status,
+      startCreateSRDate: scientificResearchGroupData.startCreateSRDate,
+      endCreateSRDate: scientificResearchGroupData.endCreateSRDate,
       createUser: scientificResearchGroupData.createUserId,
       lastModifyUser: scientificResearchGroupData.lastModifyUserId,
     });
@@ -70,14 +70,31 @@ export class ScientificResearchGroupService {
 
 
     // Merge dữ liệu mới vào đối tượng đã tìm thấy
-    SRGUpdate.scientificResearchGroupName = data.scientificResearchGroupName;
-    SRGUpdate.startYear = data.startYear;
-    SRGUpdate.finishYear = data.finishYear;
-    SRGUpdate.faculty = faculty;
-    SRGUpdate.status = status;
-    SRGUpdate.lastModifyUser = data.lastModifyUserId;
+    data.faculty = faculty;
+    data.status = status;
 
+    this.scientificResearchGroupRepository.merge(SRGUpdate, data);
     return this.scientificResearchGroupRepository.save(SRGUpdate);
+  }
+
+  async updateMulti(scientificResearchGroupId: string[], data: Partial<ScientificResearchGroup>): Promise<ScientificResearchGroup[] | null> {
+    // Tìm tất cả các bản ghi với scientificResearchId trong mảng
+    const scientificResearchGroupList = await this.scientificResearchGroupRepository.find({
+      where: { scientificResearchGroupId: In(scientificResearchGroupId) }
+    });
+
+    // Nếu không tìm thấy bản ghi nào
+    if (scientificResearchGroupList.length === 0) {
+      return null;
+    }
+
+    // Cập nhật từng bản ghi
+    scientificResearchGroupList.forEach((scientificResearchGroup) => {
+      this.scientificResearchGroupRepository.merge(scientificResearchGroup, data);
+    });
+
+    // Lưu tất cả các bản ghi đã cập nhật
+    return this.scientificResearchGroupRepository.save(scientificResearchGroupList);
   }
 
   async delete(scientificResearchGroupIds: string[]): Promise<boolean> {
@@ -102,39 +119,76 @@ export class ScientificResearchGroupService {
     }
 
     // Format the new ID
-    return `${facultyId}RTG${numericPart.toString().padStart(3, '0')}`;
+    return `${facultyId}SRG${numericPart.toString().padStart(3, '0')}`;
   }
 
-  async getWhere(condition: Partial<ScientificResearchGroup>): Promise<ScientificResearchGroup[]> {
-    const whereCondition: any = {};
+  async getWhere(condition: any): Promise<ScientificResearchGroup[]> {
+    const queryBuilder = this.scientificResearchGroupRepository.createQueryBuilder('srg');
 
+    // Kiểm tra và thêm điều kiện faculty nếu có
     if (condition.faculty) {
-      whereCondition.faculty = { facultyId: condition.faculty }
+      queryBuilder.andWhere('srg.facultyId = :facultyId', { facultyId: condition.faculty });
     }
 
+    // Kiểm tra và thêm điều kiện status nếu có
     if (condition.status) {
-      whereCondition.status = { statusId: condition.status }
+      queryBuilder.andWhere('srg.statusId = :statusId', { statusId: condition.status });
     }
 
+    // Kiểm tra và thêm điều kiện scientificResearchGroupId
     if (condition.scientificResearchGroupId) {
-      whereCondition.scientificResearchGroupId = Like(`%${condition.scientificResearchGroupId}%`);
+      queryBuilder.andWhere('srg.scientificResearchGroupId LIKE :scientificResearchGroupId', { scientificResearchGroupId: `%${condition.scientificResearchGroupId}%` });
     }
 
+    // Kiểm tra và thêm điều kiện scientificResearchGroupName
     if (condition.scientificResearchGroupName) {
-      whereCondition.scientificResearchGroupName = Like(`%${condition.scientificResearchGroupName}%`);
+      queryBuilder.andWhere('srg.scientificResearchGroupName LIKE :scientificResearchGroupName', { scientificResearchGroupName: `%${condition.scientificResearchGroupName}%` });
     }
 
+    // Kiểm tra và thêm điều kiện startYear
     if (condition.startYear) {
-      whereCondition.startYear = Like(`%${condition.startYear}%`);
+      queryBuilder.andWhere('srg.startYear LIKE :startYear', { startYear: `%${condition.startYear}%` });
     }
 
+    // Kiểm tra và thêm điều kiện finishYear
     if (condition.finishYear) {
-      whereCondition.startYear = Like(`%${condition.finishYear}%`);
+      queryBuilder.andWhere('srg.finishYear LIKE :finishYear', { finishYear: `%${condition.finishYear}%` });
     }
 
-    return this.scientificResearchGroupRepository.find({
-      where: whereCondition,
-      relations: ['status', 'faculty', 'createUser', 'lastModifyUser']
-    });
+    // Kiểm tra và xử lý condition.stillValue
+    if (condition.stillValue) {
+      const currentDate = new Date();
+      queryBuilder.andWhere(
+        '(srg.startCreateSRDate IS NULL OR srg.startCreateSRDate <= :currentDate)',
+        { currentDate }
+      );
+      queryBuilder.andWhere(
+        '(srg.endCreateSRDate IS NULL OR srg.startCreateSRDate > :currentDate)',
+        { currentDate }
+      );
+    }
+
+    // Kiểm tra và xử lý condition.disabled
+    if (condition.disabled) {
+      queryBuilder.andWhere(
+        '(srg.isDisable <= :disabled)',
+        { disabled: condition.disabled }
+      );
+    }
+
+
+    // Thêm mối quan hệ cần lấy
+    queryBuilder.leftJoinAndSelect('srg.status', 'status')
+      .leftJoinAndSelect('srg.faculty', 'faculty')
+      .leftJoinAndSelect('srg.createUser', 'createUser')
+      .leftJoinAndSelect('srg.lastModifyUser', 'lastModifyUser');
+
+    // Thực thi truy vấn và trả về kết quả
+    const result = await queryBuilder.getMany();
+    return result;
   }
+
+
+
+
 }

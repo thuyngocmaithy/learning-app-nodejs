@@ -35,7 +35,6 @@ export class RequestHandler {
             if (result) {
                 return RequestHandler.sendResponse(res, StatusCodes.OK, "success", result);
             }
-            return RequestHandler.sendResponse(res, StatusCodes.NOT_FOUND, "error", null, "Entity not found");
         } catch (error) {
             console.error("Get By ID Error:", error);
             return RequestHandler.sendResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, "error", null, (error as Error).message);
@@ -49,7 +48,7 @@ export class RequestHandler {
     ) {
         try {
             const condition = req.query as Partial<T>;
-            
+
             // Loại bỏ chuỗi 'undefined' từ các thuộc tính của `condition`
             for (const key in condition) {
                 if (condition[key] === 'undefined') {

@@ -47,6 +47,20 @@ export class ScientificResearchGroup {
   @JoinColumn({ name: 'facultyId' })
   faculty: Faculty;
 
+  /**
+   * Tạo đề tài từ ngày
+   * Nhớ sửa lại nullable: false
+   */
+  @Column({ nullable: true })
+  startCreateSRDate: Date;
+
+  /**
+   * Tạo đề tài đến ngày
+   * Nhớ sửa lại nullable: false
+   */
+  @Column({ nullable: true })
+  endCreateSRDate: Date;
+
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
@@ -73,4 +87,10 @@ export class ScientificResearchGroup {
    */
   @UpdateDateColumn()
   lastModifyDate: Date;
+
+  /**
+   * Hiển thị
+   */
+  @Column({ nullable: false, default: false })
+  isDisable: boolean;
 }

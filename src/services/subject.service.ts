@@ -1,30 +1,15 @@
 // src/services/subject.service.ts
-import { Repository, DataSource, FindOneOptions, In, MoreThan, LessThanOrEqual } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
 import { Subject } from '../entities/Subject';
-import { User } from '../entities/User';
-import { AppDataSource } from '../data-source';
-import { Cycle } from '../entities/Cycle';
-import { StudyFrame_Faculty_Cycle } from '../entities/StudyFrame_Faculty_Cycle';
-import { StudyFrame_Component } from '../entities/StudyFrame';
 import { Subject_StudyFrameComp } from '../entities/Subject_StudyFrameComp';
 
 export class SubjectService {
   private subjectRepository: Repository<Subject>;
-  private userRepository: Repository<User>;
-  private cycleRepository: Repository<Cycle>;
-  private studyFrame_Faculty_Cycle_Repository: Repository<StudyFrame_Faculty_Cycle>;
-  private studyFrameComponentRepository: Repository<StudyFrame_Component>;
-  private Subject_StudyFrameComp_Repository: Repository<Subject_StudyFrameComp>;
   private dataSource: DataSource;
 
 
   constructor(dataSource: DataSource) {
     this.subjectRepository = dataSource.getRepository(Subject);
-    this.userRepository = AppDataSource.getRepository(User);
-    this.cycleRepository = AppDataSource.getRepository(Cycle);
-    this.studyFrame_Faculty_Cycle_Repository = AppDataSource.getRepository(StudyFrame_Faculty_Cycle);
-    this.studyFrameComponentRepository = dataSource.getRepository(StudyFrame_Component);
-    this.Subject_StudyFrameComp_Repository = dataSource.getRepository(Subject_StudyFrameComp);
     this.dataSource = dataSource;
   }
 

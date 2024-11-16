@@ -13,6 +13,7 @@ export class ScientificResearchGroupController {
 
   public getAllScientificResearchGroups = (req: Request, res: Response) => RequestHandler.getAll<ScientificResearchGroup>(req, res, this.scientificResearchGroupService);
   public getScientificResearchGroupById = (req: Request, res: Response) => RequestHandler.getById<ScientificResearchGroup>(req, res, this.scientificResearchGroupService);
+  public updateScientificResearchGroupMulti = (req: Request, res: Response) => RequestHandler.updateMulti<ScientificResearchGroup>(req, res, this.scientificResearchGroupService);
   public createScientificResearchGroup = (req: Request, res: Response) => RequestHandler.create<ScientificResearchGroup>(req, res, this.scientificResearchGroupService);
   public updateScientificResearchGroup = (req: Request, res: Response) => RequestHandler.update<ScientificResearchGroup>(req, res, this.scientificResearchGroupService);
   public deleteScientificResearchGroup = (req: Request, res: Response) => RequestHandler.delete(req, res, this.scientificResearchGroupService);

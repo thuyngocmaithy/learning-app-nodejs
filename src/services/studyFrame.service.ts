@@ -4,14 +4,14 @@ import { DataSource, In, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
 import { StudyFrame, StudyFrame_Component } from '../entities/StudyFrame';
 import { User } from '../entities/User';
 import { Cycle } from '../entities/Cycle';
-import { StudyFrame_Faculty_Cycle } from '../entities/StudyFrame_Faculty_Cycle';
 import { AppDataSource } from '../data-source';
+import { Faculty } from '../entities/Faculty';
 
 export class StudyFrameService {
   private studyFrameRepository: Repository<StudyFrame>;
   private userRepository: Repository<User>;
   private cycleRepository: Repository<Cycle>;
-  private studyFrame_Faculty_Cycle_Repository: Repository<StudyFrame_Faculty_Cycle>;
+  private facultyRepository: Repository<Faculty>;
   private studyFrameComponentRepository: Repository<StudyFrame_Component>;
   private dataSource: DataSource;
 
@@ -19,30 +19,67 @@ export class StudyFrameService {
     this.studyFrameRepository = dataSource.getRepository(StudyFrame);
     this.userRepository = AppDataSource.getRepository(User);
     this.cycleRepository = AppDataSource.getRepository(Cycle);
-    this.studyFrame_Faculty_Cycle_Repository = AppDataSource.getRepository(StudyFrame_Faculty_Cycle);
+    this.facultyRepository = AppDataSource.getRepository(Faculty);
     this.studyFrameComponentRepository = dataSource.getRepository(StudyFrame_Component);
     this.dataSource = dataSource;
   }
 
-  async create(data: Partial<StudyFrame>): Promise<StudyFrame> {
-    const studyFrame = this.studyFrameRepository.create(data);
+  async create(data: any): Promise<StudyFrame> {
+    // Tìm entity cycle
+    const cycle = await this.cycleRepository.findOne({ where: { cycleId: data.cycleId } });
+    if (!cycle) {
+      throw new Error('SemesterService - create - Not found cycle');
+    }
+
+    // Tìm entity faculty update theo id
+    const faculty = await this.facultyRepository.findOne({ where: { facultyId: data.facultyId } });
+    if (!faculty) {
+      throw new Error('SemesterService - create - Not found cycle');
+    }
+
+    const dataCreate = {
+      frameId: data.frameId,
+      frameName: data.frameName,
+      cycle: cycle,
+      faculty: faculty
+    }
+
+    const studyFrame = this.studyFrameRepository.create(dataCreate);
     return this.studyFrameRepository.save(studyFrame);
   }
 
   async getAll(): Promise<StudyFrame[]> {
-    return this.studyFrameRepository.find();
+    return this.studyFrameRepository.find({ relations: ['cycle', 'faculty'] });
   }
 
   async getById(id: string): Promise<StudyFrame | null> {
     return this.studyFrameRepository.findOne({ where: { frameId: id } });
   }
 
-  async update(id: string, data: Partial<StudyFrame>): Promise<StudyFrame | null> {
+  async update(id: string, data: any): Promise<StudyFrame | null> {
     const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: id } });
     if (!studyFrame) {
       return null;
     }
-    this.studyFrameRepository.merge(studyFrame, data);
+    // Tìm entity cycle
+    const cycle = await this.cycleRepository.findOne({ where: { cycleId: data.cycleId } });
+    if (!cycle) {
+      throw new Error('StudyFrameService - update - Not found cycle');
+    }
+
+    // Tìm entity faculty update theo id
+    const faculty = await this.facultyRepository.findOne({ where: { facultyId: data.facultyId } });
+    if (!faculty) {
+      throw new Error('StudyFrameService - update - Not found faculty');
+    }
+
+    const dataUpdate = {
+      frameName: data.frameName,
+      cycle: cycle,
+      faculty: faculty
+    }
+
+    this.studyFrameRepository.merge(studyFrame, dataUpdate);
     return this.studyFrameRepository.save(studyFrame);
   }
 
@@ -51,50 +88,8 @@ export class StudyFrameService {
     return result.affected !== 0;
   }
 
-  // async getStudyFrameAndSubjectByUserMajorAndFaculty(userId: string): Promise<any> {
-  //   try {
-  //     const query = 'CALL GetStudyFrameAndSubjectByUserMajorAndFaculty(?)';
-  //     const result = await this.dataSource.query(query, [userId]);
-
-  //     console.log('Raw result from stored procedure:', JSON.stringify(result, null, 1));
-
-  //     // The result is now an array with a single element containing the query results
-  //     const frames = result[0];
-  //     return frames.map((frame: any) => {
-  //       try {
-  //         let parsedSubjectInfo = [];
-  //         if (frame.subjectInfo) {
-  //           if (Array.isArray(frame.subjectInfo) && frame.subjectInfo.length === 1 && frame.subjectInfo[0] === null) {
-  //             // Handle the case where subjectInfo is [null]
-  //             parsedSubjectInfo = [];
-  //           } else if (typeof frame.subjectInfo === 'string') {
-  //             parsedSubjectInfo = JSON.parse(frame.subjectInfo);
-  //           } else if (Array.isArray(frame.subjectInfo)) {
-  //             parsedSubjectInfo = frame.subjectInfo;
-  //           }
-  //         }
-  //         return {
-  //           ...frame,
-  //           subjectInfo: parsedSubjectInfo
-  //         };
-  //       } catch (parseError) {
-  //         console.error('Error processing subjectInfo:', parseError, 'Raw data:', frame.subjectInfo);
-  //         return {
-  //           ...frame,
-  //           subjectInfo: [] // Return an empty array if processing fails
-  //         };
-  //       }
-  //     });
-  //   } catch (error) {
-  //     console.error('Error calling stored procedure GetStudyFrameAndSubjectByUserMajorAndFaculty', error);
-  //     throw new Error('Error calling stored procedure');
-  //   }
-  // }
-
 
   // Gọi store lấy danh sách môn theo khung
-
-
   async GetSubjectByMajor(userId: string): Promise<any> {
     try {
       const user = await this.userRepository.findOne({
@@ -119,18 +114,17 @@ export class StudyFrameService {
       }
 
       // Tìm khung đào tạo theo ngành và chu kỳ
-      const studyFrame_Faculty_Cycle = await this.studyFrame_Faculty_Cycle_Repository.findOne({
+      const studyFrame = await this.studyFrameRepository.findOne({
         where: {
           faculty: user.faculty,
           cycle: cycle
-        },
-        relations: ['studyFrame']
+        }
       }
       )
 
       const query = 'CALL GetSubjectByMajor(?,?)';
       const [results] = await this.dataSource.query(query,
-        [user.major.majorId, studyFrame_Faculty_Cycle?.studyFrame.frameId]
+        [user.major.majorId, studyFrame?.frameId]
       );
 
       // MySQL returns an array of arrays for stored procedures
@@ -174,19 +168,18 @@ export class StudyFrameService {
       }
 
       // Tìm khung đào tạo theo ngành và chu kỳ
-      const studyFrame_Faculty_Cycle = await this.studyFrame_Faculty_Cycle_Repository.findOne({
+      const studyFrame = await this.studyFrameRepository.findOne({
         where: {
           faculty: user.faculty,
           cycle: cycle
         },
-        relations: ['studyFrame']
       }
       )
 
       const query = 'CALL KhungCTDT(?)';
       const [results] = await this.dataSource.query(
         query,
-        [studyFrame_Faculty_Cycle?.studyFrame.frameId]
+        [studyFrame?.frameId]
       );
 
       const resultSet = results[0];
@@ -229,22 +222,21 @@ export class StudyFrameService {
       }
 
       // Tìm khung đào tạo theo ngành và chu kỳ
-      const studyFrame_Faculty_Cycle = await this.studyFrame_Faculty_Cycle_Repository.findOne({
+      const studyFrame = await this.studyFrameRepository.findOne({
         where: {
           faculty: { facultyId: facultyId },
           cycle: cycle
         },
-        relations: ['studyFrame']
       })
 
-      if (!studyFrame_Faculty_Cycle) {
+      if (!studyFrame) {
         return [];
       }
 
       const query = 'CALL KhungCTDT(?)';
       const [results] = await this.dataSource.query(
         query,
-        [studyFrame_Faculty_Cycle?.studyFrame.frameId]
+        [studyFrame?.frameId]
       );
 
       const resultSet = results[0];

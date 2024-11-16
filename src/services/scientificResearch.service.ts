@@ -1,5 +1,5 @@
 // scientificResearch.service.ts
-import { DataSource, Repository, Like, FindManyOptions, In } from 'typeorm';
+import { DataSource, Repository, Like, FindManyOptions, In, MoreThan, LessThanOrEqual } from 'typeorm';
 import { ScientificResearch } from '../entities/ScientificResearch';
 import { Faculty } from '../entities/Faculty';
 import { User } from '../entities/User';
@@ -26,7 +26,9 @@ export class ScientificResearchService {
 	}
 
 	async getAll(): Promise<ScientificResearch[]> {
-		return this.scientificResearchRepository.find({ relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'] });
+		return this.scientificResearchRepository.find({
+			relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower', 'scientificResearchGroup']
+		});
 	}
 
 	async getById(scientificResearchId: string): Promise<ScientificResearch | null> {
@@ -185,20 +187,23 @@ export class ScientificResearchService {
 
 	async getWhere(condition: any): Promise<ScientificResearch[]> {
 		const whereCondition: any = {};
-
-		if(condition.scientificResearchId){
+		if (condition.stillValue) {
+			whereCondition.scientificResearchGroup = { startCreateSRDate: LessThanOrEqual(new Date()) };
+			whereCondition.scientificResearchGroup = { endCreateSRDate: MoreThan(new Date()) };
+		}
+		if (condition.scientificResearchId) {
 			whereCondition.scientificResearchId = Like(`%${condition.scientificResearchId}%`);
 		}
-		if(condition.scientificResearchName){
+		if (condition.scientificResearchName) {
 			whereCondition.scientificResearchName = Like(`%${condition.scientificResearchName}%`);
 		}
-		if(condition.level){
+		if (condition.level) {
 			whereCondition.level = condition.level;
 		}
-		if(condition.status){
-			whereCondition.status = {statusId: condition.status};
+		if (condition.status) {
+			whereCondition.status = { statusId: condition.status };
 		}
-		if(condition.isDisable){
+		if (condition.isDisable) {
 			whereCondition.isDisable = condition.isDisable;
 		}
 		if (condition.instructorId) {

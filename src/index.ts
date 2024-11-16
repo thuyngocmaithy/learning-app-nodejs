@@ -48,7 +48,6 @@ import cycleRoutes from './routes/cycle.route';
 import studyFrameComponentRoutes from './routes/studyFrame_component.route';
 import frameStructureRoutes from './routes/frameStucture.route';
 import subject_studyFrameCompRoutes from './routes/subject_studyFrameComp.route';
-import studyFrame_faculty_cycle from './routes/studyFrame_faculty_cycle.route';
 
 
 // Nạp các biến môi trường từ file .env
@@ -57,9 +56,11 @@ dotenv.config();
 // Khởi tạo ứng dụng Express
 const app = express();
 
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['*'];
+
 // Cấu hình CORS
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*', // Cho phép từ origin cụ thể
+    origin: allowedOrigins, // Cho phép từ origin cụ thể
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Các phương thức HTTP được phép
     allowedHeaders: ['X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version', 'Authorization',], // Các header được phép
     credentials: true
@@ -76,7 +77,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
     path: '/socket.io',
     cors: {
-        origin: process.env.CORS_ORIGIN || '*', // Thiết lập origin frontend
+        origin: allowedOrigins, // Thiết lập origin frontend
         methods: ["GET", "POST"],
     },
     transports: ["websocket"],
@@ -159,7 +160,6 @@ app.use('/api/mega', megaRoutes);
 app.use('/api/cycles', cycleRoutes);
 app.use('/api/frameStructures', frameStructureRoutes);
 app.use('/api/subject_studyFrameComps', subject_studyFrameCompRoutes);
-app.use('/api/studyFrame_faculty_cycles', studyFrame_faculty_cycle);
 
 
 

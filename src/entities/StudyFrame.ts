@@ -1,6 +1,8 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, PrimaryColumn, OneToMany } from 'typeorm';
 import { Major } from './Major';
 import { Subject_StudyFrameComp } from './Subject_StudyFrameComp';
+import { Faculty } from './Faculty';
+import { Cycle } from './Cycle';
 
 /**
  * Thực thể Khung đào tạo
@@ -18,6 +20,22 @@ export class StudyFrame {
    */
   @Column({ nullable: false })
   frameName: string;
+
+  /**
+   * Mã ngành: Áp dụng cho ngành nào
+   * Nhớ đổi lại nullable false
+   */
+  @ManyToOne(() => Faculty, faculty => faculty.facultyId, { nullable: true })
+  @JoinColumn({ name: 'facultyId' })
+  faculty: Faculty;
+
+  /**
+   * Chu kỳ: Áp dụng cho chu kỳ nào
+   * Nhớ đổi lại nullable false
+   */
+  @ManyToOne(() => Cycle, cycle => cycle.cycleId, { nullable: true })
+  @JoinColumn({ name: 'cycleId' })
+  cycle: Cycle;
 }
 
 /**

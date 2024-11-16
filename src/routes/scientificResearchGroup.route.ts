@@ -8,6 +8,7 @@ const scientificResearchGroupRoute = Router();
 const scientificResearchGroupController = new ScientificResearchGroupController(AppDataSource);
 
 scientificResearchGroupRoute.get('/', scientificResearchGroupController.getAllScientificResearchGroups);
+scientificResearchGroupRoute.put('/updateSRGMulti/:ids', scientificResearchGroupController.updateScientificResearchGroupMulti);
 scientificResearchGroupRoute.get('/getWhere', scientificResearchGroupController.getSRGWhere);
 scientificResearchGroupRoute.get('/:id', scientificResearchGroupController.getScientificResearchGroupById);
 scientificResearchGroupRoute.post('/', scientificResearchGroupController.createScientificResearchGroup);
