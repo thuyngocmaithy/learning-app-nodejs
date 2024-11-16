@@ -28,6 +28,7 @@ export class FacultyController {
         res.status(500).json({ success: false, message: err.message });
       });
   }
+  public getFacultyWhere = (req: Request, res: Response) => RequestHandler.getWhere<Faculty>(req, res, this.facultyService);
   public createFaculty = (req: Request, res: Response) => RequestHandler.create<Faculty>(req, res, this.facultyService);
   public updateFaculty = (req: Request, res: Response) => RequestHandler.update<Faculty>(req, res, this.facultyService);
   public deleteFaculty = (req: Request, res: Response) => RequestHandler.delete(req, res, this.facultyService);

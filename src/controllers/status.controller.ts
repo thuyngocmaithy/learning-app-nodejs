@@ -30,4 +30,5 @@ export class StatusController {
   public createStatus = (req: Request, res: Response) => RequestHandler.create<Status>(req, res, this.statusService);
   public updateStatus = (req: Request, res: Response) => RequestHandler.update<Status>(req, res, this.statusService);
   public deleteStatus = (req: Request, res: Response) => RequestHandler.delete(req, res, this.statusService);
+  public getStatusWhere = (req: Request, res: Response) => RequestHandler.getWhere<Status>(req,res, this.statusService);
 }

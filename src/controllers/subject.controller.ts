@@ -40,5 +40,7 @@ export class SubjectController {
       res.status(500).json({ message: 'Unable to fetch subjects detail.' });
     }
   };
+
+  public getSubjectWhere = (req: Request, res: Response) => RequestHandler.getWhere<Subject>(req,res, this.subjectService);
 }
 

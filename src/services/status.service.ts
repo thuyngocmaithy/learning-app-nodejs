@@ -1,5 +1,5 @@
 // status.service.ts
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, Like, Repository } from 'typeorm';
 import { Status } from '../entities/Status';
 
 export class StatusService {
@@ -15,7 +15,7 @@ export class StatusService {
       .select("MAX(status.orderNo)", "maxOrderNo")
       .where("status.type = :type", { type })
       .getRawOne();
-      
+
     return result?.maxOrderNo ?? 0;
   }
 
@@ -51,5 +51,25 @@ export class StatusService {
 
   async getByType(type: 'Tiến độ đề tài NCKH' | 'Tiến độ khóa luận' | 'Tiến độ nhóm đề tài NCKH'): Promise<Status[]> {
     return this.statusRepository.find({ where: { type } });
+  }
+
+  async getWhere(condition: any): Promise<Status[]> {
+    const whereCondition: any = {};
+
+    if (condition.statusId) {
+      whereCondition.statusId = condition.statusId;
+    }
+
+    if (condition.statusName) {
+      whereCondition.statusName = Like(`%${condition.statusName}%`);
+    }
+
+    if (condition.type) {
+      whereCondition.type = condition.type;
+    }
+
+    return this.statusRepository.find({
+      where: whereCondition,
+    });
   }
 }
