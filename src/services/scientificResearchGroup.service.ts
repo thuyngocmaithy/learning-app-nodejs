@@ -17,7 +17,11 @@ export class ScientificResearchGroupService {
   }
 
   async getAll(): Promise<ScientificResearchGroup[]> {
-    return this.scientificResearchGroupRepository.find({ relations: ['status', 'faculty', 'createUser', 'lastModifyUser'] });
+    return this.scientificResearchGroupRepository.find(
+      {
+        order: { createDate: 'DESC' },
+        relations: ['status', 'faculty', 'createUser', 'lastModifyUser']
+      });
   }
 
   async getById(scientificResearchGroupId: string): Promise<ScientificResearchGroup | null> {
@@ -182,6 +186,8 @@ export class ScientificResearchGroupService {
       .leftJoinAndSelect('srg.faculty', 'faculty')
       .leftJoinAndSelect('srg.createUser', 'createUser')
       .leftJoinAndSelect('srg.lastModifyUser', 'lastModifyUser');
+
+    queryBuilder.orderBy('srg.createDate', 'DESC');
 
     // Thực thi truy vấn và trả về kết quả
     const result = await queryBuilder.getMany();
