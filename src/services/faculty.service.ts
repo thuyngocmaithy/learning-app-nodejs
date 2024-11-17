@@ -35,4 +35,22 @@ export class FacultyService {
     const result = await this.facultyRepository.delete({ facultyId: In(facultyIds) });
     return result.affected !== 0;
   }
+
+  async getWhere(condition: Partial<Faculty>): Promise<Faculty[]> {
+    const queryBuilder = this.facultyRepository.createQueryBuilder('faculty');
+    
+    if (condition.facultyId) {
+        queryBuilder.andWhere('faculty.facultyId LIKE :facultyId', { 
+            facultyId: `%${condition.facultyId}%` 
+        });
+    }
+    
+    if (condition.facultyName) {
+        queryBuilder.andWhere('faculty.facultyName LIKE :facultyName', { 
+            facultyName: `%${condition.facultyName}%` 
+        });
+    }
+    
+    return queryBuilder.getMany();
+  }
 }

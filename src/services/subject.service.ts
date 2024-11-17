@@ -114,4 +114,77 @@ export class SubjectService {
       throw new Error('Unable to fetch subjects. Please try again later.'); // Optionally, you can throw a custom error
     }
   }
+  async getWhere(condition: any): Promise<any[]> {
+    const queryBuilder = this.dataSource.createQueryBuilder()
+      .select([
+        's.subjectId AS subjectId',
+        's.subjectName as subjectName',
+        's.creditHour as creditHour',
+        's.isCompulsory as isCompulsory',
+        'sb.subjectId AS subjectBeforeId',
+        'se.subjectId AS subjectEqualId',
+        // Dùng GROUP_CONCAT để gom các giá trị cho majorId và majorName
+        'GROUP_CONCAT(DISTINCT m.majorId) AS majorId',
+        'GROUP_CONCAT(DISTINCT m.majorName) AS majorName',
+        // Dùng GROUP_CONCAT để gom các giá trị cho facultyId và facultyName
+        'GROUP_CONCAT(DISTINCT f.facultyId) AS facultyId',
+        'GROUP_CONCAT(DISTINCT f.facultyName) AS facultyName',
+        // Các trường đã sử dụng GROUP_CONCAT
+        'GROUP_CONCAT(DISTINCT sfc.frameComponentId) AS frameComponentId',  // Group frameComponentId
+        'GROUP_CONCAT(DISTINCT sfc.frameComponentName) AS frameComponentName',  // Group frameComponentName
+        'GROUP_CONCAT(DISTINCT sfc.description) AS description',  // Group descriptions
+        's.createDate as createDate',
+        's.createUserId as createUserId',
+        's.lastModifyDate as lastModifyDate',
+        's.lastModifyUserId as lastModifyUserId',
+      ])
+      .from(Subject, 's')
+      .leftJoin('s.subjectBefore', 'sb')
+      .leftJoin('s.subjectEqual', 'se')
+      .leftJoin(Subject_StudyFrameComp, 'ss', 'ss.subjectId = s.subjectId')
+      .leftJoin('ss.studyFrameComponent', 'sfc')
+      .leftJoin('sfc.major', 'm')
+      .leftJoin('m.faculty', 'f');
+
+    // Add conditions dynamically
+    if (condition.subjectId) {
+      queryBuilder.andWhere('s.subjectId = :subjectId', { subjectId: condition.subjectId });
+    }
+
+    if (condition.subjectName) {
+      queryBuilder.andWhere('s.subjectName LIKE :subjectName', { subjectName: `%${condition.subjectName}%` });
+    }
+
+    if (condition.creditHour) {
+      queryBuilder.andWhere('s.creditHour = :creditHour', { creditHour: condition.creditHour });
+    }
+
+    if (condition.isCompulsory !== undefined) {
+      queryBuilder.andWhere('s.isCompulsory = :isCompulsory', { isCompulsory: condition.isCompulsory });
+    }
+
+    if (condition.subjectBeforeId) {
+      queryBuilder.andWhere('sb.subjectId = :subjectBeforeId', { subjectBeforeId: condition.subjectBeforeId });
+    }
+
+    if (condition.majorId) {
+      queryBuilder.andWhere('m.majorId = :majorId', { majorId: condition.majorId });
+    }
+
+    if (condition.facultyId) {
+      queryBuilder.andWhere('f.facultyId = :facultyId', { facultyId: condition.facultyId });
+    }
+
+    if (condition.frameComponentId) {
+      queryBuilder.andWhere('sfc.frameComponentId = :frameComponentId', { frameComponentId: condition.frameComponentId });
+    }
+
+    queryBuilder.groupBy('s.subjectId'); // Đảm bảo mỗi môn học chỉ xuất hiện một lần
+
+    // Execute the query
+    return queryBuilder.getRawMany();
+  }
+
+
+
 }

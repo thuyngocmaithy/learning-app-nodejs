@@ -1,8 +1,8 @@
 // major.service.ts
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, Like, Repository } from 'typeorm';
 import { Major } from '../entities/Major';
 import { User } from '../entities/User';
-import { Faculty} from '../entities/Faculty';
+import { Faculty } from '../entities/Faculty';
 
 export class MajorService {
   private majorRepository: Repository<Major>;
@@ -17,9 +17,9 @@ export class MajorService {
 
   async getAll(): Promise<Major[]> {
     return this.majorRepository.find({
-        relations: ['faculty'], 
+      relations: ['faculty'],
     });
-}
+  }
   async getById(majorId: string): Promise<Major | null> {
     return this.majorRepository.findOneBy({ majorId });
   }
@@ -41,22 +41,22 @@ export class MajorService {
       throw new Error('Faculty ID is required');
     }
 
-    const faculty = await this.facultyRepository.findOneBy({ 
-      facultyId: data.faculty.facultyId 
+    const faculty = await this.facultyRepository.findOneBy({
+      facultyId: data.faculty.facultyId
     });
-    
+
     if (!faculty) {
       throw new Error('Faculty not found');
     }
 
     const maxOrderNo = await this.getMaxOrderNoByFaculty(faculty.facultyId);
-    
+
     const major = this.majorRepository.create({
       ...data,
       faculty: faculty,
       orderNo: maxOrderNo + 1
     });
-    
+
     return this.majorRepository.save(major);
   }
 
@@ -86,6 +86,14 @@ export class MajorService {
         throw new Error('Not found entity user');
       }
       whereCondition.faculty = { facultyId: user.faculty.facultyId }
+    }
+
+    if (condition.majorId) {
+      whereCondition.majorId = condition.majorId;
+    }
+
+    if (condition.majorName) {
+      whereCondition.majorName = Like(`%${condition.majorName}%`); // Tìm kiếm tương đối
     }
 
     if (condition.facultyId) {
