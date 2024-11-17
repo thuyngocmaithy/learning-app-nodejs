@@ -20,8 +20,33 @@ export const setupNotificationSocket = (io: Server) => {
         // Lắng nghe sự kiện sendNotification để gửi thông báo đến các room cụ thể
         socket.on('sendNotification', async ({ room, notificationData }: { room: string; notificationData: Notification }) => {
             try {
+                // Kiểm tra nếu url === /DeTaiNCKH/DeTaiNCKHThamGia hoặc /DeTaiKhoaLuan/DeTaiKhoaLuanThamGia
+                // => Update các thông báo có cùng url trước đó thành disable = 1
+                const urlCheck = notificationData.url;
+                const urlPath = urlCheck.split('?')[0];
+                let disabledNotifications: any = [];
+
+                if (urlPath === '/DeTaiNCKH/DeTaiNCKHThamGia' || '/DeTaiKhoaLuan/DeTaiKhoaLuanThamGia') {
+                    // Tìm các thông báo có cùng url
+                    const listNotiUpdate = await notificationService.getWhere({ url: urlCheck });
+                    if (listNotiUpdate.length > 0) {
+                        // Cập nhật tất cả các thông báo tìm được
+                        disabledNotifications = await Promise.all(
+                            listNotiUpdate.map(async (noti) => {
+                                noti.disabled = true; // Đặt disabled = true
+                                await notificationService.update(noti.id, { disabled: true });
+                                return noti; // Lưu thông báo đã cập nhật
+                            })
+                        );
+                    }
+                }
+
                 const createdNotification = await notificationService.create(notificationData)
-                notificationIo.to(room).emit('receiveNotification', createdNotification);
+                // Gửi thông báo mới và danh sách thông báo bị ẩn
+                notificationIo.to(room).emit('receiveNotification', {
+                    newNotification: createdNotification,
+                    disabledNotifications,
+                });
             } catch (error) {
                 console.error('Lỗi khi gửi thông báo:', error);
             }

@@ -13,15 +13,14 @@ export class SemesterService {
   }
 
   async create(data: any): Promise<Semester> {
-    const cycle = await this.cycleRepository.findOneBy({cycleId: data.cycle});
-    if(!cycle)
-    {
+    const cycle = await this.cycleRepository.findOneBy({ cycleId: data.cycle });
+    if (!cycle) {
       throw new Error('SemesterService - create - Not found cycle');
     }
 
     const newId = await this.generateNewId();
-    
-    const semesterData = {      
+
+    const semesterData = {
       semesterId: newId,
       semesterName: data.semesterName,
       cycle: cycle,
@@ -42,9 +41,8 @@ export class SemesterService {
 
   async update(semesterId: string, data: any): Promise<Semester | null> {
     // Tìm entity cycle
-    const cycle = await this.cycleRepository.findOneBy({cycleId: data.cycle});
-    if(!cycle)
-    {
+    const cycle = await this.cycleRepository.findOneBy({ cycleId: data.cycle });
+    if (!cycle) {
       throw new Error('SemesterService - create - Not found cycle');
     }
 
@@ -55,7 +53,7 @@ export class SemesterService {
     }
 
     // Tạo semesterData update
-    const semesterData = {      
+    const semesterData = {
       cycle: cycle,
       academicYear: data.academicYear
     }
@@ -70,21 +68,40 @@ export class SemesterService {
   }
 
   private generateNewId = async (): Promise<string> => {
-		const lastSemester = await this.semesterRepository.find({
-			order: { semesterId: 'DESC' },
+    const lastSemester = await this.semesterRepository.find({
+      order: { semesterId: 'DESC' },
       take: 1,
-		});
+    });
 
     const oneLastSemester = lastSemester.length > 0 ? lastSemester[0] : null;
 
-		let numericPart = 1;
-		if (oneLastSemester) {
-			const match = oneLastSemester.semesterId.match(/\d+$/); // Regex lấy phần số cuối cùng của chuỗi
-			const lastNumericPart = match ? parseInt(match[0], 10) : 0; // Nếu có kết quả, chuyển đổi thành số
+    let numericPart = 1;
+    if (oneLastSemester) {
+      const match = oneLastSemester.semesterId.match(/\d+$/); // Regex lấy phần số cuối cùng của chuỗi
+      const lastNumericPart = match ? parseInt(match[0], 10) : 0; // Nếu có kết quả, chuyển đổi thành số
 
-			numericPart = lastNumericPart + 1;
-		}
-		// Format the new ID
-		return `SEMESTER${numericPart.toString().padStart(3, '0')}`;
-	}
+      numericPart = lastNumericPart + 1;
+    }
+    // Format the new ID
+    return `SEMESTER${numericPart.toString().padStart(3, '0')}`;
+  }
+
+  async getWhere(condition: Partial<Semester>): Promise<Semester[]> {
+    const whereCondition: any = {};
+
+    if (condition.cycle) {
+      whereCondition.cycle = { cycleId: condition.cycle };
+    }
+
+    if (condition.academicYear) {
+      whereCondition.academicYear = condition.academicYear;
+    }
+
+    return this.semesterRepository.find({
+      where: whereCondition,
+      relations: ['cycle'],
+    });
+  }
+
+
 }

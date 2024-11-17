@@ -13,6 +13,7 @@ export class SemesterController {
   }
 
   public getAllSemesters = (req: Request, res: Response) => RequestHandler.getAll<Semester>(req, res, this.semesterService);
+  public getSemesterWhere = (req: Request, res: Response) => RequestHandler.getWhere<Semester>(req, res, this.semesterService);
   public getSemesterById = (req: Request, res: Response) => RequestHandler.getById<Semester>(req, res, this.semesterService);
   public createSemester = (req: Request, res: Response) => RequestHandler.create<Semester>(req, res, this.semesterService);
   public updateSemester = (req: Request, res: Response) => RequestHandler.update<Semester>(req, res, this.semesterService);

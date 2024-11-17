@@ -196,8 +196,8 @@ export class StudyFrameService {
   }
 
 
-  // Gọi store lấy danh sách môn theo khung bằng startYear và facultyId
-  async callKhungCTDTDepartment(startYear: number | null, facultyId: string, cycleId: string | null): Promise<any> {
+  // Tìm khung CTĐT theo năm và khoa hoặc theo cycle
+  async findKhungCTDTDepartment(startYear: number | null, facultyId: string, cycleId: string | null): Promise<StudyFrame | null> {
     try {
       let cycle;
       if (cycleId) {
@@ -229,8 +229,17 @@ export class StudyFrameService {
         },
       })
 
+      return studyFrame;
+    } catch (error) {
+      throw new Error('Lỗi khi tìm KHUNG CTDT');
+    }
+  }
+
+  async callKhungCTDTDepartment(studyFrameId: string): Promise<any> {
+    try {
+      const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: studyFrameId } });
       if (!studyFrame) {
-        return [];
+        throw new Error('Lỗi khi tìm KHUNG CTDT');
       }
 
       const query = 'CALL KhungCTDT(?)';

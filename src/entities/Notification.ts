@@ -6,7 +6,6 @@ import { User } from './User';
  * Thực thể Thông báo
  */
 @Entity()
-@Unique(["toUser", "createUser", "content"])
 export class Notification {
   /**
    * Khóa chính
@@ -47,6 +46,12 @@ export class Notification {
    */
   @Column({ default: false, nullable: false })
   isRead: boolean;
+
+  /**
+   * Trạng thái ẩn (mặc định: false, không rỗng)
+   */
+  @Column({ default: false, nullable: false })
+  disabled: boolean;
 
   /**
    * ID người tạo thông báo (tham chiếu đến thực thể User, không rỗng)
