@@ -40,29 +40,22 @@ export class StudyFrameController {
     }
   }
 
-
-  public callKhungCTDT = async (req: Request, res: Response): Promise<void> => {
+  public findKhungCTDTByUserId = async (req: Request, res: Response) => {
     try {
-      // Lấy ngành và chu kỳ học của user để tìm studyFrame
       const userId = req.query.userId as string;
       if (!userId) {
         res.status(400).json({ message: 'userId is required' });
         return;
       }
+      // Tìm khung CTDT theo userid
+      const result = await this.studyFrameService.findKhungCTDTByUserId(userId);
 
-      const result = await this.studyFrameService.callKhungCTDT(userId);
-      if (!result || result.length === 0) {
-        res.status(404).json({ message: 'No data found for KhungCTDT' });
-        return;
-      }
-      res.json(result);
+      return res.status(200).json({ message: 'success', data: result });
     } catch (error) {
-      console.error('Error in callKhungCTDT:', error);
-      res.status(500).json({
-        error: 'Error executing stored procedure khungCTDT',
-      });
+      const err = error as Error;
+      return res.status(500).json({ message: 'error', error: err.message });
     }
-  }
+  };
 
 
   public findKhungCTDTDepartment = async (req: Request, res: Response) => {
@@ -101,7 +94,7 @@ export class StudyFrameController {
   };
 
 
-  public callKhungCTDTDepartment = async (req: Request, res: Response): Promise<void> => {
+  public callKhungCTDT = async (req: Request, res: Response): Promise<void> => {
     try {
       const studyFrameId = req.query.studyFrame as string;
 
@@ -111,7 +104,7 @@ export class StudyFrameController {
       }
 
       // Gọi service và lấy kết quả
-      const result = await this.studyFrameService.callKhungCTDTDepartment(studyFrameId);
+      const result = await this.studyFrameService.callKhungCTDT(studyFrameId);
 
       if (!result || result.length === 0) {
         // Nếu không có dữ liệu, trả về mảng rỗng

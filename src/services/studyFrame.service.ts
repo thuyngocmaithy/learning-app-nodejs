@@ -143,8 +143,9 @@ export class StudyFrameService {
   };
 
 
-  // Gọi store lấy danh sách môn theo khung với userId
-  async callKhungCTDT(userId: string): Promise<any> {
+
+  // Tìm khung CTĐT theo userId
+  async findKhungCTDTByUserId(userId: string): Promise<StudyFrame | null> {
     try {
       const user = await this.userRepository.findOne({
         where: { userId: userId },
@@ -173,28 +174,12 @@ export class StudyFrameService {
           faculty: user.faculty,
           cycle: cycle
         },
-      }
-      )
-
-      const query = 'CALL KhungCTDT(?)';
-      const [results] = await this.dataSource.query(
-        query,
-        [studyFrame?.frameId]
-      );
-
-      const resultSet = results[0];
-
-      if (!resultSet || resultSet.length === 0) {
-        return [];
-      }
-
-      return results;
+      })
+      return studyFrame;
     } catch (error) {
-      console.error('Lỗi khi gọi stored procedure callKhungCTDT', error);
-      throw new Error('Lỗi khi gọi stored procedure');
+      throw new Error('Lỗi khi tìm KHUNG CTDT theo userId');
     }
   }
-
 
   // Tìm khung CTĐT theo năm và khoa hoặc theo cycle
   async findKhungCTDTDepartment(startYear: number | null, facultyId: string, cycleId: string | null): Promise<StudyFrame | null> {
@@ -235,7 +220,7 @@ export class StudyFrameService {
     }
   }
 
-  async callKhungCTDTDepartment(studyFrameId: string): Promise<any> {
+  async callKhungCTDT(studyFrameId: string): Promise<any> {
     try {
       const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: studyFrameId } });
       if (!studyFrame) {
