@@ -53,4 +53,16 @@ export class FacultyService {
     
     return queryBuilder.getMany();
   }
+
+  async importFaculty(data: any[]) {
+    
+    const facultiesToSave = data.map((facultyData) => {
+        const faculty = new Faculty();
+        faculty.facultyId = facultyData[0]; 
+        faculty.facultyName = facultyData[1]; 
+        return faculty;
+    });
+
+    await this.facultyRepository.save(facultiesToSave);
+  };
 }

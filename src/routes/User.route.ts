@@ -6,6 +6,7 @@ import { AppDataSource } from '../data-source';
 const userRouter = Router();
 const userController = new UserController(AppDataSource);
 
+userRouter.get('/getwhere', userController.getUserWhere);
 userRouter.get('/teachers', userController.getActiveNonStudents);
 userRouter.get('/students', userController.getActiveStudents);
 userRouter.get('/users-by-faculty/:facultyId', userController.getUsersByFaculty);

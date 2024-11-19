@@ -10,6 +10,8 @@ export class StatusController {
 
   constructor(dataSource: DataSource) {
     this.statusService = new StatusService(dataSource);
+    this.importStatus = this.importStatus.bind(this);
+
   }
 
   public getAllStatuses = (req: Request, res: Response) => RequestHandler.getAll<Status>(req, res, this.statusService);
@@ -30,5 +32,28 @@ export class StatusController {
   public createStatus = (req: Request, res: Response) => RequestHandler.create<Status>(req, res, this.statusService);
   public updateStatus = (req: Request, res: Response) => RequestHandler.update<Status>(req, res, this.statusService);
   public deleteStatus = (req: Request, res: Response) => RequestHandler.delete(req, res, this.statusService);
-  public getStatusWhere = (req: Request, res: Response) => RequestHandler.getWhere<Status>(req,res, this.statusService);
+  public getStatusWhere = (req: Request, res: Response) => RequestHandler.getWhere<Status>(req, res, this.statusService);
+
+  public async importStatus(req: Request, res: Response): Promise<Response<any, Record<string, any>>> {
+    try {
+      const statuses = req.body.data;
+      const createUserId = req.body.createUserId;
+  
+      if (!Array.isArray(statuses) || !createUserId) {
+        return res.status(400).json({ message: 'Dữ liệu không hợp lệ hoặc thiếu CreateUserId' });
+      }
+  
+      await this.statusService.importStatus(statuses, createUserId);
+  
+      return res.status(200).json({ message: 'Import trạng thái thành công' });
+    } catch (error: any) {
+      console.error('[StatusController - importStatus]:', error);
+      return res.status(500).json({
+        message: 'Có lỗi xảy ra khi import dữ liệu',
+        error: error.message,
+      });
+    }
+  }
+
+
 }

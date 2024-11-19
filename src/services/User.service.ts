@@ -1,5 +1,5 @@
 // user.service.ts
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, Like, Repository } from 'typeorm';
 import { User } from '../entities/User';
 
 export class UserService {
@@ -74,4 +74,69 @@ export class UserService {
       relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
     });
   }
+
+
+  async getWhere(condition: any): Promise<User[]> {
+    const whereCondition: any = {};
+
+    // Xử lý các điều kiện tìm kiếm cơ bản
+    if (condition.userId) {
+        whereCondition.userId = Like(`%${condition.userId}%`);
+    }
+    if (condition.fullname) {
+        whereCondition.fullname = Like(`%${condition.fullname}%`);
+    }
+    // if (condition.email) {
+    //     whereCondition.email = Like(`%${condition.email}%`);
+    // }
+    // if (condition.phone) {
+    //     whereCondition.phone = Like(`%${condition.phone}%`);
+    // }
+    // if (condition.isActive !== undefined) {
+    //     whereCondition.isActive = condition.isActive;
+    // }
+
+    if (condition.class !== undefined) {
+        whereCondition.class = condition.class;
+    }
+    if (condition.isStudent !== undefined) {
+        whereCondition.isStudent = condition.isStudent;
+    }
+    if (condition.facultyId) {
+        whereCondition.faculty = { facultyId: condition.facultyId };
+    }
+    if (condition.majorId) {
+        whereCondition.major = { majorId: condition.majorId };
+    }
+
+    if (condition.nien_khoa) {
+        whereCondition.nien_khoa = Like(`%${condition.nien_khoa}%`);
+    }
+
+    // Thêm điều kiện năm học
+    if (condition.firstAcademicYear) {
+        whereCondition.firstAcademicYear = condition.firstAcademicYear;
+    }
+    if (condition.lastAcademicYear) {
+        whereCondition.lastAcademicYear = condition.lastAcademicYear;
+    }
+    if (condition.academicYearRange) {
+        whereCondition.firstAcademicYear = {
+            $gte: condition.academicYearRange.start,
+        };
+        whereCondition.lastAcademicYear = {
+            $lte: condition.academicYearRange.end,
+        };
+    }
+
+    // Thực hiện truy vấn
+    return this.userRepository.find({
+        where: whereCondition,
+        relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
+    });
+}
+
+
+
+
 }

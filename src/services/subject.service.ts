@@ -2,6 +2,7 @@
 import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
 import { Subject } from '../entities/Subject';
 import { Subject_StudyFrameComp } from '../entities/Subject_StudyFrameComp';
+import { User } from '../entities/User';
 
 export class SubjectService {
   private subjectRepository: Repository<Subject>;
@@ -185,6 +186,63 @@ export class SubjectService {
     return queryBuilder.getRawMany();
   }
 
+  async importSubject(data: any[], createUserId: string): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+        // Validate createUser
+        const createUser = await queryRunner.manager.findOne(User, {
+            where: { userId: createUserId },
+        });
+
+        if (!createUser) {
+            throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
+        }
+
+        const subjectsToSave = await Promise.all(
+            data.map(async (row) => {
+                const [subjectId, subjectName, creditHour, isCompulsory, subjectBeforeId, subjectEqualId] = row;
+
+                const subject = new Subject();
+                subject.subjectId = String(subjectId);
+                subject.subjectName = subjectName;
+                subject.creditHour = Number(creditHour);
+                subject.isCompulsory = isCompulsory === 'true' || isCompulsory === true;
+
+                // Xử lý môn học trước (nếu có)
+                if (subjectBeforeId) {
+                    const subjectBefore = await queryRunner.manager.findOne(Subject, {
+                        where: { subjectId: subjectBeforeId },
+                    });
+                    subject.subjectBefore = subjectBefore || null;
+                } else {
+                    subject.subjectBefore = null;
+                }
+
+                // Xử lý môn học tương đương (nếu có)
+                subject.subjectEqual = subjectEqualId ? String(subjectEqualId) : null;
+
+                // Set thông tin người tạo và chỉnh sửa
+                subject.createUser = createUser;
+                subject.lastModifyUser = createUser;
+
+                return subject;
+            })
+        );
+
+        // Lưu các môn học vào database
+        await queryRunner.manager.save(Subject, subjectsToSave);
+
+        await queryRunner.commitTransaction();
+    } catch (error) {
+        await queryRunner.rollbackTransaction();
+        throw error;
+    } finally {
+        await queryRunner.release();
+    }
+}
 
 
 }
