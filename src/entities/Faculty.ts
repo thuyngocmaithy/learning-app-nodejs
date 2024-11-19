@@ -16,4 +16,11 @@ export class Faculty {
      */
     @Column({ nullable: false })
     facultyName: string;
+
+
+    /**
+     * Số tín chỉ của ngành (không rỗng)
+     */
+    @Column({ nullable: false, default: 0 })
+    creditHourTotal: number;
 }
