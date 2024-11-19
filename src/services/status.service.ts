@@ -1,12 +1,15 @@
 // status.service.ts
 import { DataSource, In, Like, Repository } from 'typeorm';
 import { Status } from '../entities/Status';
+import { User } from '../entities/User';
 
 export class StatusService {
   private statusRepository: Repository<Status>;
+  private userRepository: Repository<User>;
 
   constructor(dataSource: DataSource) {
     this.statusRepository = dataSource.getRepository(Status);
+    this.userRepository = dataSource.getRepository(User);
   }
 
   async create(data: Partial<Status>): Promise<Status> {
@@ -67,4 +70,46 @@ export class StatusService {
       where: whereCondition,
     });
   }
+
+  async getMaxOrderNoByType(type: string): Promise<number> {
+    const result = await this.statusRepository
+      .createQueryBuilder('status')
+      .where('status.type = :type', { type })
+      .select('MAX(status.orderNo)', 'maxOrderNo')
+      .getRawOne();
+    return result.maxOrderNo || 0;
+  }
+
+
+  async importStatus(data: any[], createUserId: string): Promise<void> {
+    // Kiểm tra createUserId hợp lệ
+    const createUser = await this.userRepository.findOne({ where: { userId: createUserId } });
+    if (!createUser) {
+      throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
+    }
+
+    const statusesToSave = await Promise.all(
+      data.map(async (statusData) => {
+        const status = new Status();
+        status.statusId = statusData[0];
+        status.statusName = statusData[1];
+        status.type = statusData[2];
+
+        // Gán createUser từ tham số API
+        status.createUser = createUser;
+
+        // Tính toán orderNo mới dựa trên type
+        const maxOrderNo = await this.getMaxOrderNoByType(status.type);
+        status.orderNo = maxOrderNo + 1;
+
+        // Gán thêm các trường dữ liệu
+        status.color = statusData[3] || null;
+
+        return status;
+      })
+    );
+
+    await this.statusRepository.save(statusesToSave);
+  }
+
 }

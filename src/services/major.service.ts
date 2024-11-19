@@ -109,4 +109,37 @@ export class MajorService {
       relations: ['faculty']
     });
   }
+
+  async importMajor(data: any[]) {
+    const majorsToSave = await Promise.all(
+        data.map(async (majorData) => {
+            const major = new Major();
+            major.majorId = majorData[0];
+            major.majorName = majorData[1];
+
+            // Tìm faculty dựa trên facultyId
+            const faculty = await this.facultyRepository.findOne({
+                where: { facultyId: majorData[2] }, // Lấy facultyId từ cột tương ứng trong file Excel
+            });
+
+            if (!faculty) {
+                throw new Error(`Không tìm thấy khoa với mã: ${majorData[2]}`);
+            }
+
+            // Lấy orderNo lớn nhất của khoa đó
+            const maxOrderNo = await this.getMaxOrderNoByFaculty(faculty.facultyId);
+
+            // Gán faculty và orderNo mới
+            major.faculty = faculty;
+            major.orderNo = maxOrderNo + 1;
+
+            return major;
+        })
+    );
+
+    // Lưu danh sách majors vào database
+    await this.majorRepository.save(majorsToSave);
+  }
+
+
 }

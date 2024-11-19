@@ -32,9 +32,9 @@ export class Subject {
   /**
     * Môn học trước (có thể rỗng)
     */
-  @ManyToOne(() => Subject, data => data.subjectId, { nullable: true })
-  @JoinColumn({ name: 'subjectBefore' })
-  subjectBefore: Subject;
+@ManyToOne(() => Subject, data => data.subjectId, { nullable: true })
+@JoinColumn({ name: 'subjectBefore' })
+subjectBefore: Subject | null; // Thêm "| null"
 
   /**
     * Môn học tương đương (có thể rỗng)
