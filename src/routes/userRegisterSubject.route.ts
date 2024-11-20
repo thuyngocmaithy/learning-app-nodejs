@@ -5,6 +5,9 @@ import { AppDataSource } from '../data-source';
 const userRegisterSubjectRouter = Router();
 const userRegisterSubjectController = new UserRegisterSubjectController(AppDataSource);
 
+// Route để lưu danh sách đăng ký môn học từ mảng dữ liệu
+userRegisterSubjectRouter.post('/saveRegister', userRegisterSubjectController.saveRegister);
+
 // Route để user đăng ký môn học
 userRegisterSubjectRouter.post('/register', userRegisterSubjectController.registerSubject);
 

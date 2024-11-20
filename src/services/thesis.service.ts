@@ -26,6 +26,7 @@ export class ThesisService {
 
   async getAll(): Promise<Thesis[]> {
     return this.thesisRepository.find({
+      order: { createDate: 'DESC' },
       relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower', 'thesisGroup']
     });
   }
@@ -214,6 +215,7 @@ export class ThesisService {
     }
 
     return this.thesisRepository.find({
+      order: { createDate: 'DESC' },
       where: whereCondition,
       relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'],
     });

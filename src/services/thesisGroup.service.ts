@@ -15,7 +15,10 @@ export class ThesisGroupService {
   }
 
   async getAll(): Promise<ThesisGroup[]> {
-    return this.thesisGroupRepository.find({ relations: ['status', 'faculty', 'createUser', 'lastModifyUser'] });
+    return this.thesisGroupRepository.find({
+      order: { createDate: 'DESC' },
+      relations: ['status', 'faculty', 'createUser', 'lastModifyUser']
+    });
   }
 
   async getById(thesisGroupId: string): Promise<ThesisGroup | null> {
@@ -180,6 +183,8 @@ export class ThesisGroupService {
       .leftJoinAndSelect('thesisgroup.faculty', 'faculty')
       .leftJoinAndSelect('thesisgroup.createUser', 'createUser')
       .leftJoinAndSelect('thesisgroup.lastModifyUser', 'lastModifyUser');
+
+    queryBuilder.orderBy('thesisgroup.createDate', 'DESC');
 
     // Thực thi truy vấn và trả về kết quả
     const result = await queryBuilder.getMany();

@@ -27,6 +27,7 @@ export class ScientificResearchService {
 
 	async getAll(): Promise<ScientificResearch[]> {
 		return this.scientificResearchRepository.find({
+			order: { createDate: 'DESC' },
 			relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower', 'scientificResearchGroup']
 		});
 	}
@@ -218,6 +219,7 @@ export class ScientificResearchService {
 		}
 
 		return this.scientificResearchRepository.find({
+			order: { createDate: 'DESC' },
 			where: whereCondition,
 			relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'],
 		});

@@ -78,6 +78,14 @@ export const setupMessageSocket = (io: Server) => {
             }
         });
 
+        socket.on('deleteMessage', async ({ messageId, roomId }) => {
+            // Xóa tin nhắn khỏi cơ sở dữ liệu
+            await messageService.delete([messageId]);
+
+            // Thông báo đến các client khác trong cùng room
+            messageIo.to(roomId).emit('messageDeleted', messageId);
+        });
+
         socket.on('disconnect', () => {
             console.log('Người dùng đã ngắt kết nối (message): ', socket.id);
         });
