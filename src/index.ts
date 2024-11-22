@@ -50,7 +50,7 @@ import frameStructureRoutes from './routes/frameStucture.route';
 import subject_studyFrameCompRoutes from './routes/subject_studyFrameComp.route';
 import thesisGroupRoute from './routes/thesisGroup.route';
 import subjectCourseOpeningRoute from './routes/subject_course_opening.route';
-
+import expectedScoreRouter from './routes/expectedScore.route';
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
@@ -164,7 +164,7 @@ app.use('/api/cycles', cycleRoutes);
 app.use('/api/frameStructures', frameStructureRoutes);
 app.use('/api/subject_studyFrameComps', subject_studyFrameCompRoutes);
 app.use('/api/subject_course_openings', subjectCourseOpeningRoute);
-
+app.use('/api/expectedScore', expectedScoreRouter);
 
 
 
