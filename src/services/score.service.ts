@@ -20,7 +20,7 @@ interface FrameComponentResponse {
   subjectInfo?: SubjectInfo[];
 }
 export class ScoreService {
-  
+
 
   private scoreRepository: Repository<Score>;
   private componentScoreRepository: Repository<ComponentScore>;
@@ -81,8 +81,6 @@ export class ScoreService {
     return uniqueScores;
   };
 
-
-
   public getScoreByStudentIdAndSemesterId = async (
     studentId: string,
     semesterId: string
@@ -114,37 +112,37 @@ export class ScoreService {
   }
 
 
-  
+
 
   public getStudentFrameScores = async (studentId: string): Promise<FrameComponentResponse[]> => {
     try {
       const frameComponentRepo = getRepository(StudyFrame_Component);
       const frameComponents = await frameComponentRepo.find();
-  
+
       const scores = await getRepository(Score).find({
         where: { student: { userId: studentId } },
         relations: ['subject', 'semester'],
       });
-  
+
       const subjects = await getRepository(Subject).find();
       const subjectsByFrame = new Map<string, SubjectInfo[]>();
-  
+
       const findFrameComponentForSubject = (subject: Subject): string | null => {
         if (subject.isCompulsory) {
           return 'COMPULSORY';
         }
         return 'ELECTIVE';
       };
-  
+
       subjects.forEach(subject => {
         const frameComponentId = findFrameComponentForSubject(subject);
         if (frameComponentId) {
           if (!subjectsByFrame.has(frameComponentId)) {
             subjectsByFrame.set(frameComponentId, []);
           }
-          
+
           const score = scores.find(s => s.subject.subjectId === subject.subjectId);
-          
+
           subjectsByFrame.get(frameComponentId)?.push({
             subjectId: subject.subjectId,
             subjectName: subject.subjectName,
@@ -153,7 +151,7 @@ export class ScoreService {
           });
         }
       });
-  
+
       const response: FrameComponentResponse[] = frameComponents.map(component => ({
         id: component.id,
         frameComponentId: component.frameComponentId,
@@ -162,13 +160,13 @@ export class ScoreService {
         creditHour: component.creditHour,
         subjectInfo: subjectsByFrame.get(component.frameComponentId) || [],
       }));
-  
+
       // Vì không có cấu trúc parent-child, trả về response trực tiếp
       return response;
-  
+
     } catch (error) {
       console.error('Error in getStudentFrameScores:', error);
       throw error;
     }
-};
+  };
 }

@@ -12,6 +12,7 @@ export class CycleController {
   }
 
   public getAllCycles = (req: Request, res: Response) => RequestHandler.getAll<Cycle>(req, res, this.cycleService);
+  public getCycleWhere = (req: Request, res: Response) => RequestHandler.getWhere<Cycle>(req, res, this.cycleService);
   public getCycleById = (req: Request, res: Response) => RequestHandler.getById<Cycle>(req, res, this.cycleService);
   public createCycle = (req: Request, res: Response) => RequestHandler.create<Cycle>(req, res, this.cycleService);
   public updateCycle = (req: Request, res: Response) => RequestHandler.update<Cycle>(req, res, this.cycleService);

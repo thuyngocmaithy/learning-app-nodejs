@@ -9,10 +9,9 @@ export class CycleService {
   }
 
   async create(data: Partial<Cycle>): Promise<Cycle> {
-		const newId = await this.generateNewId();
     data = {
       ...data,
-      cycleId: newId
+      cycleId: `CYCLE${String(data.startYear).slice(-2)}${String(data.endYear).slice(-2)}`
     }
     const cycle = this.cycleRepository.create(data);
     return this.cycleRepository.save(cycle);
@@ -21,7 +20,7 @@ export class CycleService {
   async getAll(): Promise<Cycle[]> {
     return this.cycleRepository.find({
       order: {
-        cycleId: 'ASC', 
+        cycleId: 'ASC',
       },
     });
   }
@@ -45,23 +44,21 @@ export class CycleService {
     return result.affected !== 0;
   }
 
-	private generateNewId = async (): Promise<string> => {
-		const lastCycle = await this.cycleRepository.find({
-			order: { cycleId: 'DESC' },
-      take: 1,
-		});
+  async getWhere(condition: Partial<Cycle>): Promise<Cycle[]> {
+    const whereCondition: any = {};
 
-    const oneLastCycle = lastCycle.length > 0 ? lastCycle[0] : null;
 
-		let numericPart = 1;
-		if (oneLastCycle) {
-			const match = oneLastCycle.cycleId.match(/\d+$/); // Regex lấy phần số cuối cùng của chuỗi
-			const lastNumericPart = match ? parseInt(match[0], 10) : 0; // Nếu có kết quả, chuyển đổi thành số
+    if (condition.startYear) {
+      whereCondition.startYear = condition.startYear;
+    }
 
-			numericPart = lastNumericPart + 1;
-		}
-		// Format the new ID
-		return `CYCLE${numericPart.toString().padStart(3, '0')}`;
-	}
+    if (condition.endYear) {
+      whereCondition.endYear = condition.endYear;
+    }
+
+    return this.cycleRepository.find({
+      where: whereCondition,
+    });
+  }
 
 }

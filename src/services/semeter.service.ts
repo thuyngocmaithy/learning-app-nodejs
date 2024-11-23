@@ -18,10 +18,8 @@ export class SemesterService {
       throw new Error('SemesterService - create - Not found cycle');
     }
 
-    const newId = await this.generateNewId();
-
     const semesterData = {
-      semesterId: newId,
+      semesterId: `${data.academicYear}${data.semesterName}`,
       semesterName: data.semesterName,
       cycle: cycle,
       academicYear: data.academicYear
@@ -67,24 +65,6 @@ export class SemesterService {
     return result.affected !== 0;
   }
 
-  private generateNewId = async (): Promise<string> => {
-    const lastSemester = await this.semesterRepository.find({
-      order: { semesterId: 'DESC' },
-      take: 1,
-    });
-
-    const oneLastSemester = lastSemester.length > 0 ? lastSemester[0] : null;
-
-    let numericPart = 1;
-    if (oneLastSemester) {
-      const match = oneLastSemester.semesterId.match(/\d+$/); // Regex lấy phần số cuối cùng của chuỗi
-      const lastNumericPart = match ? parseInt(match[0], 10) : 0; // Nếu có kết quả, chuyển đổi thành số
-
-      numericPart = lastNumericPart + 1;
-    }
-    // Format the new ID
-    return `SEMESTER${numericPart.toString().padStart(3, '0')}`;
-  }
 
   async getWhere(condition: Partial<Semester>): Promise<Semester[]> {
     const whereCondition: any = {};

@@ -33,7 +33,7 @@ export class Account {
   /**
    * Token làm mới (có thể rỗng)
    */
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'text' })
   refreshToken: string;
 
 

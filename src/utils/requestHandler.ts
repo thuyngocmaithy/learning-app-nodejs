@@ -35,6 +35,9 @@ export class RequestHandler {
             if (result) {
                 return RequestHandler.sendResponse(res, StatusCodes.OK, "success", result);
             }
+            else {
+                return RequestHandler.sendResponse(res, StatusCodes.NO_CONTENT, "success", result);
+            }
         } catch (error) {
             console.error("Get By ID Error:", error);
             return RequestHandler.sendResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, "error", null, (error as Error).message);

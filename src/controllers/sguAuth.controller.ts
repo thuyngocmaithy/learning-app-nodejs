@@ -20,4 +20,15 @@ export class SguAuthController {
     }
   };
 
+  public getScore = async (req: Request, res: Response) => {
+    const { access_token } = req.body;
+    try {
+      const result = await this.sguAuthService.getScoreFromSGU(access_token);
+      await response(res, 200, 'success', result);
+    } catch (error: any) {
+      console.error('Error logging in:', error.message);
+      await response(res, 400, 'error', null, error.message);
+    }
+  };
+
 }
