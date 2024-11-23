@@ -18,7 +18,10 @@ export class FeatureService {
   }
 
   async getAll(): Promise<Feature[]> {
-    return this.featureRepository.find({ relations: ['parent'] });
+    return this.featureRepository.find({
+      order: { orderNo: 'ASC' },
+      relations: ['parent']
+    });
   }
 
   async getById(featureId: string): Promise<Feature | null> {
@@ -54,6 +57,7 @@ export class FeatureService {
       }
     }
 
+    queryBuilder.orderBy('feature.orderNo', 'ASC');
 
     // Thực thi truy vấn và trả về kết quả
     return queryBuilder.getMany();
@@ -128,7 +132,6 @@ export class FeatureService {
     try {
       // Chuyển đổi cấu trúc cây thành danh sách phẳng
       const flattenedData = this.flattenTreeData(treeData);
-      console.log(flattenedData);
 
       // Lưu đối tượng cha và các phần tử con
       await Promise.all(

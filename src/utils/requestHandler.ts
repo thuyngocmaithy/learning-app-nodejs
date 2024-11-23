@@ -63,7 +63,7 @@ export class RequestHandler {
             if (result !== null && result.length > 0) {
                 return RequestHandler.sendResponse(res, StatusCodes.OK, "success", result);
             }
-            return RequestHandler.sendResponse(res, StatusCodes.NO_CONTENT, "NoContent", null, "No entities found matching the criteria");
+            return RequestHandler.sendResponse(res, StatusCodes.NO_CONTENT, "success", result);
         } catch (error) {
             console.error("Get Where Error:", error);
             return RequestHandler.sendResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, "error", null, (error as Error).message);

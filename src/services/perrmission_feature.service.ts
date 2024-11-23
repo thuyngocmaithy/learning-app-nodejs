@@ -107,6 +107,7 @@ export class PermissionFeatureService {
 
     return this.permissionFeatureRepository.find({
       where: whereCondition,
+      order: { feature: { orderNo: 'ASC' } },
       relations: ['permission', 'feature', 'feature.parent'],
     });
   }
