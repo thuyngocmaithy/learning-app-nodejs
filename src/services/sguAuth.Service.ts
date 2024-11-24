@@ -230,8 +230,8 @@ export class SguAuthService {
 		}
 
 		// Nếu không có access token, tạo mới
-		const accessTokenExpiry = '20m';
-		const accessTokenExpiryDate = new Date(Date.now() + 20 * 60 * 1000); // 20 phút tính bằng milliseconds
+		const accessTokenExpiry = '2h';
+		const accessTokenExpiryDate = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 tiếng tính bằng milliseconds
 
 		// Tạo thời gian hết hạn cho refresh token (7 ngày)
 		const refreshTokenExpiry = '7d';

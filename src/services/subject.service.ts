@@ -61,11 +61,14 @@ export class SubjectService {
   }
 
   async getAll(): Promise<Subject[]> {
-    return this.subjectRepository.find({ relations: ['createUser', 'lastModifyUser', 'subjectBefore'] });
+    return this.subjectRepository.find({
+      order: { createDate: 'DESC' },
+      relations: ['subjectBefore']
+    });
   }
 
   async getById(subjectId: string): Promise<Subject | null> {
-    const options: FindOneOptions<Subject> = { where: { subjectId }, relations: ['createUser', 'lastModifyUser', 'subjectBefore'] };
+    const options: FindOneOptions<Subject> = { where: { subjectId }, relations: ['subjectBefore'] };
     return await this.subjectRepository.findOne(options);
   }
 
@@ -122,18 +125,8 @@ export class SubjectService {
         's.subjectName as subjectName',
         's.creditHour as creditHour',
         's.isCompulsory as isCompulsory',
-        'sb.subjectId AS subjectBeforeId',
-        'se.subjectId AS subjectEqualId',
-        // Dùng GROUP_CONCAT để gom các giá trị cho majorId và majorName
-        'GROUP_CONCAT(DISTINCT m.majorId) AS majorId',
-        'GROUP_CONCAT(DISTINCT m.majorName) AS majorName',
-        // Dùng GROUP_CONCAT để gom các giá trị cho facultyId và facultyName
-        'GROUP_CONCAT(DISTINCT f.facultyId) AS facultyId',
-        'GROUP_CONCAT(DISTINCT f.facultyName) AS facultyName',
-        // Các trường đã sử dụng GROUP_CONCAT
-        'GROUP_CONCAT(DISTINCT sfc.frameComponentId) AS frameComponentId',  // Group frameComponentId
-        'GROUP_CONCAT(DISTINCT sfc.frameComponentName) AS frameComponentName',  // Group frameComponentName
-        'GROUP_CONCAT(DISTINCT sfc.description) AS description',  // Group descriptions
+        'sb.subjectId AS subjectBefore',
+        'se.subjectId AS subjectEqual',
         's.createDate as createDate',
         's.createUserId as createUserId',
         's.lastModifyDate as lastModifyDate',
@@ -142,14 +135,10 @@ export class SubjectService {
       .from(Subject, 's')
       .leftJoin('s.subjectBefore', 'sb')
       .leftJoin('s.subjectEqual', 'se')
-      .leftJoin(Subject_StudyFrameComp, 'ss', 'ss.subjectId = s.subjectId')
-      .leftJoin('ss.studyFrameComponent', 'sfc')
-      .leftJoin('sfc.major', 'm')
-      .leftJoin('m.faculty', 'f');
 
     // Add conditions dynamically
     if (condition.subjectId) {
-      queryBuilder.andWhere('s.subjectId = :subjectId', { subjectId: condition.subjectId });
+      queryBuilder.andWhere('s.subjectId LIKE :subjectId', { subjectId: `%${condition.subjectId}%` });
     }
 
     if (condition.subjectName) {
@@ -168,14 +157,6 @@ export class SubjectService {
       queryBuilder.andWhere('sb.subjectId = :subjectBeforeId', { subjectBeforeId: condition.subjectBeforeId });
     }
 
-    if (condition.majorId) {
-      queryBuilder.andWhere('m.majorId = :majorId', { majorId: condition.majorId });
-    }
-
-    if (condition.facultyId) {
-      queryBuilder.andWhere('f.facultyId = :facultyId', { facultyId: condition.facultyId });
-    }
-
     if (condition.frameComponentId) {
       queryBuilder.andWhere('sfc.frameComponentId = :frameComponentId', { frameComponentId: condition.frameComponentId });
     }
@@ -192,57 +173,57 @@ export class SubjectService {
     await queryRunner.startTransaction();
 
     try {
-        // Validate createUser
-        const createUser = await queryRunner.manager.findOne(User, {
-            where: { userId: createUserId },
-        });
+      // Validate createUser
+      const createUser = await queryRunner.manager.findOne(User, {
+        where: { userId: createUserId },
+      });
 
-        if (!createUser) {
-            throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
-        }
+      if (!createUser) {
+        throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
+      }
 
-        const subjectsToSave = await Promise.all(
-            data.map(async (row) => {
-                const [subjectId, subjectName, creditHour, isCompulsory, subjectBeforeId, subjectEqualId] = row;
+      const subjectsToSave = await Promise.all(
+        data.map(async (row) => {
+          const [subjectId, subjectName, creditHour, isCompulsory, subjectBeforeId, subjectEqualId] = row;
 
-                const subject = new Subject();
-                subject.subjectId = String(subjectId);
-                subject.subjectName = subjectName;
-                subject.creditHour = Number(creditHour);
-                subject.isCompulsory = isCompulsory === 'true' || isCompulsory === true;
+          const subject = new Subject();
+          subject.subjectId = String(subjectId);
+          subject.subjectName = subjectName;
+          subject.creditHour = Number(creditHour);
+          subject.isCompulsory = isCompulsory === 'true' || isCompulsory === true;
 
-                // Xử lý môn học trước (nếu có)
-                if (subjectBeforeId) {
-                    const subjectBefore = await queryRunner.manager.findOne(Subject, {
-                        where: { subjectId: subjectBeforeId },
-                    });
-                    subject.subjectBefore = subjectBefore || null;
-                } else {
-                    subject.subjectBefore = null;
-                }
+          // Xử lý môn học trước (nếu có)
+          if (subjectBeforeId) {
+            const subjectBefore = await queryRunner.manager.findOne(Subject, {
+              where: { subjectId: subjectBeforeId },
+            });
+            subject.subjectBefore = subjectBefore || null;
+          } else {
+            subject.subjectBefore = null;
+          }
 
-                // Xử lý môn học tương đương (nếu có)
-                subject.subjectEqual = subjectEqualId ? String(subjectEqualId) : null;
+          // Xử lý môn học tương đương (nếu có)
+          subject.subjectEqual = subjectEqualId ? String(subjectEqualId) : null;
 
-                // Set thông tin người tạo và chỉnh sửa
-                subject.createUser = createUser;
-                subject.lastModifyUser = createUser;
+          // Set thông tin người tạo và chỉnh sửa
+          subject.createUser = createUser;
+          subject.lastModifyUser = createUser;
 
-                return subject;
-            })
-        );
+          return subject;
+        })
+      );
 
-        // Lưu các môn học vào database
-        await queryRunner.manager.save(Subject, subjectsToSave);
+      // Lưu các môn học vào database
+      await queryRunner.manager.save(Subject, subjectsToSave);
 
-        await queryRunner.commitTransaction();
+      await queryRunner.commitTransaction();
     } catch (error) {
-        await queryRunner.rollbackTransaction();
-        throw error;
+      await queryRunner.rollbackTransaction();
+      throw error;
     } finally {
-        await queryRunner.release();
+      await queryRunner.release();
     }
-}
+  }
 
 
 }

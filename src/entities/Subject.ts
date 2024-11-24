@@ -32,9 +32,9 @@ export class Subject {
   /**
     * Môn học trước (có thể rỗng)
     */
-@ManyToOne(() => Subject, data => data.subjectId, { nullable: true })
-@JoinColumn({ name: 'subjectBefore' })
-subjectBefore: Subject | null; // Thêm "| null"
+  @ManyToOne(() => Subject, data => data.subjectId, { nullable: true })
+  @JoinColumn({ name: 'subjectBefore' })
+  subjectBefore: Subject | null; // Thêm "| null"
 
   /**
     * Môn học tương đương (có thể rỗng)
@@ -96,4 +96,10 @@ subjectBefore: Subject | null; // Thêm "| null"
    */
   @UpdateDateColumn()
   lastModifyDate: Date;
+
+  //   /**
+  //    * Danh sách học kỳ thuộc chu kỳ này
+  //    */
+  //   @OneToMany(() => Semester, semester => semester.cycle)
+  //   semesters: Semester[];
 }

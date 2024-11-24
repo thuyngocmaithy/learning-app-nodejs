@@ -41,92 +41,56 @@ export class MegaService {
         });
     }
 
-
-
-
-    async uploadFile(filePath: string): Promise<File | undefined> {
-        const storage = await this.loginToMega();
-        const fileName = path.basename(filePath);
-        const fileSize = fs.statSync(filePath).size; // Lấy kích thước file
-
-        // Lấy thư mục đích
-        const folder = storage.root.navigate(megaConfig.folder as string);
-        if (folder) {
-            // Lưu danh sách tên file trong một Set
-            const existingFiles = new Set(folder.children?.map(file => file.name).filter((name): name is string => name !== null));
-
-            // Kiểm tra và tạo tên file mới nếu đã tồn tại
-            const newFileName = this.getUniqueFileName(existingFiles, fileName);
-
-            // Tạo upload stream cho file trong thư mục đã chọn
-            const uploadStream = folder.upload({
-                name: newFileName,
-                size: fileSize,
-                maxConnections: 10, // Có thể điều chỉnh tùy thuộc vào băng thông
-            });
-
-            // Biến để lưu thông tin file sau khi upload
-            return new Promise<File | undefined>((resolve, reject) => {
-                // Lắng nghe sự kiện complete để lấy thông tin file
-                uploadStream.on('complete', (file: File) => {
-                    resolve(file); // Gọi resolve khi upload hoàn tất
-                });
-
-                // Lắng nghe sự kiện error để xử lý lỗi
-                uploadStream.on('error', (error) => {
-                    console.error("Lỗi trong quá trình upload:", error);
-                    reject(error); // Gọi reject khi có lỗi
-                });
-
-                // Sử dụng pipeline để đọc file và upload
-                pipelineAsync(
-                    fs.createReadStream(filePath),
-                    uploadStream
-                ).catch((err) => {
-                    console.error("Lỗi trong quá trình upload:", err);
-                    reject(err); // Gọi reject nếu pipeline có lỗi
-                });
-            });
-        } else {
-            console.error("Thư mục không tồn tại:", megaConfig.folder);
-            return undefined;
-        }
-    }
-
     async uploadFileFromBuffer(fileBuffer: Buffer, fileName: string): Promise<File | undefined> {
         try {
             const storage = await this.loginToMega();
             const folder = storage.root.navigate(megaConfig.folder as string);
-
             if (!folder) {
                 throw new Error(`Thư mục không tồn tại: ${megaConfig.folder}`);
             }
 
-            // Upload file từ buffer
-            const uploadStream = folder.upload({
-                name: fileName,
-                size: fileBuffer.length,
-            });
+            // Lưu danh sách tên file trong một Set
+            const existingFiles = new Set(folder.children?.map(file => file.name).filter((name): name is string => name !== null));
+            const newFileName = this.getUniqueFileName(existingFiles, fileName);
 
-            return new Promise<File | undefined>((resolve, reject) => {
-                uploadStream.on('complete', (file: File) => {
-                    resolve(file); // Upload thành công
+            const chunkSize = 5 * 1024 * 1024; // 5MB mỗi phần
+            const chunks = Math.ceil(fileBuffer.length / chunkSize);
+            const uploadPromises: Promise<File>[] = [];
+
+            for (let i = 0; i < chunks; i++) {
+                const start = i * chunkSize;
+                const end = Math.min((i + 1) * chunkSize, fileBuffer.length);
+
+                const chunkBuffer = new Uint8Array(fileBuffer.buffer, start, end - start);
+
+                const uploadStream = folder.upload({
+                    name: newFileName,
+                    size: chunkBuffer.length,
+                    maxConnections: 1,
                 });
 
-                uploadStream.on('error', (err: any) => {
-                    reject(new Error(`Lỗi khi upload file: ${err.message}`)); // Xử lý lỗi
-                });
+                uploadPromises.push(new Promise<File>((resolve, reject) => {
+                    uploadStream.on('complete', (file: File) => {
+                        resolve(file);
+                    });
 
-                // Dòng dữ liệu buffer sẽ được gửi tới Mega
-                uploadStream.end(fileBuffer);
-            });
+                    uploadStream.on('error', (err: any) => {
+                        reject(new Error(`Lỗi khi upload file chunk: ${err.message}`));
+                    });
+
+                    uploadStream.end(chunkBuffer);
+                }));
+            }
+
+            // Chờ tất cả các upload hoàn thành
+            const uploadedFiles = await Promise.all(uploadPromises);
+            return uploadedFiles[0]; // Trả về file đầu tiên (hoặc kết hợp chúng nếu cần)
+
         } catch (error) {
             console.error('Lỗi khi upload file từ buffer:', error);
-            throw error;  // Ném lại lỗi sau khi ghi log
+            throw error;
         }
     }
-
-
 
     // Hàm kiểm tra và tạo tên file mới
     private getUniqueFileName(existingFiles: Set<string>, fileName: string): string {
@@ -143,8 +107,6 @@ export class MegaService {
 
         return newFileName;
     }
-
-
 
     // Download file từ MEGA
     async downloadFile(fileId: string, destinationPath: string): Promise<void> {

@@ -195,13 +195,13 @@ export class User {
   /**
   * ma-truong 
   */
-  @Column({ nullable: true })
+  @Column({ default: "DHSG", nullable: true })
   ma_truong: string;
 
   /**
   * ten_truong
   */
-  @Column({ nullable: true })
+  @Column({ default: "ĐH Sài Gòn", nullable: true })
   ten_truong: string;
 
   /**
@@ -223,9 +223,9 @@ export class User {
   lastAcademicYear: number;
 
   /**
-   * Đang hoạt động hay không (mặc định là false, không rỗng)
+   * Đang hoạt động hay không (mặc định là true, không rỗng)
    */
-  @Column({ default: false, nullable: false })
+  @Column({ default: true, nullable: false })
   isActive: boolean;
 
   /**
