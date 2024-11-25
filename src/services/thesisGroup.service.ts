@@ -2,16 +2,19 @@ import { DataSource, Repository, Like, In } from 'typeorm';
 import { ThesisGroup } from '../entities/ThesisGroup';
 import { Faculty } from '../entities/Faculty';
 import { Status } from '../entities/Status';
+import { User } from '../entities/User';
 
 export class ThesisGroupService {
   private thesisGroupRepository: Repository<ThesisGroup>;
   private facultyRepository: Repository<Faculty>;
   private statusRepository: Repository<Status>;
+  private userRepository: Repository<User>;
 
   constructor(dataSource: DataSource) {
     this.thesisGroupRepository = dataSource.getRepository(ThesisGroup);
     this.facultyRepository = dataSource.getRepository(Faculty);
     this.statusRepository = dataSource.getRepository(Status);
+    this.userRepository = dataSource.getRepository(User);
   }
 
   async getAll(): Promise<ThesisGroup[]> {
@@ -192,6 +195,99 @@ export class ThesisGroupService {
   }
 
 
-
+  async importThesisGroup(data: any[], createUserId: string): Promise<void> {
+    // Kiểm tra createUserId hợp lệ
+    const createUser = await this.userRepository.findOne({ where: { userId: createUserId } });
+    if (!createUser) {
+      throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
+    }
+  
+    const thesisGroupsToSave = await Promise.all(
+      data.map(async (thesisGroupData) => {
+        const thesisGroupId = thesisGroupData[0];
+        const thesisGroupName = thesisGroupData[1];
+        const statusId = thesisGroupData[2];
+        const startYear = Number(thesisGroupData[3]);
+        const finishYear = Number(thesisGroupData[4]);
+        const facultyId = thesisGroupData[5];
+        const startCreateThesisDate = new Date(thesisGroupData[6]);
+        const endCreateThesisDate = new Date(thesisGroupData[7]);
+  
+        // Kiểm tra xem nhóm đề tài đã tồn tại chưa
+        const existingThesisGroup = await this.thesisGroupRepository.findOne({
+          where: { thesisGroupId },
+        });
+  
+        if (existingThesisGroup) {
+          // Nếu đã tồn tại, cập nhật thông tin nhóm đề tài
+          existingThesisGroup.thesisGroupName = thesisGroupName;
+  
+          // Cập nhật trạng thái
+          const status = await this.statusRepository.findOne({ where: { statusId } });
+          if (!status) {
+            throw new Error(`Không tìm thấy trạng thái với ID: ${statusId}`);
+          }
+          existingThesisGroup.status = status;
+  
+          // Cập nhật năm thực hiện
+          existingThesisGroup.startYear = startYear;
+          existingThesisGroup.finishYear = finishYear;
+  
+          // Cập nhật khoa
+          const faculty = await this.facultyRepository.findOne({ where: { facultyId } });
+          if (!faculty) {
+            throw new Error(`Không tìm thấy khoa với ID: ${facultyId}`);
+          }
+          existingThesisGroup.faculty = faculty;
+  
+          // Cập nhật thời gian tạo đề tài
+          existingThesisGroup.startCreateThesisDate = startCreateThesisDate;
+          existingThesisGroup.endCreateThesisDate = endCreateThesisDate;
+  
+          // Cập nhật người chỉnh sửa cuối cùng
+          existingThesisGroup.lastModifyUser = createUser;
+          existingThesisGroup.lastModifyDate = new Date();
+  
+          return existingThesisGroup;
+        } else {
+          // Nếu chưa tồn tại, tạo nhóm đề tài mới
+          const thesisGroup = new ThesisGroup();
+          thesisGroup.thesisGroupId = thesisGroupId;
+          thesisGroup.thesisGroupName = thesisGroupName;
+  
+          // Thiết lập trạng thái
+          const status = await this.statusRepository.findOne({ where: { statusId } });
+          if (!status) {
+            throw new Error(`Không tìm thấy trạng thái với ID: ${statusId}`);
+          }
+          thesisGroup.status = status;
+  
+          // Thiết lập năm thực hiện
+          thesisGroup.startYear = startYear;
+          thesisGroup.finishYear = finishYear;
+  
+          // Thiết lập khoa
+          const faculty = await this.facultyRepository.findOne({ where: { facultyId } });
+          if (!faculty) {
+            throw new Error(`Không tìm thấy khoa với ID: ${facultyId}`);
+          }
+          thesisGroup.faculty = faculty;
+  
+          // Thiết lập thời gian tạo đề tài
+          thesisGroup.startCreateThesisDate = startCreateThesisDate;
+          thesisGroup.endCreateThesisDate = endCreateThesisDate;
+  
+          // Thiết lập người tạo và chỉnh sửa
+          thesisGroup.createUser = createUser;
+          thesisGroup.lastModifyUser = createUser;
+  
+          return thesisGroup;
+        }
+      })
+    );
+  
+    // Lưu danh sách nhóm đề tài vào database
+    await this.thesisGroupRepository.save(thesisGroupsToSave);
+  }
 
 }

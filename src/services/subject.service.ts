@@ -171,51 +171,80 @@ export class SubjectService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
+  
     try {
       // Validate createUser
       const createUser = await queryRunner.manager.findOne(User, {
         where: { userId: createUserId },
       });
-
+  
       if (!createUser) {
         throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
       }
-
+  
       const subjectsToSave = await Promise.all(
         data.map(async (row) => {
           const [subjectId, subjectName, creditHour, isCompulsory, subjectBeforeId, subjectEqualId] = row;
-
-          const subject = new Subject();
-          subject.subjectId = String(subjectId);
-          subject.subjectName = subjectName;
-          subject.creditHour = Number(creditHour);
-          subject.isCompulsory = isCompulsory === 'true' || isCompulsory === true;
-
-          // Xử lý môn học trước (nếu có)
-          if (subjectBeforeId) {
-            const subjectBefore = await queryRunner.manager.findOne(Subject, {
-              where: { subjectId: subjectBeforeId },
-            });
-            subject.subjectBefore = subjectBefore || null;
+  
+          // Kiểm tra xem môn học đã tồn tại chưa
+          const existingSubject = await queryRunner.manager.findOne(Subject, {
+            where: { subjectId: String(subjectId) },
+          });
+  
+          if (existingSubject) {
+            // Nếu tồn tại, cập nhật thông tin môn học
+            existingSubject.subjectName = subjectName;
+            existingSubject.creditHour = Number(creditHour);
+            existingSubject.isCompulsory = isCompulsory === 'true' || isCompulsory === true;
+  
+            // Cập nhật môn học trước
+            if (subjectBeforeId) {
+              const subjectBefore = await queryRunner.manager.findOne(Subject, {
+                where: { subjectId: subjectBeforeId },
+              });
+              existingSubject.subjectBefore = subjectBefore || null;
+            } else {
+              existingSubject.subjectBefore = null;
+            }
+  
+            // Cập nhật môn học tương đương
+            existingSubject.subjectEqual = subjectEqualId ? String(subjectEqualId) : null;
+  
+            existingSubject.lastModifyUser = createUser;
+            return existingSubject;
           } else {
-            subject.subjectBefore = null;
+            // Nếu không tồn tại, tạo môn học mới
+            const subject = new Subject();
+            subject.subjectId = String(subjectId);
+            subject.subjectName = subjectName;
+            subject.creditHour = Number(creditHour);
+            subject.isCompulsory = isCompulsory === 'true' || isCompulsory === true;
+  
+            // Xử lý môn học trước
+            if (subjectBeforeId) {
+              const subjectBefore = await queryRunner.manager.findOne(Subject, {
+                where: { subjectId: subjectBeforeId },
+              });
+              subject.subjectBefore = subjectBefore || null;
+            } else {
+              subject.subjectBefore = null;
+            }
+  
+            // Xử lý môn học tương đương
+            subject.subjectEqual = subjectEqualId ? String(subjectEqualId) : null;
+  
+            // Set thông tin người tạo và chỉnh sửa
+            subject.createUser = createUser;
+            subject.lastModifyUser = createUser;
+  
+            return subject;
           }
-
-          // Xử lý môn học tương đương (nếu có)
-          subject.subjectEqual = subjectEqualId ? String(subjectEqualId) : null;
-
-          // Set thông tin người tạo và chỉnh sửa
-          subject.createUser = createUser;
-          subject.lastModifyUser = createUser;
-
-          return subject;
         })
       );
-
+  
       // Lưu các môn học vào database
       await queryRunner.manager.save(Subject, subjectsToSave);
-
+  
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();

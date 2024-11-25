@@ -113,30 +113,61 @@ export class MajorService {
   async importMajor(data: any[]) {
     const majorsToSave = await Promise.all(
       data.map(async (majorData) => {
-        const major = new Major();
-        major.majorId = majorData[0];
-        major.majorName = majorData[1];
-
-        // Tìm faculty dựa trên facultyId
-        const faculty = await this.facultyRepository.findOne({
-          where: { facultyId: majorData[2] }, // Lấy facultyId từ cột tương ứng trong file Excel
+        const majorId = majorData[0];
+        const majorName = majorData[1];
+        const facultyId = majorData[2];
+  
+        // Kiểm tra xem ngành học đã tồn tại chưa
+        const existingMajor = await this.majorRepository.findOne({
+          where: { majorId },
         });
-
-        if (!faculty) {
-          throw new Error(`Không tìm thấy khoa với mã: ${majorData[2]}`);
+  
+        if (existingMajor) {
+          // Nếu đã tồn tại, cập nhật thông tin ngành học
+          existingMajor.majorName = majorName;
+  
+          // Tìm faculty dựa trên facultyId
+          const faculty = await this.facultyRepository.findOne({
+            where: { facultyId },
+          });
+  
+          if (!faculty) {
+            throw new Error(`Không tìm thấy khoa với mã: ${facultyId}`);
+          }
+  
+          existingMajor.faculty = faculty;
+  
+          // Cập nhật orderNo
+          const maxOrderNo = await this.getMaxOrderNoByFaculty(faculty.facultyId);
+          existingMajor.orderNo = maxOrderNo + 1;
+  
+          return existingMajor;
+        } else {
+          // Nếu chưa tồn tại, tạo ngành học mới
+          const major = new Major();
+          major.majorId = majorId;
+          major.majorName = majorName;
+  
+          // Tìm faculty dựa trên facultyId
+          const faculty = await this.facultyRepository.findOne({
+            where: { facultyId },
+          });
+  
+          if (!faculty) {
+            throw new Error(`Không tìm thấy khoa với mã: ${facultyId}`);
+          }
+  
+          major.faculty = faculty;
+  
+          // Gán orderNo mới
+          const maxOrderNo = await this.getMaxOrderNoByFaculty(faculty.facultyId);
+          major.orderNo = maxOrderNo + 1;
+  
+          return major;
         }
-
-        // Lấy orderNo lớn nhất của khoa đó
-        const maxOrderNo = await this.getMaxOrderNoByFaculty(faculty.facultyId);
-
-        // Gán faculty và orderNo mới
-        major.faculty = faculty;
-        major.orderNo = maxOrderNo + 1;
-
-        return major;
       })
     );
-
+  
     // Lưu danh sách majors vào database
     await this.majorRepository.save(majorsToSave);
   }
