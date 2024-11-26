@@ -22,7 +22,7 @@ export class Subject_Course_OpeningController {
 
     try {
       if (!cycleId || !studyFrameId) {
-        return res.status(400).json({ message: 'Year and StudyFrameId are required' });
+        return res.status(400).json({ message: 'cycleId and StudyFrameId are required' });
       }
 
       // Gọi service để xóa các item theo cycleId và studyFrameId

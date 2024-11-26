@@ -1,5 +1,5 @@
 // studyFrame.service.ts
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, Like, Repository } from 'typeorm';
 import { StudyFrame_Component } from '../entities/StudyFrame';
 import { Major } from '../entities/Major';
 import { FrameStructure } from '../entities/FrameStructure';
@@ -118,6 +118,30 @@ export class StudyFrame_ComponentService {
     return result.affected !== 0;
   }
 
+  async getWhere(condition: any): Promise<StudyFrame_Component[]> {
+    const whereCondition: any = {};
+
+    if (condition.frameComponentId) {
+      whereCondition.frameComponentId = Like(`%${condition.frameComponentId}%`);
+    }
+    if (condition.frameComponentName) {
+      whereCondition.frameComponentName = Like(`%${condition.frameComponentName}%`);
+    }
+    if (condition.description) {
+      whereCondition.description = Like(`%${condition.description}%`);
+    }
+
+    if (condition.major) {
+      whereCondition.major = { majorId: condition.major };
+    }
+
+    return this.studyFrameCompRepository.find({
+      where: whereCondition,
+      relations: [
+        'major'
+      ],
+    });
+  }
 
 }
 

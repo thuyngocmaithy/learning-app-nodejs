@@ -7,9 +7,8 @@ const studyFrameRouter = Router();
 const studyFrameController = new StudyFrameController(AppDataSource);
 
 studyFrameRouter.get('/major/:userId', studyFrameController.GetSubjectByMajor);
-// studyFrameRouter.get('/listSubjectToFrame', studyFrameController.callKhungCTDT);
+studyFrameRouter.get('/getWhere', studyFrameController.getStudyFrameWhere);
 studyFrameRouter.get('/findKhungCTDTByUserId', studyFrameController.findKhungCTDTByUserId);
-// studyFrameRouter.get('/findFrameDepartment', studyFrameController.findKhungCTDTDepartment);
 studyFrameRouter.get('/findKhungCTDTDepartment', studyFrameController.findKhungCTDTDepartment);
 studyFrameRouter.get('/callKhungCTDT', studyFrameController.callKhungCTDT);
 studyFrameRouter.get('/components', studyFrameController.getAllStudyFrameComponents);

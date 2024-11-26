@@ -1,6 +1,6 @@
 import { Major } from './../entities/Major';
 // studyFrame.service.ts
-import { DataSource, In, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
+import { DataSource, In, LessThanOrEqual, Like, MoreThan, Repository } from 'typeorm';
 import { StudyFrame, StudyFrame_Component } from '../entities/StudyFrame';
 import { User } from '../entities/User';
 import { Cycle } from '../entities/Cycle';
@@ -53,7 +53,10 @@ export class StudyFrameService {
   }
 
   async getById(id: string): Promise<StudyFrame | null> {
-    return this.studyFrameRepository.findOne({ where: { frameId: id } });
+    return this.studyFrameRepository.findOne({
+      where: { frameId: id },
+      relations: ['faculty', 'cycle']
+    });
   }
 
   async update(id: string, data: any): Promise<StudyFrame | null> {
@@ -255,6 +258,33 @@ export class StudyFrameService {
         'description',
         'creditHour',
       ]
+    });
+  }
+
+  async getWhere(condition: any): Promise<StudyFrame[]> {
+    const whereCondition: any = {};
+
+    if (condition.frameId) {
+      whereCondition.frameId = Like(`%${condition.frameId}%`);
+    }
+    if (condition.frameName) {
+      whereCondition.frameName = Like(`%${condition.frameName}%`);
+    }
+
+    if (condition.cycle) {
+      whereCondition.cycle = { cycleId: condition.cycle };
+    }
+
+    if (condition.faculty) {
+      whereCondition.faculty = { facultyId: condition.faculty };
+    }
+
+    return this.studyFrameRepository.find({
+      where: whereCondition,
+      relations: [
+        'faculty',
+        'cycle'
+      ],
     });
   }
 
