@@ -2,6 +2,7 @@ import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, Column } from 't
 import { StudyFrame } from './StudyFrame';
 import { Subject } from './Subject';
 import { Semester } from './Semester';
+import { Cycle } from './Cycle';
 
 /**
  * Mở học phần: 1 môn có thể được mở nhiều năm, nhiều khung
@@ -22,10 +23,11 @@ export class Subject_Course_Opening {
   subject: Subject;
 
   /**
-   * Năm mở
+   * Chu kỳ mở
    */
-  @Column({ type: 'int', width: 4, nullable: false })
-  year: number;
+  @ManyToOne(() => Cycle, cycle => cycle.cycleId, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'cycleId', referencedColumnName: 'cycleId' })
+  cycle: Cycle;
 
   /**
    * Học kỳ mở

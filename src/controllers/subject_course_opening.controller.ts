@@ -18,15 +18,15 @@ export class Subject_Course_OpeningController {
   public updateSubjectCourseOpening = (req: Request, res: Response) => RequestHandler.update<Subject_Course_Opening>(req, res, this.service);
 
   public deleteSubjectCourseOpening = async (req: Request, res: Response) => {
-    const { year, studyFrameId } = req.query;
+    const { cycleId, studyFrameId } = req.query;
 
     try {
-      if (!year || !studyFrameId) {
+      if (!cycleId || !studyFrameId) {
         return res.status(400).json({ message: 'Year and StudyFrameId are required' });
       }
 
-      // Gọi service để xóa các item theo year và studyFrameId
-      const result = await this.service.deleteSubjectCourseOpening(year as unknown as number, studyFrameId as unknown as string);
+      // Gọi service để xóa các item theo cycleId và studyFrameId
+      const result = await this.service.deleteSubjectCourseOpening(cycleId as unknown as string, studyFrameId as unknown as string);
 
       if (!result) {
         return res.status(404).json({ message: 'No records found to delete' });
