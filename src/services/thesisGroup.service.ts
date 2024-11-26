@@ -206,12 +206,26 @@ export class ThesisGroupService {
       data.map(async (thesisGroupData) => {
         const thesisGroupId = thesisGroupData[0];
         const thesisGroupName = thesisGroupData[1];
-        const statusId = thesisGroupData[2];
+        const statusName = thesisGroupData[2]; // Nhập từ file
         const startYear = Number(thesisGroupData[3]);
         const finishYear = Number(thesisGroupData[4]);
-        const facultyId = thesisGroupData[5];
+        const facultyName = thesisGroupData[5]; // Nhập từ file
         const startCreateThesisDate = new Date(thesisGroupData[6]);
         const endCreateThesisDate = new Date(thesisGroupData[7]);
+  
+        // Tìm statusId từ statusName
+        const status = await this.statusRepository.findOne({ where: { statusName } });
+        if (!status) {
+          throw new Error(`Không tìm thấy trạng thái với tên: ${statusName}`);
+        }
+        const statusId = status.statusId;
+  
+        // Tìm facultyId từ facultyName
+        const faculty = await this.facultyRepository.findOne({ where: { facultyName } });
+        if (!faculty) {
+          throw new Error(`Không tìm thấy khoa với tên: ${facultyName}`);
+        }
+        const facultyId = faculty.facultyId;
   
         // Kiểm tra xem nhóm đề tài đã tồn tại chưa
         const existingThesisGroup = await this.thesisGroupRepository.findOne({
@@ -221,30 +235,12 @@ export class ThesisGroupService {
         if (existingThesisGroup) {
           // Nếu đã tồn tại, cập nhật thông tin nhóm đề tài
           existingThesisGroup.thesisGroupName = thesisGroupName;
-  
-          // Cập nhật trạng thái
-          const status = await this.statusRepository.findOne({ where: { statusId } });
-          if (!status) {
-            throw new Error(`Không tìm thấy trạng thái với ID: ${statusId}`);
-          }
           existingThesisGroup.status = status;
-  
-          // Cập nhật năm thực hiện
           existingThesisGroup.startYear = startYear;
           existingThesisGroup.finishYear = finishYear;
-  
-          // Cập nhật khoa
-          const faculty = await this.facultyRepository.findOne({ where: { facultyId } });
-          if (!faculty) {
-            throw new Error(`Không tìm thấy khoa với ID: ${facultyId}`);
-          }
           existingThesisGroup.faculty = faculty;
-  
-          // Cập nhật thời gian tạo đề tài
           existingThesisGroup.startCreateThesisDate = startCreateThesisDate;
           existingThesisGroup.endCreateThesisDate = endCreateThesisDate;
-  
-          // Cập nhật người chỉnh sửa cuối cùng
           existingThesisGroup.lastModifyUser = createUser;
           existingThesisGroup.lastModifyDate = new Date();
   
@@ -254,30 +250,12 @@ export class ThesisGroupService {
           const thesisGroup = new ThesisGroup();
           thesisGroup.thesisGroupId = thesisGroupId;
           thesisGroup.thesisGroupName = thesisGroupName;
-  
-          // Thiết lập trạng thái
-          const status = await this.statusRepository.findOne({ where: { statusId } });
-          if (!status) {
-            throw new Error(`Không tìm thấy trạng thái với ID: ${statusId}`);
-          }
           thesisGroup.status = status;
-  
-          // Thiết lập năm thực hiện
           thesisGroup.startYear = startYear;
           thesisGroup.finishYear = finishYear;
-  
-          // Thiết lập khoa
-          const faculty = await this.facultyRepository.findOne({ where: { facultyId } });
-          if (!faculty) {
-            throw new Error(`Không tìm thấy khoa với ID: ${facultyId}`);
-          }
           thesisGroup.faculty = faculty;
-  
-          // Thiết lập thời gian tạo đề tài
           thesisGroup.startCreateThesisDate = startCreateThesisDate;
           thesisGroup.endCreateThesisDate = endCreateThesisDate;
-  
-          // Thiết lập người tạo và chỉnh sửa
           thesisGroup.createUser = createUser;
           thesisGroup.lastModifyUser = createUser;
   
@@ -289,5 +267,6 @@ export class ThesisGroupService {
     // Lưu danh sách nhóm đề tài vào database
     await this.thesisGroupRepository.save(thesisGroupsToSave);
   }
+  
 
 }

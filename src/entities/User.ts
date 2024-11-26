@@ -29,19 +29,19 @@ export class User {
   /**
    * Nơi sinh (không rỗng)
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   placeOfBirth: string;
 
   /**
    * Số điện thoại (không rỗng)
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   phone: string;
 
   /**
    * Email (không rỗng)
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   email: string;
 
   /**
