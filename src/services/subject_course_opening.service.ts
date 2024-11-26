@@ -3,18 +3,21 @@ import { Subject_Course_Opening } from '../entities/Subject_Course_Opening';
 import { StudyFrame } from '../entities/StudyFrame';
 import { Subject } from '../entities/Subject';
 import { Semester } from '../entities/Semester';
+import { Cycle } from '../entities/Cycle';
 
 export class Subject_Course_OpeningService {
 	private subject_course_openingRepository: Repository<Subject_Course_Opening>;
 	private subjectRepository: Repository<Subject>;
 	private studyFrameRepository: Repository<StudyFrame>;
 	private semesterRepository: Repository<Semester>;
+	private cycleRepository: Repository<Cycle>;
 
 	constructor(dataSource: DataSource) {
 		this.subject_course_openingRepository = dataSource.getRepository(Subject_Course_Opening);
 		this.subjectRepository = dataSource.getRepository(Subject);
 		this.studyFrameRepository = dataSource.getRepository(StudyFrame);
 		this.semesterRepository = dataSource.getRepository(Semester);
+		this.cycleRepository = dataSource.getRepository(Cycle);
 	}
 
 	async getAll(): Promise<Subject_Course_Opening[]> {
@@ -26,16 +29,16 @@ export class Subject_Course_OpeningService {
 			.leftJoinAndSelect('studyFrame.faculty', 'faculty')
 			.leftJoinAndSelect('studyFrame.cycle', 'cycle')
 			.select([
-				'subject_course_opening.year AS year',
 				'studyFrame.frameId as studyFrameId',
 				'studyFrame.frameName as studyFrameName',
 				'faculty.facultyId as facultyId',
 				'faculty.facultyName as facultyName',
 				'cycle.cycleId as cycleId',
 				'cycle.cycleName as cycleName',
+				'subject_course_opening.disabled as disabled',
 				'MAX(subject_course_opening.id) AS id', // Hoặc các hàm tổng hợp khác
 			])
-			.groupBy('subject_course_opening.year, subject_course_opening.studyFrame')
+			.groupBy('subject_course_opening.studyFrame, subject_course_opening.disabled')
 			.getRawMany();
 	}
 
@@ -66,11 +69,16 @@ export class Subject_Course_OpeningService {
 			throw new Error('Invalid semester ID');
 		}
 
+		const cycle = await this.cycleRepository.findOne({ where: { cycleId: data.cycle } });
+		if (!cycle) {
+			throw new Error('Invalid cycle ID');
+		}
+
 		const subject_course_opening = this.subject_course_openingRepository.create({
 			subject: subject,
 			instructor: data.instructor,
 			studyFrame: studyFrame,
-			year: data.year,
+			cycle: cycle,
 			semester: semester
 		});
 
@@ -85,7 +93,7 @@ export class Subject_Course_OpeningService {
 
 			// Lấy danh sách tất cả Subject_Course_Opening hiện có trong cơ sở dữ liệu
 			const existingSubjectCourseOpenings = await this.subject_course_openingRepository.find({
-				relations: ['subject', 'studyFrame', 'semester']
+				relations: ['cycle', 'subject', 'studyFrame', 'semester']
 			});
 
 			for (const item of data) {
@@ -93,7 +101,7 @@ export class Subject_Course_OpeningService {
 				const existingRecord = existingSubjectCourseOpenings.find(existing =>
 					existing.subject.subjectId === item.subject &&
 					existing.studyFrame.frameId === item.studyFrame &&
-					existing.year === item.year &&
+					existing.cycle === item.cycle &&
 					existing.semester.semesterId === item.semester
 				);
 
@@ -112,7 +120,7 @@ export class Subject_Course_OpeningService {
 						subject: item.subject,
 						instructor: item.instructor,
 						studyFrame: item.studyFrame,
-						year: item.year,
+						cycle: item.cycle,
 						semester: item.semester
 					});
 
@@ -127,7 +135,7 @@ export class Subject_Course_OpeningService {
 					item.subject === existingRecord.subject.subjectId &&
 					item.instructor === existingRecord.instructor &&
 					item.studyFrame === existingRecord.studyFrame.frameId &&
-					item.year === existingRecord.year &&
+					item.cycle === existingRecord.cycle.cycleId &&
 					item.semester === existingRecord.semester.semesterId
 				);
 
@@ -152,25 +160,30 @@ export class Subject_Course_OpeningService {
 		if (!subject_course_opening) {
 			return null;
 		}
-
-		const subject = await this.subjectRepository.findOne({ where: { subjectId: data.subject } });
-		if (!subject) {
-			throw new Error('Invalid subject ID');
+		if (data.subject) {
+			const subject = await this.subjectRepository.findOne({ where: { subjectId: data.subject } });
+			if (!subject) {
+				throw new Error('Invalid subject ID');
+			}
+			data.subject = subject;
 		}
 
-		const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: data.studyFrame } });
-		if (!studyFrame) {
-			throw new Error('Invalid studyFrame ID');
+		if (data.studyFrame) {
+			const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: data.studyFrame } });
+			if (!studyFrame) {
+				throw new Error('Invalid studyFrame ID');
+			}
+			data.studyFrame = studyFrame;
 		}
 
-		const semester = await this.semesterRepository.findOne({ where: { semesterId: data.semester } });
-		if (!semester) {
-			throw new Error('Invalid semester ID');
+		if (data.semester) {
+			const semester = await this.semesterRepository.findOne({ where: { semesterId: data.semester } });
+			if (!semester) {
+				throw new Error('Invalid semester ID');
+			}
+			data.semester = semester;
 		}
 
-		data.subject = subject;
-		data.studyFrame = studyFrame;
-		data.semester = semester;
 
 		this.subject_course_openingRepository.merge(subject_course_opening, data);
 		return this.subject_course_openingRepository.save(subject_course_opening);
@@ -182,11 +195,11 @@ export class Subject_Course_OpeningService {
 	}
 
 
-	async deleteSubjectCourseOpening(year: number, studyFrameId: string): Promise<boolean> {
+	async deleteSubjectCourseOpening(cycleId: string, studyFrameId: string): Promise<boolean> {
 		try {
 			// Xóa các bản ghi theo year và studyFrameId
 			const result = await this.subject_course_openingRepository.delete({
-				year: year,
+				cycle: { cycleId: cycleId },
 				studyFrame: { frameId: studyFrameId },
 			});
 

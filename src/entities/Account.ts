@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Permission } from './Permission';
 
 /**
@@ -55,6 +55,19 @@ export class Account {
    */
   @Column({ default: false, nullable: false })
   isSystem: boolean;
+
+  /**
+ * Ngày tạo (không rỗng)
+ */
+  @CreateDateColumn()
+  createDate: Date;
+
+
+  /**
+   * Ngày chỉnh sửa cuối cùng (không rỗng)
+   */
+  @UpdateDateColumn()
+  lastModifyDate: Date;
 }
 
 

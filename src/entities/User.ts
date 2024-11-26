@@ -27,21 +27,21 @@ export class User {
   dateOfBirth: Date;
 
   /**
-   * Nơi sinh (không rỗng)
+   * Nơi sinh 
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   placeOfBirth: string;
 
   /**
-   * Số điện thoại (không rỗng)
+   * Số điện thoại
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   phone: string;
 
   /**
-   * Email (không rỗng)
+   * Email
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   email: string;
 
   /**
@@ -71,12 +71,6 @@ export class User {
   major: Major;
 
   /**
-   * Vẫn còn học hay không (có thể rỗng)
-   */
-  @Column({ nullable: true })
-  stillStudy: boolean;
-
-  /**
 * niên khoá 
 */
   @Column({ nullable: true })
@@ -88,41 +82,6 @@ export class User {
   @Column({ nullable: true })
   sex: string;
 
-  /**
-* dan_toc
-*/
-  @Column({ nullable: true })
-  dan_toc: string;
-
-  /**
- * ton_giao
- */
-  @Column({ nullable: true })
-  ton_giao: string;
-
-  /**
-* quoc_tich
-*/
-  @Column({ nullable: true })
-  quoc_tich: string;
-
-  /**
-* cccd
-*/
-  @Column({ nullable: true })
-  cccd: string;
-
-  /**
-* hộ khẩu
-*/
-  @Column({ nullable: true })
-  ho_khau_thuong_tru: string;
-
-  /**
- * khu vuc
- */
-  @Column({ nullable: true })
-  khu_vuc: string;
 
   /**
   * khoi
@@ -130,79 +89,17 @@ export class User {
   @Column({ nullable: true })
   khoi: string;
 
+  /**
+  * cccd
+  */
+  @Column({ nullable: true })
+  cccd: string;
 
   /**
   * bậc hệ đào tạo
   */
   @Column({ nullable: true })
   bac_he_dao_tao: string;
-
-
-  /**
-  * mã cố vấn học tập
-  */
-  @Column({ nullable: true })
-  ma_cvht: string;
-
-  /**
-  * ho ten cố vấn học tập
-  */
-  @Column({ nullable: true })
-  ho_ten_cvht: string;
-
-
-  /**
-  * email_cvht
-  */
-  @Column({ nullable: true })
-  email_cvht: string;
-
-
-  /**
-  * email_cvht
-  */
-  @Column({ nullable: true })
-  dien_thoai_cvht: string;
-
-
-  /**
-* mã cố vấn học tập 2
-*/
-  @Column({ nullable: true })
-  ma_cvht_ng2: string;
-
-  /**
-  * ho ten cố vấn học tập 2
-  */
-  @Column({ nullable: true })
-  ho_ten_cvht_ng2: string;
-
-
-  /**
-  * email_cvht 2
-  */
-  @Column({ nullable: true })
-  email_cvht_ng2: string;
-
-
-  /**
-  * dien_thoai_cvht_ng2  
-  */
-  @Column({ nullable: true })
-  dien_thoai_cvht_ng2: string;
-
-
-  /**
-  * ma-truong 
-  */
-  @Column({ default: "DHSG", nullable: true })
-  ma_truong: string;
-
-  /**
-  * ten_truong
-  */
-  @Column({ default: "ĐH Sài Gòn", nullable: true })
-  ten_truong: string;
 
   /**
   * hoc_vi (giảng viên)
@@ -273,4 +170,12 @@ export class User {
    */
   @Column({ type: 'float', nullable: true })
   GPA: number;
+
+
+  /**
+   * Số tín chỉ hiện tại
+   */
+  @Column({ type: 'int', nullable: true })
+  currentCreditHour: number;
+
 }

@@ -15,16 +15,19 @@ export class UserService {
   }
 
   async getAll(): Promise<User[]> {
-    return this.userRepository.find({ relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'] });
+    return this.userRepository.find({
+      order: { createDate: 'DESC' },
+      relations: ['faculty', 'major', 'account']
+    });
   }
 
   async getById(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { userId: id }, relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'] });
+    return this.userRepository.findOne({ where: { userId: id }, relations: ['faculty', 'major', 'account'] });
   }
 
 
   async getByUserId(userId: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { userId }, relations: ['faculty', 'major', 'account', 'account.permission' , 'createUser', 'lastModifyUser'] });
+    return this.userRepository.findOne({ where: { userId }, relations: ['faculty', 'major', 'account', 'account.permission'] });
   }
 
 
@@ -35,7 +38,7 @@ export class UserService {
         isStudent: false, // Tìm người dùng không phải là sinh viên
         isActive: true,   // Tìm người dùng đang hoạt động
       },
-      relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
+      relations: ['faculty', 'major', 'account'],
     });
   }
 
@@ -46,7 +49,7 @@ export class UserService {
         isStudent: true,
         isActive: true,
       },
-      relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
+      relations: ['faculty', 'major', 'account'],
     });
   }
 
@@ -71,7 +74,7 @@ export class UserService {
         isActive: true,
         faculty: { facultyId }
       },
-      relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
+      relations: ['faculty', 'major', 'account'],
     });
   }
 
@@ -81,10 +84,10 @@ export class UserService {
 
     // Xử lý các điều kiện tìm kiếm cơ bản
     if (condition.userId) {
-        whereCondition.userId = Like(`%${condition.userId}%`);
+      whereCondition.userId = Like(`%${condition.userId}%`);
     }
     if (condition.fullname) {
-        whereCondition.fullname = Like(`%${condition.fullname}%`);
+      whereCondition.fullname = Like(`%${condition.fullname}%`);
     }
     // if (condition.email) {
     //     whereCondition.email = Like(`%${condition.email}%`);
@@ -97,44 +100,45 @@ export class UserService {
     // }
 
     if (condition.class !== undefined) {
-        whereCondition.class = condition.class;
+      whereCondition.class = condition.class;
     }
     if (condition.isStudent !== undefined) {
-        whereCondition.isStudent = condition.isStudent;
+      whereCondition.isStudent = condition.isStudent;
     }
     if (condition.facultyId) {
-        whereCondition.faculty = { facultyId: condition.facultyId };
+      whereCondition.faculty = { facultyId: condition.facultyId };
     }
     if (condition.majorId) {
-        whereCondition.major = { majorId: condition.majorId };
+      whereCondition.major = { majorId: condition.majorId };
     }
 
     if (condition.nien_khoa) {
-        whereCondition.nien_khoa = Like(`%${condition.nien_khoa}%`);
+      whereCondition.nien_khoa = Like(`%${condition.nien_khoa}%`);
     }
 
     // Thêm điều kiện năm học
     if (condition.firstAcademicYear) {
-        whereCondition.firstAcademicYear = condition.firstAcademicYear;
+      whereCondition.firstAcademicYear = condition.firstAcademicYear;
     }
     if (condition.lastAcademicYear) {
-        whereCondition.lastAcademicYear = condition.lastAcademicYear;
+      whereCondition.lastAcademicYear = condition.lastAcademicYear;
     }
     if (condition.academicYearRange) {
-        whereCondition.firstAcademicYear = {
-            $gte: condition.academicYearRange.start,
-        };
-        whereCondition.lastAcademicYear = {
-            $lte: condition.academicYearRange.end,
-        };
+      whereCondition.firstAcademicYear = {
+        $gte: condition.academicYearRange.start,
+      };
+      whereCondition.lastAcademicYear = {
+        $lte: condition.academicYearRange.end,
+      };
     }
 
     // Thực hiện truy vấn
     return this.userRepository.find({
-        where: whereCondition,
-        relations: ['faculty', 'major', 'account', 'createUser', 'lastModifyUser'],
+      where: whereCondition,
+      order: { createDate: 'DESC' },
+      relations: ['faculty', 'major', 'account'],
     });
-}
+  }
 
 
 

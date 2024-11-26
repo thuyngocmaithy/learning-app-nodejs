@@ -19,7 +19,10 @@ export class AccountService {
   }
 
   async getAll(): Promise<Account[]> {
-    return this.accountRepository.find({ relations: ['permission'] });
+    return this.accountRepository.find({
+      order: { createDate: "DESC" },
+      relations: ['permission']
+    });
   }
 
   async getById(id: string): Promise<Account | null> {

@@ -114,8 +114,7 @@ export class StudyFrame_ComponentService {
   }
 
   async delete(ids: string[]): Promise<boolean> {
-    // Xóa trong studyFrame_component
-    const result = await this.studyFrameCompRepository.delete({ id: In(ids) });
+    const result = await this.studyFrameCompRepository.delete({ frameComponentId: In(ids) });
     return result.affected !== 0;
   }
 
