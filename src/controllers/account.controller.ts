@@ -13,6 +13,7 @@ export class AccountController {
   }
 
   public getAllAccounts = (req: Request, res: Response) => RequestHandler.getAll<Account>(req, res, this.accountService);
+  public getAccountWhere = (req: Request, res: Response) => RequestHandler.getWhere<Account>(req, res, this.accountService);
   public getAccountById = (req: Request, res: Response) => RequestHandler.getById<Account>(req, res, this.accountService);
   public createAccount = (req: Request, res: Response) => RequestHandler.create<Account>(req, res, this.accountService);
   public updateAccount = (req: Request, res: Response) => RequestHandler.update<Account>(req, res, this.accountService);

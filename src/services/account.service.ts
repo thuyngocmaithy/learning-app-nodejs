@@ -26,7 +26,7 @@ export class AccountService {
   }
 
   async getById(id: string): Promise<Account | null> {
-    return this.accountRepository.findOne({ where: { id }, relations: ['permission'] });
+    return this.accountRepository.findOne({ where: { username: id }, relations: ['permission'] });
   }
 
   async getByUsername(username: string): Promise<Account | null> {
@@ -48,5 +48,22 @@ export class AccountService {
     return result.affected !== 0;
   }
 
+  async getWhere(condition: Partial<Account>): Promise<Account[]> {
+    const whereCondition: any = {};
 
+
+    if (condition.isSystem) {
+      whereCondition.isSystem = condition.isSystem;
+    }
+
+    // if (condition.endYear) {
+    //   whereCondition.endYear = condition.endYear;
+    // }
+
+    return this.accountRepository.find({
+      where: whereCondition,
+      order: { createDate: "DESC" },
+      relations: ['permission']
+    });
+  }
 }

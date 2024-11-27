@@ -55,15 +55,4 @@ export class ScoreController {
     );
     res.status(200).json(score);
   };
-
-  public getStudentFrameScoresController = async (req: any, res: any) => {
-    try {
-      const { studentId } = req.params;
-      const frameScores = await this.scoreService.getStudentFrameScores(studentId);
-      return res.status(200).json(frameScores);
-    } catch (error) {
-      console.error('Error in getStudentFrameScoresController:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
-  };
 }

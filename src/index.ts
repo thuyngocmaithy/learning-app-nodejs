@@ -14,7 +14,6 @@ import { setupSockets } from './socket';
 
 
 import path from 'path';
-import authRoutes from './routes/auth.route';
 import majorRoute from './routes/major.route';
 import notificationRoute from './routes/notification.route';
 import userRoutes from './routes/User.route';
@@ -130,7 +129,6 @@ app.get('/', (req, res) => {
 
 // Sử dụng router auth
 app.use('/api/authSGU', sguAuthRouter);
-app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/attachments', attachRoutes);

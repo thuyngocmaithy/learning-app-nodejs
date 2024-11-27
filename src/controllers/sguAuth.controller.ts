@@ -10,9 +10,9 @@ export class SguAuthController {
   }
 
   public loginToSgu = async (req: Request, res: Response) => {
-    const { username, password } = req.body;
+    const { username, password, isSync } = req.body;
     try {
-      const result = await this.sguAuthService.loginToSgu(username, password);
+      const result = await this.sguAuthService.loginToSgu(username, password, isSync);
       await response(res, 200, 'success', result, 'Đăng nhập SGU thành công');
     } catch (error: any) {
       console.error('Error logging in:', error.message);

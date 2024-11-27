@@ -84,4 +84,10 @@ export class StudyFrame_Component {
   // Thêm cascade: true để xóa liên quan đến Subject_StudyFrameComp khi xóa StudyFrameComp
   @OneToMany(() => Subject_StudyFrameComp, ssm => ssm.studyFrameComponent, { cascade: ['insert', 'update', 'remove'] })
   ssm: Subject_StudyFrameComp[];
+
+  /**
+    * Có bắt buộc không (không rỗng)
+    */
+  @Column({ type: 'boolean', default: false, nullable: false })
+  isCompulsory: boolean;
 }
