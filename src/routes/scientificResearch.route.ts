@@ -7,6 +7,7 @@ import { AppDataSource } from '../data-source';
 const scientificResearchRouter = Router();
 const scientificResearchController = new ScientificResearchController(AppDataSource);
 
+scientificResearchRouter.post('/import', scientificResearchController.importScienceResearch);
 scientificResearchRouter.get('/', scientificResearchController.getAllScientificResearchs);
 scientificResearchRouter.get('/getByScientificResearchGroupId', scientificResearchController.getByScientificResearchIGroupId);
 scientificResearchRouter.get('/getBySRGIdAndCheckApprove', scientificResearchController.getBySRGIdAndCheckApprove);

@@ -123,4 +123,5 @@ export class ScientificResearch {
    */
   @Column({ nullable: false, default: false })
   isDisable: boolean;
+	existingResearch: ScientificResearch;
 }

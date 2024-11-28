@@ -7,6 +7,7 @@ import { AppDataSource } from '../data-source';
 const scientificResearchGroupRoute = Router();
 const scientificResearchGroupController = new ScientificResearchGroupController(AppDataSource);
 
+scientificResearchGroupRoute.post('/import', scientificResearchGroupController.importScientificResearchGroup);
 scientificResearchGroupRoute.get('/', scientificResearchGroupController.getAllScientificResearchGroups);
 scientificResearchGroupRoute.put('/updateSRGMulti/:ids', scientificResearchGroupController.updateScientificResearchGroupMulti);
 scientificResearchGroupRoute.get('/getWhere', scientificResearchGroupController.getSRGWhere);

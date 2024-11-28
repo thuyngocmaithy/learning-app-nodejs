@@ -7,6 +7,7 @@ import { Status } from '../entities/Status';
 import { AppDataSource } from '../data-source';
 import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 import { ScientificResearch_User } from '../entities/ScientificResearch_User';
+import { ThesisService } from './thesis.service';
 
 export class ScientificResearchService {
 	private scientificResearchRepository: Repository<ScientificResearch>;
@@ -271,5 +272,100 @@ export class ScientificResearchService {
 		return result;
 	}
 
+	public async importScientificResearch(data: any[], createUserId: string): Promise<void> {
+
+		const createUser = await this.userRepository.findOne({ where: { userId: createUserId } });
+		if (!createUser) {
+			throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
+		}
+
+		const ScientificResearchToSave = await Promise.all(
+			data.map(async (scientificData) => {
+				const scientificResearchId = scientificData[0];
+				const scientificResearchName = scientificData[1];
+				const scientificResearchGroup = scientificData[2];
+				const description = scientificData[3];
+				const numberOfMember = scientificData[4];
+				const statusName = scientificData[5];
+				const instructor = scientificData[6];
+				const level = scientificData[7];
+				const budget = parseInt(scientificData[8]) || 0;
+				const startDate = new Date(scientificData[9]);
+				const finishDate = new Date(scientificData[10]);
+
+				console.log(scientificData);
+
+				if (!['Cơ sở', 'Thành phố', 'Bộ', 'Quốc gia', 'Quốc tế'].includes(level)) {
+					throw new Error(`Giá trị cột cấp không đúng: ${level}`);
+				}
+
+
+
+				const status = await this.statusRepository.findOne({ where: { statusName: scientificData.statusName } });
+				if (!status) {
+					throw new Error(`Không tìm thấy trạng thái với tên: ${statusName}`);
+				}
+
+				const user = await this.userRepository.findOne({ where: { userId: scientificData.instructor } });
+				if (!user) {
+					throw new Error(`Không tìm thấy người hướng dẫn: ${instructor}`);
+				}
+
+				const researchGroup = await this.scientificResearchGroupRepository.findOne({
+					where: { scientificResearchGroupId: scientificData.scientificResearchGroup }
+				});
+
+				if (!researchGroup) {
+					throw new Error(`Không tìm thấy nhóm đề tài nghiên cứu khoa học: ${researchGroup}`);
+				}
+
+
+				// Kiểm tra xem đề tài đã tồn tại chưa
+				const existingResearch = await this.scientificResearchRepository.findOne({
+					where: { scientificResearchId },
+				});
+
+				if (existingResearch) {
+					existingResearch.scientificResearchName = scientificResearchName;
+					existingResearch.scientificResearchGroup = researchGroup;
+					existingResearch.description = description;
+					existingResearch.numberOfMember = numberOfMember;
+					existingResearch.status = status;
+					existingResearch.instructor = user;
+					existingResearch.level = ['Cơ sở', 'Thành phố', 'Bộ', 'Quốc gia', 'Quốc tế'].includes(level) ? level : 'Cơ sở';
+					existingResearch.budget = budget;
+					existingResearch.startDate = new Date(startDate);
+					existingResearch.finishDate = new Date(finishDate);
+
+					existingResearch.lastModifyDate = new Date();
+					existingResearch.lastModifyUser = createUser;
+
+					return existingResearch;
+				}
+				else {
+					let research = new ScientificResearch();
+					research.scientificResearchId = scientificResearchId;
+					research.scientificResearchName = scientificResearchName;
+					research.scientificResearchGroup = researchGroup;
+					research.description = description;
+					research.numberOfMember = numberOfMember;;
+					research.status = status;
+					research.instructor = user;
+					research.level = ['Cơ sở', 'Thành phố', 'Bộ', 'Quốc gia', 'Quốc tế'].includes(level) ? level : 'Cơ sở';
+					research.budget = budget;
+					research.startDate = new Date(startDate);
+					research.finishDate = new Date(finishDate);
+					research.createUser = createUser;
+					research.lastModifyUser = createUser;
+					research.lastModifyDate = new Date();
+
+					return research;
+				}
+			})
+		);
+
+
+		await this.scientificResearchRepository.save(ScientificResearchToSave);
+	}
 }
 

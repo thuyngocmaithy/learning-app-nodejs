@@ -1,4 +1,6 @@
+
 // scientificResearchGroup.service.ts
+import { ScientificResearch } from './../entities/ScientificResearch';
 import { DataSource, Repository, FindOneOptions, Like, CreateDateColumn, In, LessThanOrEqual, MoreThan, MoreThanOrEqual, LessThan, IsNull } from 'typeorm';
 import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 import { Faculty } from '../entities/Faculty';
@@ -9,11 +11,13 @@ export class ScientificResearchGroupService {
   private scientificResearchGroupRepository: Repository<ScientificResearchGroup>;
   private facultyRepository: Repository<Faculty>;
   private statusRepository: Repository<Status>;
+  private userRepository: Repository<User>;
 
   constructor(dataSource: DataSource) {
     this.scientificResearchGroupRepository = dataSource.getRepository(ScientificResearchGroup);
     this.facultyRepository = dataSource.getRepository(Faculty);
     this.statusRepository = dataSource.getRepository(Status);
+    this.userRepository = dataSource.getRepository(User);
   }
 
   async getAll(): Promise<ScientificResearchGroup[]> {
@@ -194,7 +198,79 @@ export class ScientificResearchGroupService {
     return result;
   }
 
+  public async importScientificReasearchGroup(data: any[], createUserId: string): Promise<void> {
+    const createUser = await this.userRepository.findOne({ where: { userId: createUserId } });
+    if (!createUser) {
+      throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
+    }
 
+    const ScientificResearchGroupToSave = await Promise.all(
+      data.map(async (scientificGroupData) => {
+        const scientificResearchGroupId = scientificGroupData[0];
+        const scientificResearchGroupName = scientificGroupData[1];
+        const facultyName = scientificGroupData[2];
+        const statusName = scientificGroupData[3];
+        const startYear = scientificGroupData[4];
+        const finishYear = scientificGroupData[5];
+        const startCreateSRDate = scientificGroupData[6];
+        const endCreateSRDate = scientificGroupData[7];
+        const isDisable = scientificGroupData[8];
+
+
+        const status = await this.statusRepository.findOne({ where: { statusName: scientificGroupData.statusName } });
+        if (!status) {
+          throw new Error(`Không tìm thấy trạng thái với tên: ${statusName}`);
+        }
+
+        const faculty = await this.facultyRepository.findOne({ where: { facultyName } });
+        if (!faculty) {
+          throw new Error(`Không tìm thấy khoa với tên: ${facultyName}`);
+        }
+        const facultyId = faculty.facultyId;
+
+        // Kiểm tra xem nhóm đề tài đã tồn tại chưa
+        const existingResearchGroup = await this.scientificResearchGroupRepository.findOne({
+          where: { scientificResearchGroupId },
+        });
+
+        if (existingResearchGroup) {
+          existingResearchGroup.scientificResearchGroupName = scientificResearchGroupName;
+          existingResearchGroup.faculty = faculty;
+          existingResearchGroup.status = status;
+          existingResearchGroup.startYear = startYear;
+          existingResearchGroup.finishYear = finishYear;
+          existingResearchGroup.startCreateSRDate = new Date(startCreateSRDate);
+          existingResearchGroup.endCreateSRDate = new Date(endCreateSRDate);
+          existingResearchGroup.isDisable = isDisable || true;
+
+          existingResearchGroup.lastModifyDate = new Date();
+          existingResearchGroup.lastModifyUser = createUser;
+
+          return existingResearchGroup;
+        }
+
+        else {
+          let researchGroup = new ScientificResearchGroup();
+          researchGroup.scientificResearchGroupId = scientificResearchGroupId;
+          researchGroup.scientificResearchGroupName = scientificResearchGroupName;
+          researchGroup.faculty = faculty;
+          researchGroup.status = status;
+          researchGroup.startYear = startYear;
+          researchGroup.finishYear = finishYear;
+          researchGroup.startCreateSRDate = new Date(startCreateSRDate);
+          researchGroup.endCreateSRDate = new Date(endCreateSRDate);
+          researchGroup.isDisable = isDisable || true;
+          researchGroup.createUser = createUser;
+          researchGroup.lastModifyUser = createUser;
+          researchGroup.lastModifyDate = new Date();
+
+          return researchGroup;
+        }
+      })
+    );
+
+    await this.scientificResearchGroupRepository.save(ScientificResearchGroupToSave);
+  }
 
 
 }

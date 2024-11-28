@@ -10,6 +10,7 @@ export class ScientificResearchController {
 
   constructor(dataSource: DataSource) {
     this.scientificResearchService = new ScientificResearchService(dataSource);
+    this.importScienceResearch = this.importScienceResearch.bind(this);
   }
 
   public getAllScientificResearchs = (req: Request, res: Response) => RequestHandler.getAll<ScientificResearch>(req, res, this.scientificResearchService);
@@ -46,4 +47,88 @@ export class ScientificResearchController {
       return res.status(500).json({ message: 'error', error: err.message });
     }
   };
+
+  public async importScienceResearch(req: Request, res: Response): Promise<Response<any, Record<string, any>>> {
+    try {
+      const { data, createUserId } = req.body;
+
+      // Kiểm tra dữ liệu đầu vào
+      if (!Array.isArray(data) || !createUserId) {
+        return res.status(400).json({
+          message: 'Dữ liệu không hợp lệ hoặc thiếu CreateUserId',
+        });
+      }
+
+      // Hàm parse ngày
+      const parseDate = (dateString: string): Date | null => {
+        const [day, month, year] = dateString.split('-').map(Number);
+        if (!day || !month || !year) return null;
+        return new Date(year, month - 1, day);
+      };
+
+
+      // Validate dữ liệu
+      const isValidData = data.every(row => {
+        const startDate = parseDate(row[9]);
+        const finishDate = parseDate(row[10]);
+
+        return (
+          Array.isArray(row) &&
+          row.length >= 9 &&
+          typeof row[0] === 'string' &&
+          typeof row[1] === 'string' &&
+          typeof row[2] === 'string' &&
+          typeof row[3] === 'string' &&
+          !isNaN(Number(row[4])) &&
+          typeof row[5] === 'string' &&
+          typeof row[6] === 'string' &&
+          typeof row[7] === 'string' &&
+          !isNaN(Number(row[8])) &&
+          startDate instanceof Date && !isNaN(startDate.getTime()) &&
+          finishDate instanceof Date && !isNaN(finishDate.getTime())
+        );
+      });
+
+
+      if (!isValidData) {
+        return res.status(400).json({
+          message: 'Cấu trúc dữ liệu không hợp lệ',
+        });
+      }
+
+      // Chuẩn hóa dữ liệu
+      const processedData = data.map(row => {
+        const startDate = parseDate(row[9]);
+        const finishDate = parseDate(row[10]);
+        return [
+          row[0],
+          row[1],
+          row[2],
+          row[3],
+          row[4],
+          row[5],
+          row[6],
+          row[7],
+          row[8],
+          startDate ? startDate.toISOString() : null,
+          finishDate ? finishDate.toISOString() : null
+        ];
+      });
+
+      // Gọi service
+      await this.scientificResearchService.importScientificResearch(processedData, createUserId);
+
+      return res.status(200).json({
+        message: 'Import đề tài thành công',
+      });
+
+    } catch (error: any) {
+      console.error('[ScienceResearchController - importScienceResearch]:', error);
+      return res.status(500).json({
+        message: 'Có lỗi xảy ra khi import dữ liệu',
+        error: error.message,
+      });
+    }
+  }
+
 }
