@@ -87,28 +87,45 @@ export class StatusService {
     if (!createUser) {
       throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
     }
-
+  
     const statusesToSave = await Promise.all(
       data.map(async (statusData) => {
-        const status = new Status();
-        status.statusId = statusData[0];
-        status.statusName = statusData[1];
-        status.type = statusData[2];
-
-        // Gán createUser từ tham số API
-        status.createUser = createUser;
-
-        // Tính toán orderNo mới dựa trên type
-        const maxOrderNo = await this.getMaxOrderNoByType(status.type);
-        status.orderNo = maxOrderNo + 1;
-
-        // Gán thêm các trường dữ liệu
-        status.color = statusData[3] || null;
-
-        return status;
+        const statusId = statusData[0];
+        const statusName = statusData[1];
+        const type = statusData[2];
+        const color = statusData[3] || null;
+  
+        // Kiểm tra xem trạng thái đã tồn tại chưa
+        const existingStatus = await this.statusRepository.findOne({
+          where: { statusId },
+        });
+  
+        if (existingStatus) {
+          // Nếu đã tồn tại, cập nhật thông tin trạng thái
+          existingStatus.statusName = statusName;
+          existingStatus.type = type;
+          existingStatus.color = color;
+          existingStatus.lastModifyUser = createUser;
+          return existingStatus;
+        } else {
+          // Nếu chưa tồn tại, tạo trạng thái mới
+          const status = new Status();
+          status.statusId = statusId;
+          status.statusName = statusName;
+          status.type = type;
+          status.color = color;
+          status.createUser = createUser;
+          status.lastModifyUser = createUser;
+  
+          // Tính toán orderNo mới dựa trên type
+          const maxOrderNo = await this.getMaxOrderNoByType(status.type);
+          status.orderNo = maxOrderNo + 1;
+  
+          return status;
+        }
       })
     );
-
+  
     await this.statusRepository.save(statusesToSave);
   }
 

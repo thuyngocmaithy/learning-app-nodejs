@@ -55,14 +55,31 @@ export class FacultyService {
   }
 
   async importFaculty(data: any[]) {
-    
-    const facultiesToSave = data.map((facultyData) => {
-        const faculty = new Faculty();
-        faculty.facultyId = facultyData[0]; 
-        faculty.facultyName = facultyData[1]; 
-        return faculty;
-    });
-
+    const facultiesToSave = await Promise.all(
+      data.map(async (facultyData) => {
+        const facultyId = facultyData[0];
+        const facultyName = facultyData[1];
+  
+        // Kiểm tra xem khoa đã tồn tại chưa
+        const existingFaculty = await this.facultyRepository.findOne({
+          where: { facultyId },
+        });
+  
+        if (existingFaculty) {
+          // Nếu đã tồn tại, cập nhật thông tin khoa
+          existingFaculty.facultyName = facultyName;
+          return existingFaculty;
+        } else {
+          // Nếu chưa tồn tại, tạo khoa mới
+          const faculty = new Faculty();
+          faculty.facultyId = facultyId;
+          faculty.facultyName = facultyName;
+          return faculty;
+        }
+      })
+    );
+  
+    // Lưu danh sách khoa vào database
     await this.facultyRepository.save(facultiesToSave);
-  };
+  }
 }

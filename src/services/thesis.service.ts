@@ -267,5 +267,96 @@ export class ThesisService {
     return result;
   }
 
+
+  async importThesis(data: any[], createUserId: string): Promise<void> {
+    // Kiểm tra createUserId hợp lệ
+    const createUser = await this.userRepository.findOne({ where: { userId: createUserId } });
+    if (!createUser) {
+      throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
+    }
+  
+    const thesisToSave = await Promise.all(
+      data.map(async (thesisData) => {
+        const thesisId = thesisData[0];
+        const thesisName = thesisData[1];
+        const thesisGroupName = thesisData[2];
+        const fullname = thesisData[3]; // tên người hướng dẫn
+        const numberOfMember = thesisData[4];
+        const statusName = thesisData[5]; 
+        const description = thesisData[6];
+        const startDate = new Date(thesisData[7]);
+        const finishDate = new Date(thesisData[8]);
+
+  
+        // Tìm statusId từ statusName
+        const status = await this.statusRepository.findOne({ where: { statusName: thesisData.statusName}});
+        if (!status) {
+          throw new Error(`Không tìm thấy trạng thái với tên: ${statusName}`);
+        }
+        const statusId = status.statusId;
+  
+        // Tìm userId từ userfullname
+        const user = await this.userRepository.findOne({ where: { fullname } });
+        if (!user) {
+          throw new Error(`Không tìm thấy người hướng dẫn: ${fullname}`);
+        }
+        const userId = user.userId;
+        
+        
+        const thesisGroup = await this.thesisGroupRepository.findOne({ where: { thesisGroupName } });
+        if (!thesisGroup) {
+          throw new Error(`Không tìm thấy người hướng dẫn: ${thesisGroupName}`);
+        }
+        const thesisGroupId = thesisGroup?.thesisGroupId;
+
+
+        // Kiểm tra xem đề tài đã tồn tại chưa
+        const existingThesis = await this.thesisRepository.findOne({
+          where: { thesisId },
+        });
+  
+        if (existingThesis) {
+          // Nếu đã tồn tại, cập nhật thông tin nhóm đề tài
+          existingThesis.thesisName = thesisName;
+          existingThesis.status = status;
+          existingThesis.instructor = user;
+          existingThesis.numberOfMember = numberOfMember;
+          existingThesis.description = description;
+          existingThesis.startDate = new Date(startDate);
+          existingThesis.finishDate = new Date(finishDate);
+          existingThesis.lastModifyUser = createUser;
+
+          existingThesis.lastModifyDate = new Date();
+          if(thesisGroup)
+            existingThesis.thesisGroup = thesisGroup;
+  
+          return existingThesis;
+        } else {
+          // Nếu chưa tồn tại, tạo nhóm đề tài mới
+          const thesis = new Thesis();
+          thesis.thesisId = thesisId || '';
+          thesis.thesisName = thesisName;
+          thesis.status = status;
+          thesis.numberOfMember = numberOfMember;
+          thesis.startDate = new Date(startDate);
+          thesis.finishDate = new Date(finishDate);
+          thesis.description = description;
+          thesis.instructor = user;
+          thesis.createUser = createUser;
+          thesis.lastModifyUser = createUser;
+
+          if(thesisGroup)
+            thesis.thesisGroup = thesisGroup;
+
+  
+          return thesis;
+        }
+      })
+    );
+  
+    // Lưu danh sách đề tài vào database
+    await this.thesisRepository.save(thesisToSave);
+  }
+
 }
 

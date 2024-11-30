@@ -7,6 +7,7 @@ import { AppDataSource } from '../data-source';
 const thesisGroupRoute = Router();
 const thesisGroupController = new ThesisGroupController(AppDataSource);
 
+thesisGroupRoute.post('/import', thesisGroupController.importThesisGroup);
 thesisGroupRoute.get('/', thesisGroupController.getAllThesisGroups);
 thesisGroupRoute.put('/updateThesisGroupMulti/:ids', thesisGroupController.updateThesisGroupMulti);
 thesisGroupRoute.get('/getWhere', thesisGroupController.getThesisGroupWhere);

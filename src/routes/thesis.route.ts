@@ -6,6 +6,7 @@ import { AppDataSource } from '../data-source';
 const thesisRouter = Router();
 const thesisController = new ThesisController(AppDataSource);
 
+thesisRouter.post('/import', thesisController.importThesis);
 thesisRouter.get('/', thesisController.getAllThesis);
 thesisRouter.get('/getByThesisGroupId', thesisController.getByThesisIGroupId);
 thesisRouter.get('/getByThesisGroupIdAndCheckApprove', thesisController.getByThesisGroupIdAndCheckApprove);
