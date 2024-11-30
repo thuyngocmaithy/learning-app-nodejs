@@ -903,7 +903,7 @@ export class SguAuthService {
 	async getInfoUserFromSGU_DKMH(username: string, password: string, isExistAccount: boolean) {
 		// Khởi tạo trình duyệt Playwright
 		const browser = await chromium.launch({
-			headless: false,
+			headless: true,
 			args: [
 				'--disable-blink-features=AutomationControlled',
 				'--disable-web-security',
