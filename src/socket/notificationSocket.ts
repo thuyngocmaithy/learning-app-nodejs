@@ -55,7 +55,7 @@ export const setupNotificationSocket = (io: Server) => {
         //Xóa thông báo
         socket.on('deleteNotification', async ({ room, deleteNotification }: { room: string; deleteNotification: Notification }) => {
             try {
-                const notiFind = await notificationService.getWhere({ toUser: deleteNotification.toUser, createUser: deleteNotification.createUser, content: deleteNotification.content });
+                const notiFind = await notificationService.getWhere({ toUser: deleteNotification.toUser, createUser: deleteNotification.createUser, title: deleteNotification.title });
                 if (notiFind) {
                     await notificationService.delete([notiFind[0].id]);
                     notificationIo.to(room).emit('notificationDeleted', notiFind[0].id);

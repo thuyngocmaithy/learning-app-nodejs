@@ -58,6 +58,10 @@ export class NotificationService {
       whereCondition.createUser = { userId: condition.createUser.userId };
     }
 
+    if (condition.title) {
+      whereCondition.title = condition.title;
+    }
+
     if (condition.content) {
       whereCondition.content = condition.content;
     }

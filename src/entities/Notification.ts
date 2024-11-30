@@ -29,6 +29,12 @@ export class Notification {
   content: string;
 
   /**
+   * Tiêu đề
+   */
+  @Column({ nullable: true })
+  title: string;
+
+  /**
    * URL liên kết (không rỗng)
    */
   @Column({ nullable: false })

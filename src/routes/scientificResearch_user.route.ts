@@ -7,6 +7,7 @@ const scientificResearchUserController = new ScientificResearch_UserController(A
 
 scientificResearchUserRouter.get('/', scientificResearchUserController.getAllScientificResearchUser);
 scientificResearchUserRouter.get('/highestGroup', scientificResearchUserController.getHighestGroupScientificResearchUser);
+scientificResearchUserRouter.get('/getByListSRId/:ids', scientificResearchUserController.getByListSRId);
 scientificResearchUserRouter.get('/getWhere', scientificResearchUserController.getScientificResearchUserWhere);
 scientificResearchUserRouter.get('/getByScientificResearchId', scientificResearchUserController.getByScientificResearchId);
 scientificResearchUserRouter.get('/:id', scientificResearchUserController.getScientificResearchUserById);
