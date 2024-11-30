@@ -7,6 +7,7 @@ const scoreController = new ScoreController(AppDataSource);
 
 scoreRouter.get('/student/:studentId', scoreController.getScoreByStudentId);
 scoreRouter.get('/score/:studentId', scoreController.getScoreByStudentId);
+scoreRouter.post('/import', scoreController.importScore);
 scoreRouter.get('/', scoreController.getAllScores);
 scoreRouter.get('/:id', scoreController.getScoreById);
 scoreRouter.get('/student/:studentId/semester/:semesterId', scoreController.getScoreByStudentIdAndSemesterId);

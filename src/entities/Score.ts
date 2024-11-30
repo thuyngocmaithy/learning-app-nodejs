@@ -35,15 +35,15 @@ export class Score {
   semester: Semester;
 
   /**
-   * Điểm thi (không rỗng)
+   * Điểm thi (rỗng)
    */
-  @Column('decimal', { precision: 5, scale: 2, nullable: false })
+  @Column('decimal', { precision: 5, scale: 2, nullable: true })
   examScore: number;
 
   /**
-   * Điểm kiểm tra (không rỗng)
+   * Điểm kiểm tra (rỗng)
    */
-  @Column('decimal', { precision: 5, scale: 2, nullable: false })
+  @Column('decimal', { precision: 5, scale: 2, nullable: true })
   testScore: number;
 
   /**
@@ -67,7 +67,7 @@ export class Score {
   /**
    * Kết quả (mặc định: false, không rỗng)
    */
-  @Column({ default: false, nullable: false })
+  @Column({ default: true, nullable: false })
   result: boolean;
 }
 
