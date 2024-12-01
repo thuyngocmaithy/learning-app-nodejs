@@ -16,13 +16,15 @@ export class NotificationService {
 
 	public getAll = async (): Promise<Notification[]> => {
 		return this.notificationRepository.find({
-			relations: ['toUsers', 'toUsers.user', 'createUser']
+			relations: ['toUsers', 'toUsers.user', 'createUser'],
+			order: { createDate: 'DESC' },
 		});
 	}
 
 	public getById = async (id: string): Promise<Notification | null> => {
 		const options: FindOneOptions<Notification> = {
 			where: { id },
+			order: { createDate: 'DESC' },
 			relations: ['toUsers', 'toUsers.user', 'createUser']
 		};
 		return this.notificationRepository.findOne(options);
@@ -74,8 +76,9 @@ export class NotificationService {
 			return null; // Trả về null nếu thông báo không tồn tại
 		}
 
+
 		// Nếu trong notificationData có truyền isRead hoặc disabled thì không cập nhật toUsers
-		if (!notificationData.isRead || !notificationData.disabled) {
+		if (notificationData.isRead === undefined && notificationData.disabled === undefined) {
 			// Lấy danh sách người dùng hiện tại (toUsers)
 			const currentToUsers = existingNotification.toUsers;
 
@@ -169,7 +172,12 @@ export class NotificationService {
 
 		// Điều kiện cho toUsers (tìm thông báo gửi tới người dùng)
 		if (condition.toUsers) {
-			const toUsers = JSON.parse(condition.toUsers);
+			let toUsers;
+			if (typeof condition.createUser === 'string') {
+				toUsers = JSON.parse(condition.toUsers);
+			} else {
+				toUsers = condition.toUsers;  // Nếu đã là object, không cần parse
+			}
 			if (Array.isArray(toUsers) && toUsers.length > 0) {
 				const userIds = toUsers.map(user => user.userId); // Mảng userId
 				whereCondition.push({ toUsers: { userId: In(userIds) } }); // Thêm điều kiện OR cho toUsers
