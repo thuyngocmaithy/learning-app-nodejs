@@ -239,13 +239,27 @@ export class ScientificResearch_UserService {
 				'user',
 				'scientificResearch.instructor',
 				'scientificResearch.status',
-				//'scientificResearch.follower',
-				//'scientificResearch.follower.followerDetails',
-				//'scientificResearch.follower.followerDetails.user',
+				// 'scientificResearch.follower',
+				// 'scientificResearch.follower.followerDetails',
+				// 'scientificResearch.follower.followerDetails.user',
 				'scientificResearch.scientificResearchGroup.faculty'
 			]
 		};
 		return this.scientificResearchUserRepository.find(options);
 	}
+
+	//Lấy Danh Sách Người Theo Dõi
+	public getFollowersByListSRId = async (ids: string[]): Promise<any> => {
+		const options: FindManyOptions<ScientificResearch_User> = {
+			where: { scientificResearch: { scientificResearchId: In(ids) } },
+			relations: [
+				'scientificResearch.follower',
+				'scientificResearch.follower.followerDetails',
+				'scientificResearch.follower.followerDetails.user',
+			]
+		};
+		return this.scientificResearchUserRepository.find(options);
+	};
+
 
 }

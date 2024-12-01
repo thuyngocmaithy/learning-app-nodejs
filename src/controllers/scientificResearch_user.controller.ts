@@ -135,4 +135,19 @@ export class ScientificResearch_UserController {
 			return res.status(500).json({ message: 'error', error: err.message });
 		}
 	};
+
+	public getFollowersByListSRId = async (req: Request, res: Response) => {
+		try {
+			const ids = (req.params.ids as String).split(',');
+			const result = await this.scientificResearchUserService.getFollowersByListSRId(ids);
+			if (result) {
+				return res.status(200).json({ message: 'success', data: result });
+			}
+			return res.status(204).json({ message: 'success', data: [] });
+		} catch (error) {
+			console.error("Update Error:", error);
+			const err = error as Error;
+			return res.status(500).json({ message: 'error', error: err.message });
+		}
+	};
 }
