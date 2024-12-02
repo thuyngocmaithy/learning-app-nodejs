@@ -1,6 +1,14 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Unique } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToMany,
+  JoinTable,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from './User';
-
 
 /**
  * Thực thể Thông báo
@@ -14,32 +22,68 @@ export class Notification {
   id: string;
 
   /**
-   * Loại thông báo (không rỗng)
+   * Loại thông báo
    */
   @Column({
     type: 'enum',
     enum: ['success', 'error', 'warning', 'info'],
   })
-  type: 'success' | 'error' | 'warning' | 'info' = "info";
+  type: 'success' | 'error' | 'warning' | 'info' = 'info';
 
   /**
-   * Nội dung thông báo (không rỗng)
+   * Nội dung thông báo
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   content: string;
 
   /**
-   * URL liên kết (không rỗng)
+   * Tiêu đề
    */
-  @Column({ nullable: false })
+  @Column({ nullable: true })
+  title: string;
+
+  /**
+   * URL liên kết
+   */
+  @Column({ nullable: true })
   url: string;
 
   /**
-   * ID người nhận thông báo (tham chiếu đến thực thể User, không rỗng)
+   * Người nhận thông báo (ManyToMany)
    */
-  @ManyToOne(() => User, data => data.userId, { nullable: true })
-  @JoinColumn({ name: 'toUserId' })
-  toUser: User;
+  @ManyToMany(() => User, (user) => user.receivedNotifications, { cascade: true })
+  @JoinTable({
+    name: 'notification_users', // Bảng trung gian
+    joinColumn: { name: 'notificationId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'userId', referencedColumnName: 'userId' },
+  })
+  toUsers: User[];
+
+  /**
+   * Người tạo thông báo
+   */
+  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @JoinColumn({ name: 'createUserId' })
+  createUser: User;
+
+  /**
+   * Ngày tạo
+   */
+  @CreateDateColumn()
+  createDate: Date;
+
+  /**
+   * Đánh dấu thông báo hệ thống
+   */
+  @Column({ default: false, nullable: false })
+  isSystem: boolean;
+
+
+  /**
+  * Trạng thái ẩn (mặc định: false, không rỗng)
+  */
+  @Column({ default: false, nullable: false })
+  disabled: boolean;
 
   /**
    * Trạng thái đã đọc (mặc định: false, không rỗng)
@@ -47,22 +91,5 @@ export class Notification {
   @Column({ default: false, nullable: false })
   isRead: boolean;
 
-  /**
-   * Trạng thái ẩn (mặc định: false, không rỗng)
-   */
-  @Column({ default: false, nullable: false })
-  disabled: boolean;
 
-  /**
-   * ID người tạo thông báo (tham chiếu đến thực thể User, không rỗng)
-   */
-  @ManyToOne(() => User, data => data.userId, { nullable: false })
-  @JoinColumn({ name: 'createUserId' })
-  createUser: User;
-
-  /**
-   * Ngày tạo (không rỗng)
-   */
-  @CreateDateColumn()
-  createDate: Date;
 }

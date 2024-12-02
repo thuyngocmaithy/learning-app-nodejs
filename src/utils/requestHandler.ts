@@ -70,6 +70,32 @@ export class RequestHandler {
         }
     }
 
+    static async getWhereFilter<T>(
+        req: Request,
+        res: Response,
+        service: { getWhereFilter: (condition: Partial<T>) => Promise<T[]> }
+    ) {
+        try {
+            const condition = req.query as Partial<T>;
+
+            // Loại bỏ chuỗi 'undefined' từ các thuộc tính của `condition`
+            for (const key in condition) {
+                if (condition[key] === 'undefined') {
+                    condition[key] = undefined;
+                }
+            }
+
+            const result = await service.getWhereFilter(condition);
+            if (result !== null && result.length > 0) {
+                return RequestHandler.sendResponse(res, StatusCodes.OK, "success", result);
+            }
+            return RequestHandler.sendResponse(res, StatusCodes.NO_CONTENT, "success", result);
+        } catch (error) {
+            console.error("Get Where Error:", error);
+            return RequestHandler.sendResponse(res, StatusCodes.INTERNAL_SERVER_ERROR, "error", null, (error as Error).message);
+        }
+    }
+
 
 
     static async update<T>(req: Request, res: Response, service: { update: (id: string, data: any) => Promise<T | null> }) {

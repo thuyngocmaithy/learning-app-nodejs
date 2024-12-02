@@ -169,63 +169,24 @@ export class SubjectService {
 		return queryBuilder.getRawMany();
 	}
 
-  async importSubject(data: any[], createUserId: string): Promise<void> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // Validate createUser
-      const createUser = await queryRunner.manager.findOne(User, {
-        where: { userId: createUserId },
-      });
-
-      if (!createUser) {
-        throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
-      }
-
-      const subjectsToSave = await Promise.all(
-        data.map(async (row) => {
-          const [subjectId, subjectName, creditHour, isCompulsory, subjectBeforeId, subjectEqualId] = row;
-
-          const subject = new Subject();
-          subject.subjectId = String(subjectId);
-          subject.subjectName = subjectName;
-          subject.creditHour = Number(creditHour);
-        //   subject.isCompulsory = isCompulsory === 'true' || isCompulsory === true;
-
-          // Xử lý môn học trước (nếu có)
-          if (subjectBeforeId) {
-            const subjectBefore = await queryRunner.manager.findOne(Subject, {
-              where: { subjectId: subjectBeforeId },
-            });
-            subject.subjectBefore = subjectBefore || null;
-          } else {
-            subject.subjectBefore = null;
-          }
-
-          // Xử lý môn học tương đương (nếu có)
-          subject.subjectEqual = subjectEqualId ? String(subjectEqualId) : null;
-
-          // Set thông tin người tạo và chỉnh sửa
-          subject.createUser = createUser;
-          subject.lastModifyUser = createUser;
-
-          return subject;
-        })
-      );
-
-      // Lưu các môn học vào database
-      await queryRunner.manager.save(Subject, subjectsToSave);
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
-  }
+	async importSubject(subjects: Partial<Subject>[], createUserId: string): Promise<Subject[]> {
+		// Lưu từng môn học vào db
+		let subjectSaved = [];
+		for (const subject of subjects) {
+			// Kiểm tra xem subjectId có giá trị hợp lệ hay không trước khi tạo môn học
+			if (!subject.subjectId) {
+				continue; // Bỏ qua nếu subjectId không có
+			}
+			// Kiểm tra và chuyển đổi môn học trước
+			if (subject.subjectBefore) {
+				const entity = await this.getById(subject.subjectBefore as unknown as string);
+				if (entity) {
+					subject.subjectBefore = entity;
+				}
+				else {
+					subject.subjectBefore = null;
+				}
+			}
 
 
 }

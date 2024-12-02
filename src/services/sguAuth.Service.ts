@@ -25,12 +25,22 @@ export class SguAuthService {
 	private userService: UserService;
 	private permissionRepository: Repository<Permission>;
 	private majorRepository: Repository<Major>;
+	private scoreRepository: Repository<Score>;
+	private componentScoreRepository: Repository<ComponentScore>;
+	private subjectRepository: Repository<Subject>;
+	private semesterRepository: Repository<Semester>;
+	private userRepository: Repository<User>;
 	private ScoreOfUser: any;
 	private ImageOfUser: string;
 	private GPAOfUser: number;
 	private CurrentCreditHourOfUser: number;
 	private tokenConfig: { [key: string]: { secret: string; role: string; } };
 	constructor() {
+		this.scoreRepository = AppDataSource.getRepository(Score);
+		this.componentScoreRepository = AppDataSource.getRepository(ComponentScore);
+		this.subjectRepository = AppDataSource.getRepository(Subject);
+		this.semesterRepository = AppDataSource.getRepository(Semester);
+		this.userRepository = AppDataSource.getRepository(User);
 		this.accountService = new AccountService(AppDataSource);
 		this.userService = new UserService(AppDataSource);
 		this.permissionRepository = AppDataSource.getRepository(Permission);
@@ -494,15 +504,10 @@ export class SguAuthService {
 	//save score
 	async saveScoresForUserFromSgu(userId: string) {
 		try {
-			const scoreRepository = AppDataSource.getRepository(Score);
-			const componentScoreRepository = AppDataSource.getRepository(ComponentScore);
-			const subjectRepository = AppDataSource.getRepository(Subject);
-			const semesterRepository = AppDataSource.getRepository(Semester);
-			const userRepository = AppDataSource.getRepository(User);
 			const semesters = this.ScoreOfUser.ds_diem_hocky;
 
 			// Lấy thông tin người dùng một lần
-			const user = await userRepository.findOne({ where: { userId: userId } });
+			const user = await this.userRepository.findOne({ where: { userId: userId } });
 			if (!user) {
 				throw new Error(`Không tìm thấy người dùng với ID ${userId}.`);
 			}
@@ -514,7 +519,7 @@ export class SguAuthService {
 				const semesterNumber = parseInt(semesterCode.substring(4));
 
 				// Tìm hoặc tạo học kỳ
-				let semester = await semesterRepository.findOne({
+				let semester = await this.semesterRepository.findOne({
 					where: {
 						semesterName: semesterNumber,
 						academicYear: yearString
@@ -525,13 +530,13 @@ export class SguAuthService {
 				if (!semester.semesterId) {
 					semester.semesterName = semesterNumber;
 					semester.academicYear = yearString;
-					await semesterRepository.save(semester);
+					await this.semesterRepository.save(semester);
 				}
 
 				// Xử lý từng môn học trong học kỳ
 				for (const subjectData of semesterData.ds_diem_mon_hoc) {
 					// Tìm hoặc tạo môn học
-					let subject = await subjectRepository.findOne({ where: { subjectId: subjectData.ma_mon } }) || new Subject();
+					let subject = await this.subjectRepository.findOne({ where: { subjectId: subjectData.ma_mon } }) || new Subject();
 					if (!subject.subjectId) {
 						subject.subjectId = subjectData.ma_mon;
 						subject.subjectName = subjectData.ten_mon;
@@ -540,11 +545,11 @@ export class SguAuthService {
 						subject.lastModifyDate = new Date();
 						subject.createUser = user; // Gán người tạo
 						subject.lastModifyUser = user; // Gán người sửa đổi
-						await subjectRepository.save(subject);
+						await this.subjectRepository.save(subject);
 					}
 
 					// Kiểm tra xem điểm đã tồn tại hay chưa
-					let existingScore = await scoreRepository.findOne({
+					let existingScore = await this.scoreRepository.findOne({
 						where: {
 							student: { userId: userId },
 							subject: { subjectId: subject.subjectId },
@@ -565,7 +570,7 @@ export class SguAuthService {
 						score.subject = subject; // Gán môn học
 						score.semester = semester; // Gán học kỳ
 						// Lưu điểm
-						await scoreRepository.save(score);
+						await this.scoreRepository.save(score);
 
 						// Xử lý điểm của các thành phần
 						if (subjectData.ds_diem_thanh_phan) {
@@ -575,7 +580,7 @@ export class SguAuthService {
 								componentScore.componentName = component.ten_thanh_phan;
 								componentScore.weight = parseInt(component.trong_so);
 								componentScore.weightScore = isNaN(parseFloat(component.diem_thanh_phan)) ? 0 : parseFloat(component.diem_thanh_phan);
-								await componentScoreRepository.save(componentScore);
+								await this.componentScoreRepository.save(componentScore);
 							}
 						}
 					}
@@ -903,7 +908,7 @@ export class SguAuthService {
 	async getInfoUserFromSGU_DKMH(username: string, password: string, isExistAccount: boolean) {
 		// Khởi tạo trình duyệt Playwright
 		const browser = await chromium.launch({
-			headless: false,
+			headless: true,
 			args: [
 				'--disable-blink-features=AutomationControlled',
 				'--disable-web-security',
@@ -1028,19 +1033,27 @@ export class SguAuthService {
 			}
 
 			// Gọi hàm để chuyển hướng đến trang điểm và thông tin nếu người dùng là sinh viên
-			if (currentUser && typeof currentUser === 'object' && currentUser.roles === "SINHVIEN") {
-				await page.setExtraHTTPHeaders({
-					'Referer': 'https://thongtindaotao.sgu.edu.vn/public/',
-					'Content-Type': 'application/json',
-					'Sec-Ch-Ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-					'Sec-Ch-Ua-mobile': '?0',
-					'Sec-Ch-Ua-platform': '"Windows"',
-					'Authorization': `Bearer ${currentUser.access_token}`,
-					'Origin': 'https://thongtindaotao.sgu.edu.vn',
-				});
-				//6. Vào trang thông tin người dùng
-				await page.goto('https://thongtindaotao.sgu.edu.vn/public/#/diem', { waitUntil: 'networkidle' });
+			if (currentUser && typeof currentUser === 'object') {
+				if (currentUser.roles === "SINHVIEN") {
+					await page.setExtraHTTPHeaders({
+						'Referer': 'https://thongtindaotao.sgu.edu.vn/public/',
+						'Content-Type': 'application/json',
+						'Sec-Ch-Ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+						'Sec-Ch-Ua-mobile': '?0',
+						'Sec-Ch-Ua-platform': '"Windows"',
+						'Authorization': `Bearer ${currentUser.access_token}`,
+						'Origin': 'https://thongtindaotao.sgu.edu.vn',
+					});
+					//6. Vào trang thông tin điểm cho sinh viên
+					await page.goto('https://thongtindaotao.sgu.edu.vn/public/#/diem', { waitUntil: 'networkidle' });
+				}
+				if (currentUser.roles === "GIANGVIEN") {
+					// Điều hướng đến trang user để lấy CURRENT_USER_INFO
+					await page.goto('https://thongtindaotao.sgu.edu.vn/public/#/userinfo', { waitUntil: 'networkidle' });
+				}
+
 			}
+
 
 
 			// Lấy lại sessionData sau khi vào trang điểm
@@ -1052,7 +1065,7 @@ export class SguAuthService {
 			};
 
 		} finally {
-			await new Promise(resolve => setTimeout(resolve, 1000));
+			await new Promise(resolve => setTimeout(resolve, 500));
 			await browser.close();
 		}
 	}

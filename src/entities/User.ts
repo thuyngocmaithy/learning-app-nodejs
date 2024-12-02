@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn, ManyToMany } from 'typeorm';
 import { Faculty } from './Faculty';
 import { Major } from './Major';
 import { Account } from './Account';
+import { Notification } from './Notification';
 
 /**
  * Thực thể Người dùng
@@ -177,5 +178,9 @@ export class User {
    */
   @Column({ type: 'int', nullable: true })
   currentCreditHour: number;
+
+  // Danh sách thông báo nhận được
+  @ManyToMany(() => Notification, (notification) => notification.toUsers)
+  receivedNotifications: Notification[];
 
 }
