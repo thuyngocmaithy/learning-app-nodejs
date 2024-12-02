@@ -7,6 +7,7 @@ const studyFrame_ComponentRouter = Router();
 const studyFrame_ComponentController = new StudyFrame_ComponentController(AppDataSource);
 
 studyFrame_ComponentRouter.get('/', studyFrame_ComponentController.getAllStudyFrame_Components);
+studyFrame_ComponentRouter.get('/getWhere', studyFrame_ComponentController.getStudyFrame_ComponentWhere);
 studyFrame_ComponentRouter.get('/:id', studyFrame_ComponentController.getStudyFrame_ComponentById);
 studyFrame_ComponentRouter.post('/', studyFrame_ComponentController.createStudyFrame_Component);
 studyFrame_ComponentRouter.put('/:id', studyFrame_ComponentController.updateStudyFrame_Component);

@@ -23,13 +23,6 @@ export class Subject_Course_Opening {
   subject: Subject;
 
   /**
-   * Chu kỳ mở
-   */
-  @ManyToOne(() => Cycle, cycle => cycle.cycleId, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'cycleId', referencedColumnName: 'cycleId' })
-  cycle: Cycle;
-
-  /**
    * Học kỳ mở
    */
   @ManyToOne(() => Semester, semester => semester.semesterId, { nullable: false, onDelete: 'CASCADE' })

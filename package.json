@@ -40,7 +40,7 @@
         "nodemon": "^3.1.4",
         "os": "^0.1.2",
         "path": "^0.12.7",
-        "puppeteer": "^23.4.1",
+        "playwright": "^1.49.0",
         "query-string": "^9.1.0",
         "rand-token": "^1.0.1",
         "sequelize": "^6.37.3",
@@ -64,10 +64,11 @@
         "migrate-mongo": "^11.0.0",
         "morgan": "^1.10.0",
         "passport": "^0.7.0",
+        "playwright-core": "^1.49.0",
         "pre-commit": "^1.2.2",
         "prettier": "^3.3.3",
         "rimraf": "^6.0.1",
         "ts-node": "^10.9.2",
-        "typescript": "^5.6.2"
+        "typescript": "^5.7.2"
     }
 }

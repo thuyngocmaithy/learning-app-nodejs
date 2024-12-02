@@ -5,7 +5,6 @@ import { AppDataSource } from '../data-source';
 const scoreRouter = Router();
 const scoreController = new ScoreController(AppDataSource);
 
-scoreRouter.get('/student/score/:studentId', scoreController.getStudentFrameScoresController);
 scoreRouter.get('/student/:studentId', scoreController.getScoreByStudentId);
 scoreRouter.get('/score/:studentId', scoreController.getScoreByStudentId);
 scoreRouter.get('/', scoreController.getAllScores);

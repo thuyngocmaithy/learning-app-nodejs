@@ -11,8 +11,8 @@ import { Permission } from '../entities/Permission';
 import jwt from 'jsonwebtoken';
 import { Subject } from '../entities/Subject';
 import { Semester } from '../entities/Semester';
-import * as puppeteer from 'puppeteer';
 import { Major } from '../entities/Major';
+import { chromium } from 'playwright-core';
 
 const SGU_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/auth/login';
 const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/dkmh/w-locsinhvieninfo';
@@ -54,73 +54,13 @@ export class SguAuthService {
 			}
 		};
 	}
-	//MAIN ACTION - LOGIN
-	// async loginToSgu(username: string, password: string) {
-	//   try {
-	//     // Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
-	//     let account = await this.accountService.getByUsername(username);
-	//     let user = await this.userService.getByUserId(username);
-	//     if (account?.isSystem) {
-	//       // Xử lý đăng nhập cho tài khoản hệ thống
-	//       const isPasswordMatch = await bcrypt.compare(password, account.password);
-	//       if (!isPasswordMatch) {
-	//         throw new Error("Tên đăng nhập hoặc mật khẩu không chính xác");
-	//       }
-	//       // Tạo token mới cho tài khoản hệ thống
-	//       const updatedAccount = await this.updateAccountTokens(
-	//         account, 
-	//         account.permission.permissionId
-	//       );
-	//       return this.generateAuthResponse({
-	//         access_token: updatedAccount!.access_token,
-	//         refresh_token: updatedAccount!.refreshToken,
-	//         roles: account.permission.permissionId
-	//       }, user as User);
-	//     }
-	//     // Xử lý đăng nhập qua SGU
-	//     const loginData = await this.getInfoUserFromSGU(username, password, account ? true : false);
-	//     const CURRENT_USER = JSON.parse(loginData.CURRENT_USER || "");
-	//     const CURRENT_USER_INFO = JSON.parse(loginData.CURRENT_USER_INFO || "");
-	//     if (!account) {
-	//       // Tạo tài khoản mới
-	//       account = await this.createOrUpdateAccount(CURRENT_USER, password);
-	//       if (user) {
-	//         user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
-	//       } else {
-	//         user = await this.createNewUser(CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
-	//       }
-	//       if (account.permission.permissionId === "SINHVIEN") {
-	//         await this.saveScoresForUserFromSgu(account.username);
-	//       }
-	//     }
-	//     // Cập nhật token cho tài khoản SGU
-	//     const updatedAccount = await this.updateAccountTokens(
-	//       account,
-	//       account.permission.permissionId
-	//     );
-	//     if (account.permission.permissionId === "SINHVIEN") {
-	//       await this.saveScoresForUserFromSgu(CURRENT_USER.userName);
-	//     }
-	//     // Cập nhật thông tin user nếu cần
-	//     if (user) {
-	//       user = await this.updateExistingUser(user, CURRENT_USER, CURRENT_USER_INFO, this.ImageOfUser, this.GPAOfUser, account);
-	//     }
-	//     return this.generateAuthResponse({
-	//       access_token: updatedAccount!.access_token,
-	//       refresh_token: updatedAccount!.refreshToken,
-	//       roles: account.permission.permissionId
-	//     }, user as User);
-	//   } catch (error) {
-	//     this.handleError(error);
-	//   }
-	// }
-	async loginToSgu(username: string, password: string) {
+	async loginToSgu(username: string, password: string, isSync: boolean) {
 		try {
 			// Kiểm tra tài khoản có tồn tại trong cơ sở dữ liệu không
 			let account = await this.accountService.getByUsername(username);
 			let user = await this.userService.getByUserId(username);
 
-			if (account?.isSystem) {
+			if (account && (account?.isSystem || !isSync)) {
 				// Xử lý đăng nhập cho tài khoản hệ thống
 				const isPasswordMatch = await bcrypt.compare(password, account.password);
 				if (!isPasswordMatch) {
@@ -138,9 +78,7 @@ export class SguAuthService {
 			}
 
 			// Xử lý đăng nhập qua SGU
-			const loginData = await this.getInfoUserFromSGU(username, password, account ? true : false);
-			const CURRENT_USER = JSON.parse(loginData.CURRENT_USER || "");
-			const CURRENT_USER_INFO = JSON.parse(loginData.CURRENT_USER_INFO || "");
+			const { CURRENT_USER, CURRENT_USER_INFO } = await this.getInfoUserFromSGU_DKMH(username, password, account ? true : false);
 
 			if (!account) {
 				// Tạo account
@@ -598,7 +536,6 @@ export class SguAuthService {
 						subject.subjectId = subjectData.ma_mon;
 						subject.subjectName = subjectData.ten_mon;
 						subject.creditHour = parseInt(subjectData.so_tin_chi);
-						subject.isCompulsory = false;
 						subject.createDate = new Date();
 						subject.lastModifyDate = new Date();
 						subject.createUser = user; // Gán người tạo
@@ -651,21 +588,366 @@ export class SguAuthService {
 	}
 
 	//get info
-	async getInfoUserFromSGU(username: string, password: string, isExistAccount: boolean) {
-		// Khởi tạo trình duyệt Puppeteer
-		const browser = await puppeteer.launch({ headless: false, defaultViewport: null });
-		const pages = await browser.pages(); // Lấy danh sách các tab hiện có
-		const page = pages[0] || await browser.newPage(); // Sử dụng tab đầu tiên hoặc tạo mới
+	// async getInfoUserFromSGU(username: string, password: string, isExistAccount: boolean) {
+	// 	// Khởi tạo trình duyệt Puppeteer
+	// 	const browser = await puppeteer.launch({ headless: false, defaultViewport: null });
+	// 	const pages = await browser.pages(); // Lấy danh sách các tab hiện có
+	// 	const page = pages[0] || await browser.newPage(); // Sử dụng tab đầu tiên hoặc tạo mới
+	// 	// Khởi tạo lại biến
+	// 	this.GPAOfUser = 0;
+	// 	this.ImageOfUser = "";
+	// 	this.ScoreOfUser = new Object();
+	// 	this.CurrentCreditHourOfUser = 0;
+	// 	// Bắt các phản hồi (response) từ server
+	// 	page.on('response', async response => {
+	// 		const url = response.url();
+	// 		// Kiểm tra phản hồi có phải là API lấy điểm không
+	// 		if (url.includes('/api/srm/w-locdsdiemsinhvien')) {
+	// 			const scoreData = await response.json(); // Đọc nội dung phản hồi dưới dạng JSON
+	// 			this.ScoreOfUser = scoreData.data; // Lưu điểm của người dùng
+	// 			this.GPAOfUser = scoreData.data.ds_diem_hocky.find((item: any) => item.loai_nganh).dtb_tich_luy_he_4;
+
+	// 			for (let diem of scoreData.data.ds_diem_hocky) {
+	// 				if (diem.so_tin_chi_dat_tich_luy !== "") {
+	// 					this.CurrentCreditHourOfUser = diem.so_tin_chi_dat_tich_luy; // set giá trị
+	// 					break; // thoát khỏi vòng lặp
+	// 				}
+	// 			}
+	// 		}
+	// 		// Kiểm tra phản hồi có phải là API lấy ảnh không
+	// 		if (url.includes('/api/sms/w-locthongtinimagesinhvien')) {
+	// 			const imageData = await response.json(); // Đọc nội dung phản hồi dưới dạng JSON        
+	// 			this.ImageOfUser = imageData.data.thong_tin_sinh_vien.image; // Lưu ảnh của người dùng
+	// 		}
+	// 	});
+	// 	try {
+	// 		await page.setCacheEnabled(false);
+	// 		// 1. Mở trang đăng nhập của SGU
+	// 		await page.goto('https://thongtindaotao.sgu.edu.vn/#/home', { waitUntil: 'networkidle0' });
+	// 		// Hiển thị thông báo "Đang xử lý"
+	// 		await page.evaluate(() => {
+	// 			const message = document.createElement('div');
+	// 			message.textContent = 'Đang xử lý...';
+	// 			message.style.position = 'absolute';
+	// 			message.style.top = '0';
+	// 			message.style.left = '0';
+	// 			message.style.width = '100vw';
+	// 			message.style.height = '100vh';
+	// 			message.style.display = 'flex';
+	// 			message.style.alignItems = 'center';
+	// 			message.style.justifyContent = 'center';
+	// 			message.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+	// 			message.style.color = 'white';
+	// 			message.style.padding = '20px';
+	// 			message.style.borderRadius = '5px';
+	// 			message.style.pointerEvents = 'none';
+	// 			document.body.appendChild(message);
+	// 		});
+	// 		// 2. Nhập thông tin đăng nhập
+	// 		await page.type('input[formcontrolname="username"]', username);
+	// 		await page.type('input[formcontrolname="password"]', password);
+	// 		// 3. Bấm nút đăng nhập
+	// 		await page.click('button.btn.btn-primary.ng-star-inserted');
+	// 		// 4. Đợi thông báo lỗi xuất hiện hoặc điều hướng thành công
+	// 		const navigationPromise = page.waitForNavigation();
+	// 		const errorPromise = page.waitForSelector('div.alert.alert-danger', { visible: true });
+	// 		const result = await Promise.race([navigationPromise, errorPromise]);
+	// 		// Kiểm tra xem thông báo lỗi xuất hiện
+	// 		if (result && result instanceof puppeteer.ElementHandle) {
+	// 			const errorMessage = await page.$eval('div.alert.alert-danger', el => el?.textContent?.trim());
+	// 			if (errorMessage) {
+	// 				throw errorMessage; // Ném ra thông báo lỗi nếu có
+	// 			}
+	// 		}
+	// 		// 5. Lấy dữ liệu từ sessionStorage
+	// 		const sessionData = await page.evaluate(() => {
+	// 			const data: { [key: string]: string | null } = {};
+	// 			for (let i = 0; i < sessionStorage.length; i++) {
+	// 				const key = sessionStorage.key(i);
+	// 				if (key) {
+	// 					data[key] = sessionStorage.getItem(key); // Lưu trữ dữ liệu từ sessionStorage
+	// 				}
+	// 			}
+	// 			return data;
+	// 		});
+	// 		// Chức năng điều hướng đến trang điểm
+	// 		async function navigateToDiem(retries = 0) {
+	// 			await page.goto('https://thongtindaotao.sgu.edu.vn/#/diem', { waitUntil: 'networkidle0' });
+	// 			// Kiểm tra phản hồi từ API lấy điểm
+	// 			try {
+	// 				await Promise.race([
+	// 					page.waitForResponse(response => response.url().includes('/api/srm/w-locdsdiemsinhvien') && response.status() === 200),
+	// 					new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000)) // Thời gian chờ tối đa
+	// 				]);
+	// 			} catch (error) {
+	// 				if (retries < 3) { // Giới hạn số lần gọi lại
+	// 					console.log("Lấy lại điểm, thử lại lần thứ:", retries + 1);
+	// 					await navigateToDiem(retries + 1); // Gọi lại nếu có lỗi
+	// 				} else {
+	// 					throw new Error("Không thể lấy điểm.");
+	// 				}
+	// 			}
+	// 		}
+	// 		// Lấy thông tin CURRENT_USER
+	// 		let currentUser: any = null; // Sử dụng 'any' để tránh lỗi kiểu
+	// 		if (sessionData.CURRENT_USER) {
+	// 			try {
+	// 				currentUser = JSON.parse(sessionData.CURRENT_USER); // Phân tích cú pháp CURRENT_USER
+	// 			} catch (error) {
+	// 				console.error("Lỗi phân tích cú pháp CURRENT_USER:", error);
+	// 			}
+	// 		}
+	// 		// Gọi hàm để chuyển hướng đến trang điểm và thông tin nếu người dùng là sinh viên
+	// 		if (currentUser && typeof currentUser === 'object' && currentUser.roles === "SINHVIEN") {
+	// 			// if (!isExistAccount) {
+	// 			// 6. Vào trang thông tin người dùng
+	// 			await page.goto('https://thongtindaotao.sgu.edu.vn/#/userinfo', { waitUntil: 'networkidle0' });
+	// 			await page.waitForResponse(response => response.url().includes('/api/sms/w-locthongtinimagesinhvien') && response.status() === 200); // Chờ xử lý xong API lấy ảnh
+	// 			// }
+	// 			// 7. Vào trang điểm
+	// 			await navigateToDiem();
+	// 		}
+	// 		return {
+	// 			CURRENT_USER: JSON.parse(sessionData.CURRENT_USER || ""),
+	// 			CURRENT_USER_INFO: JSON.parse(sessionData.CURRENT_USER_INFO || "")
+	// 		};
+	// 	} catch (error) {
+	// 		throw new Error(`${error}`);
+	// 	} finally {
+	// 		await new Promise(resolve => setTimeout(resolve, 500));
+	// 		await browser.close();
+	// 	}
+	// }
+
+	// async getInfoUserFromSGU_DKMH(username: string, password: string, isExistAccount: boolean) {
+	// 	// Khởi tạo trình duyệt Puppeteer
+	// 	const browser = await puppeteer.launch({
+	// 		headless: false,
+	// 		defaultViewport: null,
+	// 		args: [
+	// 			'--disable-blink-features=AutomationControlled',
+	// 			'--disable-web-security',
+	// 			'--allow-running-insecure-content'
+	// 		],
+	// 	});
+	// 	const pages = await browser.pages(); // Lấy danh sách các tab hiện có
+	// 	const page = pages[0] || await browser.newPage(); // Sử dụng tab đầu tiên hoặc tạo mới
+	// 	await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36');
+	// 	await page.setExtraHTTPHeaders({
+	// 		'Referer': 'https://thongtindaotao.sgu.edu.vn/',
+	// 		'Content-Type': 'application/json',
+	// 		'Sec-Ch-Ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+	// 		'Sec-Ch-Ua-mobile': '?0',
+	// 		'Sec-Ch-Ua-platform': '"Windows"',
+	// 	});
+	// 	// Khởi tạo lại biến
+	// 	this.GPAOfUser = 0;
+	// 	this.ImageOfUser = "";
+	// 	this.ScoreOfUser = new Object();
+	// 	this.CurrentCreditHourOfUser = 0;
+	// 	// Bắt các phản hồi (response) từ server
+	// 	page.on('response', async response => {
+	// 		const url = response.url();
+	// 		// Kiểm tra phản hồi có phải là API lấy điểm không
+	// 		if (url.includes('/api/srm/w-locdsdiemsinhvien?hien_thi_mon_theo_hkdk=false')) {
+	// 			const scoreData = await response.json(); // Đọc nội dung phản hồi dưới dạng JSON
+	// 			this.ScoreOfUser = scoreData.data; // Lưu điểm của người dùng
+	// 			this.GPAOfUser = scoreData.data.ds_diem_hocky.find((item: any) => item.loai_nganh).dtb_tich_luy_he_4;
+
+	// 			for (let diem of scoreData.data.ds_diem_hocky) {
+	// 				if (diem.so_tin_chi_dat_tich_luy !== "") {
+	// 					this.CurrentCreditHourOfUser = diem.so_tin_chi_dat_tich_luy; // set giá trị
+	// 					break; // thoát khỏi vòng lặp
+	// 				}
+	// 			}
+	// 		}
+	// 		// Kiểm tra phản hồi có phải là API lấy ảnh không
+	// 		if (url.includes('/api/sms/w-locthongtinimagesinhvien')) {
+	// 			const imageData = await response.json(); // Đọc nội dung phản hồi dưới dạng JSON        
+	// 			this.ImageOfUser = imageData.data.thong_tin_sinh_vien.image; // Lưu ảnh của người dùng
+	// 		}
+	// 	});
+	// 	try {
+	// 		await page.setCacheEnabled(false);
+	// 		// 1. Mở trang đăng nhập của SGU
+	// 		await page.goto('https://thongtindaotao.sgu.edu.vn/#/', { waitUntil: 'networkidle0' });
+	// 		// Hiển thị thông báo "Đang xử lý"
+	// 		await page.evaluate(() => {
+	// 			const message = document.createElement('div');
+	// 			message.textContent = 'Đang xử lý...';
+	// 			message.style.position = 'absolute';
+	// 			message.style.top = '0';
+	// 			message.style.left = '0';
+	// 			message.style.width = '100vw';
+	// 			message.style.height = '100vh';
+	// 			message.style.display = 'flex';
+	// 			message.style.alignItems = 'center';
+	// 			message.style.justifyContent = 'center';
+	// 			message.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+	// 			message.style.color = 'white';
+	// 			message.style.padding = '20px';
+	// 			message.style.borderRadius = '5px';
+	// 			message.style.pointerEvents = 'none';
+	// 			document.body.appendChild(message);
+	// 		});
+	// 		// 2. Nhập thông tin đăng nhập
+	// 		await page.type('input[formcontrolname="username"]', username, { delay: 100 });
+	// 		await page.type('input[formcontrolname="password"]', password, { delay: 100 });
+	// 		// 3. Bấm nút đăng nhập
+	// 		await page.click('button.btn.btn-primary');
+	// 		// 4. Đợi thông báo lỗi xuất hiện hoặc điều hướng thành công
+	// 		const navigationPromise = page.waitForNavigation();
+	// 		const errorPromise = page.waitForSelector('div.alert.alert-danger', { visible: true });
+	// 		const result = await Promise.race([navigationPromise, errorPromise]);
+	// 		// Kiểm tra xem thông báo lỗi xuất hiện
+	// 		if (result && result instanceof ElementHandle) {
+	// 			const errorMessage = await page.$eval('div.alert.alert-danger', el => el?.textContent?.trim());
+	// 			if (errorMessage) {
+	// 				throw errorMessage; // Ném ra thông báo lỗi nếu có
+	// 			}
+	// 		}
+	// 		// 5. Lấy dữ liệu từ sessionStorage
+	// 		const sessionData = await page.evaluate(() => {
+	// 			const data: { [key: string]: string | null } = {};
+	// 			for (let i = 0; i < sessionStorage.length; i++) {
+	// 				const key = sessionStorage.key(i);
+	// 				if (key) {
+	// 					data[key] = sessionStorage.getItem(key); // Lưu trữ dữ liệu từ sessionStorage
+	// 				}
+	// 			}
+	// 			return data;
+	// 		});
+	// 		// Chức năng điều hướng đến trang điểm
+	// 		async function navigateToDiem(currentUser: any, retries = 0) {
+	// 			await page.setExtraHTTPHeaders({
+	// 				'Referer': 'https://thongtindaotao.sgu.edu.vn/public/',
+	// 				'Content-Type': 'application/json',
+	// 				'Sec-Ch-Ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+	// 				'Sec-Ch-Ua-mobile': '?0',
+	// 				'Sec-Ch-Ua-platform': '"Windows"',
+	// 				'Authorization': `Bearer ${currentUser.access_token}`,
+	// 				'Origin': 'https://thongtindaotao.sgu.edu.vn',
+	// 			});
+
+	// 			await page.goto('https://thongtindaotao.sgu.edu.vn/public/#/diem', { waitUntil: 'networkidle0' });
+	// 			// Kiểm tra phản hồi từ API lấy điểm
+	// 			try {
+	// 				page.on('request', request => {
+	// 					console.log('Request sent:', request.url(), 'Method:', request.method());
+	// 				});
+	// 				// Log tất cả response để kiểm tra
+	// 				page.on('response', async response => {
+	// 					console.log('Response received:', response.url(), 'Status:', response.status());
+	// 				});
+
+	// 				await Promise.race([
+	// 					page.waitForResponse(response => {
+	// 						const url = response.url();
+	// 						console.log('Checking URL:', url); // Log để kiểm tra URL thực sự
+	// 						return url.includes('/api/srm/w-locdsdiemsinhvien') && response.status() === 200;
+	// 					}, { timeout: 3000 }),
+	// 					new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000)) // Thời gian chờ tối đa
+	// 				]);
+	// 			} catch (error) {
+	// 				if (retries < 3) { // Giới hạn số lần gọi lại
+	// 					console.log("Lấy lại điểm, thử lại lần thứ:", retries + 1);
+	// 					await navigateToDiem(currentUser, retries + 1); // Gọi lại nếu có lỗi
+	// 				} else {
+	// 					throw new Error("Không thể lấy điểm: " + error);
+	// 				}
+	// 			}
+	// 		}
+	// 		// Lấy thông tin CURRENT_USER
+	// 		let currentUser: any = null; // Sử dụng 'any' để tránh lỗi kiểu
+	// 		if (sessionData.CURRENT_USER) {
+	// 			try {
+	// 				currentUser = JSON.parse(sessionData.CURRENT_USER); // Phân tích cú pháp CURRENT_USER
+	// 			} catch (error) {
+	// 				console.error("Lỗi phân tích cú pháp CURRENT_USER:", error);
+	// 			}
+	// 		}
+	// 		// Gọi hàm để chuyển hướng đến trang điểm và thông tin nếu người dùng là sinh viên
+	// 		if (currentUser && typeof currentUser === 'object' && currentUser.roles === "SINHVIEN") {
+	// 			// if (!isExistAccount) {
+	// 			// 6. Vào trang thông tin người dùng
+	// 			//await page.goto('https://thongtindaotao.sgu.edu.vn/public/#/userinfo', { waitUntil: 'networkidle0' });
+	// 			//await page.waitForResponse(response => response.url().includes('/api/sms/w-locthongtinimagesinhvien') && response.status() === 200); // Chờ xử lý xong API lấy ảnh
+	// 			// }
+	// 			// 7. Vào trang điểm
+	// 			await navigateToDiem(currentUser);
+	// 		}
+	// 		return {
+	// 			CURRENT_USER: JSON.parse(currentUser || ""),
+	// 			CURRENT_USER_INFO: JSON.parse(sessionData.CURRENT_USER_INFO || "")
+	// 		};
+	// 	} finally {
+	// 		await new Promise(resolve => setTimeout(resolve, 500));
+	// 		// await browser.close();
+	// 	}
+	// }
+
+	// Lấy dữ liệu từ sessionStorage
+	async getSessionData(page: any) {
+		return await page.evaluate(() => {
+			const data: { [key: string]: string | null } = {};
+			for (let i = 0; i < sessionStorage.length; i++) {
+				const key = sessionStorage.key(i);
+				if (key) {
+					data[key] = sessionStorage.getItem(key); // Lưu trữ dữ liệu từ sessionStorage
+				}
+			}
+			return data;
+		});
+	}
+
+	async getInfoUserFromSGU_DKMH(username: string, password: string, isExistAccount: boolean) {
+		// Khởi tạo trình duyệt Playwright
+		const browser = await chromium.launch({
+			headless: false,
+			args: [
+				'--disable-blink-features=AutomationControlled',
+				'--disable-web-security',
+				'--allow-running-insecure-content'
+			]
+		});
+
+		const context = await browser.newContext({
+			userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+			bypassCSP: true, // Bypass Content Security Policy
+			ignoreHTTPSErrors: true, // Bỏ qua lỗi HTTPS (nếu cần thiết)
+			viewport: { width: 1280, height: 720 } // Cấu hình kích thước trình duyệt (tùy chọn)
+		});
+		const page = await context.newPage();
+		// Cấu hình User Agent và Headers
+		await page.setExtraHTTPHeaders({
+			'Referer': 'https://thongtindaotao.sgu.edu.vn/',
+			'Content-Type': 'application/json',
+			'Sec-Ch-Ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+			'Sec-Ch-Ua-mobile': '?0',
+			'Sec-Ch-Ua-platform': '"Windows"',
+		});
+
+		// Tắt cache thông qua route
+		await page.route('**/*', (route) => {
+			const request = route.request();
+			const headers = {
+				...request.headers(),
+				'Cache-Control': 'no-store', // Ngăn cache
+			};
+			route.continue({ headers });
+		});
+
 		// Khởi tạo lại biến
 		this.GPAOfUser = 0;
 		this.ImageOfUser = "";
 		this.ScoreOfUser = new Object();
 		this.CurrentCreditHourOfUser = 0;
+
 		// Bắt các phản hồi (response) từ server
-		page.on('response', async response => {
+		page.on('response', async (response: any) => {
 			const url = response.url();
 			// Kiểm tra phản hồi có phải là API lấy điểm không
-			if (url.includes('/api/srm/w-locdsdiemsinhvien')) {
+			if (url.includes('/api/srm/w-locdsdiemsinhvien?hien_thi_mon_theo_hkdk=false')) {
 				const scoreData = await response.json(); // Đọc nội dung phản hồi dưới dạng JSON
 				this.ScoreOfUser = scoreData.data; // Lưu điểm của người dùng
 				this.GPAOfUser = scoreData.data.ds_diem_hocky.find((item: any) => item.loai_nganh).dtb_tich_luy_he_4;
@@ -673,6 +955,10 @@ export class SguAuthService {
 				for (let diem of scoreData.data.ds_diem_hocky) {
 					if (diem.so_tin_chi_dat_tich_luy !== "") {
 						this.CurrentCreditHourOfUser = diem.so_tin_chi_dat_tich_luy; // set giá trị
+
+						// Tiếp tục điều hướng đến trang user để lấy avatar
+						await page.goto('https://thongtindaotao.sgu.edu.vn/public/#/userinfo', { waitUntil: 'networkidle' });
+
 						break; // thoát khỏi vòng lặp
 					}
 				}
@@ -683,10 +969,11 @@ export class SguAuthService {
 				this.ImageOfUser = imageData.data.thong_tin_sinh_vien.image; // Lưu ảnh của người dùng
 			}
 		});
+
 		try {
-			await page.setCacheEnabled(false);
 			// 1. Mở trang đăng nhập của SGU
-			await page.goto('https://thongtindaotao.sgu.edu.vn/#/home', { waitUntil: 'networkidle0' });
+			await page.goto('https://thongtindaotao.sgu.edu.vn/#/', { waitUntil: 'networkidle' });
+
 			// Hiển thị thông báo "Đang xử lý"
 			await page.evaluate(() => {
 				const message = document.createElement('div');
@@ -706,75 +993,66 @@ export class SguAuthService {
 				message.style.pointerEvents = 'none';
 				document.body.appendChild(message);
 			});
+
 			// 2. Nhập thông tin đăng nhập
-			await page.type('input[formcontrolname="username"]', username);
-			await page.type('input[formcontrolname="password"]', password);
+			await page.fill('input[formcontrolname="username"]', username);
+			await page.fill('input[formcontrolname="password"]', password);
+
 			// 3. Bấm nút đăng nhập
-			await page.click('button.btn.btn-primary.ng-star-inserted');
+			await page.click('button.btn.btn-primary');
+
 			// 4. Đợi thông báo lỗi xuất hiện hoặc điều hướng thành công
-			const navigationPromise = page.waitForNavigation();
-			const errorPromise = page.waitForSelector('div.alert.alert-danger', { visible: true });
+			const navigationPromise = page.waitForEvent('domcontentloaded');
+			const errorPromise = page.waitForSelector('div.alert.alert-danger', { state: 'visible' });
+
 			const result = await Promise.race([navigationPromise, errorPromise]);
+
 			// Kiểm tra xem thông báo lỗi xuất hiện
-			if (result && result instanceof puppeteer.ElementHandle) {
-				const errorMessage = await page.$eval('div.alert.alert-danger', el => el?.textContent?.trim());
-				if (errorMessage) {
-					throw errorMessage; // Ném ra thông báo lỗi nếu có
+			if (result) {
+				if (await page.isVisible('div.alert.alert-danger')) {
+					const errorMessage = await page.textContent('div.alert.alert-danger');
+					if (errorMessage) throw new Error(errorMessage); // Throw lỗi để xử lý tiếp
 				}
 			}
-			// 5. Lấy dữ liệu từ sessionStorage
-			const sessionData = await page.evaluate(() => {
-				const data: { [key: string]: string | null } = {};
-				for (let i = 0; i < sessionStorage.length; i++) {
-					const key = sessionStorage.key(i);
-					if (key) {
-						data[key] = sessionStorage.getItem(key); // Lưu trữ dữ liệu từ sessionStorage
-					}
-				}
-				return data;
-			});
-			// Chức năng điều hướng đến trang điểm
-			async function navigateToDiem(retries = 0) {
-				await page.goto('https://thongtindaotao.sgu.edu.vn/#/diem', { waitUntil: 'networkidle0' });
-				// Kiểm tra phản hồi từ API lấy điểm
-				try {
-					await Promise.race([
-						page.waitForResponse(response => response.url().includes('/api/srm/w-locdsdiemsinhvien') && response.status() === 200),
-						new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000)) // Thời gian chờ tối đa
-					]);
-				} catch (error) {
-					if (retries < 3) { // Giới hạn số lần gọi lại
-						console.log("Lấy lại điểm, thử lại lần thứ:", retries + 1);
-						await navigateToDiem(retries + 1); // Gọi lại nếu có lỗi
-					} else {
-						throw new Error("Không thể lấy điểm.");
-					}
-				}
-			}
+
+
 			// Lấy thông tin CURRENT_USER
-			let currentUser: any = null; // Sử dụng 'any' để tránh lỗi kiểu
+			let currentUser: any = null;
+			let sessionData = await this.getSessionData(page);
 			if (sessionData.CURRENT_USER) {
 				try {
-					currentUser = JSON.parse(sessionData.CURRENT_USER); // Phân tích cú pháp CURRENT_USER
+					currentUser = JSON.parse(sessionData.CURRENT_USER);
 				} catch (error) {
 					console.error("Lỗi phân tích cú pháp CURRENT_USER:", error);
 				}
 			}
+
 			// Gọi hàm để chuyển hướng đến trang điểm và thông tin nếu người dùng là sinh viên
 			if (currentUser && typeof currentUser === 'object' && currentUser.roles === "SINHVIEN") {
-				// if (!isExistAccount) {
-				// 6. Vào trang thông tin người dùng
-				await page.goto('https://thongtindaotao.sgu.edu.vn/#/userinfo', { waitUntil: 'networkidle0' });
-				await page.waitForResponse(response => response.url().includes('/api/sms/w-locthongtinimagesinhvien') && response.status() === 200); // Chờ xử lý xong API lấy ảnh
-				// }
-				// 7. Vào trang điểm
-				await navigateToDiem();
+				await page.setExtraHTTPHeaders({
+					'Referer': 'https://thongtindaotao.sgu.edu.vn/public/',
+					'Content-Type': 'application/json',
+					'Sec-Ch-Ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+					'Sec-Ch-Ua-mobile': '?0',
+					'Sec-Ch-Ua-platform': '"Windows"',
+					'Authorization': `Bearer ${currentUser.access_token}`,
+					'Origin': 'https://thongtindaotao.sgu.edu.vn',
+				});
+				//6. Vào trang thông tin người dùng
+				await page.goto('https://thongtindaotao.sgu.edu.vn/public/#/diem', { waitUntil: 'networkidle' });
 			}
-			return sessionData;
-		} catch (error) {
-			throw new Error(`${error}`);
+
+
+			// Lấy lại sessionData sau khi vào trang điểm
+			sessionData = await this.getSessionData(page);
+
+			return {
+				CURRENT_USER: currentUser,
+				CURRENT_USER_INFO: JSON.parse(sessionData.CURRENT_USER_INFO || "")
+			};
+
 		} finally {
-			await new Promise(resolve => setTimeout(resolve, 500));
+			await new Promise(resolve => setTimeout(resolve, 1000));
 			await browser.close();
 		}
 	}

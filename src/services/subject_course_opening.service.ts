@@ -78,8 +78,6 @@ export class Subject_Course_OpeningService {
 			subject: subject,
 			instructor: data.instructor,
 			studyFrame: studyFrame,
-			cycle: cycle,
-			semester: semester
 		});
 
 		const savedSubject_Course_Opening = await this.subject_course_openingRepository.save(subject_course_opening);
@@ -93,7 +91,7 @@ export class Subject_Course_OpeningService {
 
 			// Lấy danh sách tất cả Subject_Course_Opening hiện có trong cơ sở dữ liệu
 			const existingSubjectCourseOpenings = await this.subject_course_openingRepository.find({
-				relations: ['cycle', 'subject', 'studyFrame', 'semester']
+				relations: ['studyFrame.cycle', 'subject', 'studyFrame', 'semester']
 			});
 
 			for (const item of data) {
@@ -101,7 +99,6 @@ export class Subject_Course_OpeningService {
 				const existingRecord = existingSubjectCourseOpenings.find(existing =>
 					existing.subject.subjectId === item.subject &&
 					existing.studyFrame.frameId === item.studyFrame &&
-					existing.cycle === item.cycle &&
 					existing.semester.semesterId === item.semester
 				);
 
@@ -120,7 +117,6 @@ export class Subject_Course_OpeningService {
 						subject: item.subject,
 						instructor: item.instructor,
 						studyFrame: item.studyFrame,
-						cycle: item.cycle,
 						semester: item.semester
 					});
 
@@ -135,7 +131,6 @@ export class Subject_Course_OpeningService {
 					item.subject === existingRecord.subject.subjectId &&
 					item.instructor === existingRecord.instructor &&
 					item.studyFrame === existingRecord.studyFrame.frameId &&
-					item.cycle === existingRecord.cycle.cycleId &&
 					item.semester === existingRecord.semester.semesterId
 				);
 
@@ -199,8 +194,10 @@ export class Subject_Course_OpeningService {
 		try {
 			// Xóa các bản ghi theo year và studyFrameId
 			const result = await this.subject_course_openingRepository.delete({
-				cycle: { cycleId: cycleId },
-				studyFrame: { frameId: studyFrameId },
+				studyFrame: {
+					frameId: studyFrameId,
+					cycle: { cycleId: cycleId }
+				},
 			});
 
 			return result.affected !== null && result.affected !== undefined && result.affected > 0;
@@ -220,8 +217,11 @@ export class Subject_Course_OpeningService {
 			whereCondition.studyFrame = { frameId: condition.studyFrame }
 		}
 
-		if (condition.year) {
-			whereCondition.year = condition.year;
+		if (condition.cycle) {
+			whereCondition.studyFrame = {
+				...whereCondition.studyFrame,
+				cycle: { cycleId: condition.cycle } // Thêm điều kiện cho cycle
+			};
 		}
 
 		if (condition.semester) {

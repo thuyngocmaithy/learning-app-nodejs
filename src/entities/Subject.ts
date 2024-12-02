@@ -43,12 +43,6 @@ export class Subject {
   @JoinColumn({ name: 'subjectEqualId' })
   subjectEqual: string | null;
 
-  /**
-    * Có bắt buộc không (không rỗng)
-    */
-  @Column({ type: 'boolean', default: false, nullable: false })
-  isCompulsory: boolean;
-
   // /**
   //   * ID chuyên ngành (tham chiếu đến thực thể Major)
   //   */
@@ -72,9 +66,9 @@ export class Subject {
   // frameComponents: StudyFrame_Component[];
 
   /**
-   * ID người tạo (tham chiếu đến thực thể User, không rỗng)
+   * ID người tạo (tham chiếu đến thực thể User, rỗng)
    */
-  @ManyToOne(() => User, data => data.userId, { nullable: false })
+  @ManyToOne(() => User, data => data.userId, { nullable: true })
   @JoinColumn({ name: 'createUserId' })
   createUser: User;
 
