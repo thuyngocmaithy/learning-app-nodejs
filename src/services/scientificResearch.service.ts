@@ -1,4 +1,3 @@
-// scientificResearch.service.ts
 import { DataSource, Repository, Like, FindManyOptions, In, MoreThan, LessThanOrEqual } from 'typeorm';
 import { ScientificResearch } from '../entities/ScientificResearch';
 import { Faculty } from '../entities/Faculty';
@@ -27,10 +26,29 @@ export class ScientificResearchService {
 	}
 
 	async getAll(): Promise<ScientificResearch[]> {
-		return this.scientificResearchRepository.find({
-			order: { createDate: 'DESC' },
-			relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower', 'scientificResearchGroup']
-		});
+		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
+
+		queryBuilder.select([
+			'sr.scientificResearchId',
+			'sr.scientificResearchName',
+			'sr.startDate',
+			'sr.finishDate',
+			'sr.description',
+			'sr.numberOfMember',
+			'sr.level',
+			'sr.budget',
+			'sr.isDisable',
+		]);
+		queryBuilder
+			.leftJoin('sr.instructor', 'user')
+			.addSelect(['user.userId', 'user.fullname']);
+
+		queryBuilder
+			.leftJoin('sr.status', 'status')
+			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
+
+
+		return queryBuilder.getMany();
 	}
 
 	async getById(scientificResearchId: string): Promise<ScientificResearch | null> {
@@ -172,20 +190,36 @@ export class ScientificResearchService {
 	}
 
 	public getByScientificResearchGroupId = async (scientificResearchGroupId: string): Promise<ScientificResearch[]> => {
-		const options: FindManyOptions<ScientificResearch> = {
-			where: { scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId } },
-			relations: [
-				'status',
-				'instructor',
-				'createUser',
-				'lastModifyUser',
-				'follower',
-				'follower.followerDetails',
-				'follower.followerDetails.user',
-				'scientificResearchGroup.faculty'
-			]
-		};
-		return this.scientificResearchRepository.find(options);
+		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
+
+		if (scientificResearchGroupId) {
+			queryBuilder.andWhere('sr.scientificResearchGroupId = :scientificResearchGroupId', {
+				scientificResearchGroupId: scientificResearchGroupId
+			});
+		}
+
+		queryBuilder.select([
+			'sr.scientificResearchGroupId',
+			'sr.scientificResearchId',
+			'sr.scientificResearchName',
+			'sr.startDate',
+			'sr.finishDate',
+			'sr.description',
+			'sr.description',
+			'sr.numberOfMember',
+			'sr.level',
+			'sr.isDisable',
+		]);
+		queryBuilder
+			.leftJoin('sr.status', 'status')
+			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
+
+		queryBuilder
+			.leftJoin('sr.instructor', 'user')
+			.addSelect(['user.fullname', 'user.userId']);
+
+		queryBuilder.orderBy('sr.createDate', 'ASC');
+		return queryBuilder.getMany();
 	}
 
 	async getWhere(condition: any): Promise<ScientificResearch[]> {
@@ -222,34 +256,110 @@ export class ScientificResearchService {
 		return this.scientificResearchRepository.find({
 			order: { createDate: 'DESC' },
 			where: whereCondition,
-			relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'],
+			relations: ['status', 'instructor', 'follower'],
 		});
+	}
+
+	async getListSRJoined(condition: any): Promise<ScientificResearch[]> {
+		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
+
+		if (condition.instructorId && condition.instructorId !== 'undefined') {
+			queryBuilder.andWhere('sr.instructorId = :instructorId', {
+				instructorId: condition.instructorId
+			});
+		}
+
+		if (condition.scientificResearchGroup && condition.scientificResearchGroup !== 'undefined') {
+			queryBuilder.andWhere('sr.scientificResearchGroup = :scientificResearchGroup', {
+				scientificResearchGroup: condition.scientificResearchGroup
+			});
+		}
+		queryBuilder.select([
+			'sr.scientificResearchId',
+			'sr.scientificResearchName',
+			'sr.startDate',
+			'sr.finishDate'
+		]);
+		queryBuilder
+			.leftJoin('sr.status', 'status')
+			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
+
+		queryBuilder
+			.leftJoin('sr.instructor', 'user')
+			.addSelect(['user.userId', 'user.fullname']);
+
+		queryBuilder.orderBy('sr.createDate', 'ASC');
+
+		return queryBuilder.getMany();
 	}
 
 
 	public getBySRGIdAndCheckApprove = async (scientificResearchGroupId: string, userId: string): Promise<any[]> => {
-		// Tạo điều kiện where theo scientificResearchGroupId
-		const whereCondition = (scientificResearchGroupId && scientificResearchGroupId !== "null")
-			? {
-				scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId },
-				isDisable: false
-			}
-			: { isDisable: false }; // Bỏ qua điều kiện scientificResearchGroup nếu scientificResearchGroupId là null
+		// // Tạo điều kiện where theo scientificResearchGroupId
+		// const whereCondition = (scientificResearchGroupId && scientificResearchGroupId !== "null")
+		// 	? {
+		// 		scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId },
+		// 		isDisable: false
+		// 	}
+		// 	: { isDisable: false }; // Bỏ qua điều kiện scientificResearchGroup nếu scientificResearchGroupId là null
 
-		const options: FindManyOptions<ScientificResearch> = {
-			where: whereCondition,
-			relations: [
-				'status',
-				'instructor',
-				'createUser',
-				'lastModifyUser',
-				'follower',
-				'follower.followerDetails',
-				'follower.followerDetails.user',
-				'scientificResearchGroup.faculty'
-			]
-		};
-		const listSR = await this.scientificResearchRepository.find(options);
+		// const options: FindManyOptions<ScientificResearch> = {
+		// 	where: whereCondition,
+		// 	relations: [
+		// 		'status',
+		// 		'instructor',
+		// 		'createUser',
+		// 		'lastModifyUser',
+		// 		'follower',
+		// 		'follower.followerDetails',
+		// 		'follower.followerDetails.user',
+		// 		'scientificResearchGroup.faculty'
+		// 	]
+		// };
+
+		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
+
+		if (scientificResearchGroupId && scientificResearchGroupId !== "null") {
+			queryBuilder.andWhere(
+				'sr.scientificResearchGroupId = :scientificResearchGroupId ' +
+				'sr.isDisable = false', {
+				scientificResearchGroupId: scientificResearchGroupId
+			});
+		}
+		else {
+			queryBuilder.andWhere('sr.isDisable = false');
+		}
+
+		queryBuilder.select([
+			'sr.scientificResearchId',
+			'sr.scientificResearchName',
+			'sr.startDate',
+			'sr.finishDate'
+		]);
+		queryBuilder
+			.leftJoin('sr.status', 'status')
+			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
+
+		queryBuilder
+			.leftJoin('sr.instructor', 'instructor')
+			.addSelect(['instructor.userId', 'instructor.fullname']);
+
+		queryBuilder
+			.leftJoin('sr.scientificResearchGroup', 'scientificResearchGroup')
+			.leftJoin('scientificResearchGroup.faculty', 'faculty')
+			.addSelect(['faculty.facultyId', 'faculty.facultyName']);
+
+
+		queryBuilder
+			.leftJoin('sr.follower', 'follower')
+			.leftJoin('follower.followerDetails', 'follower_detail')
+			.leftJoin('follower_detail.user', 'followerUser')
+			.addSelect(['followerUser.userId', 'followerUser.fullname', 'followerUser.avatar']);
+
+
+		queryBuilder.orderBy('sr.createDate', 'ASC');
+
+		const listSR = await queryBuilder.getMany();
 
 		const promises = listSR.map(async (SR) => {
 			const responseCountRegister = await this.scientificResearch_UserRepository.findBy({ scientificResearch: { scientificResearchId: SR.scientificResearchId } });

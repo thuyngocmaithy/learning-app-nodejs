@@ -11,7 +11,8 @@ scientificResearchRouter.post('/import', scientificResearchController.importScie
 scientificResearchRouter.get('/', scientificResearchController.getAllScientificResearchs);
 scientificResearchRouter.get('/getByScientificResearchGroupId', scientificResearchController.getByScientificResearchIGroupId);
 scientificResearchRouter.get('/getBySRGIdAndCheckApprove', scientificResearchController.getBySRGIdAndCheckApprove);
-scientificResearchRouter.get('/getWhere', scientificResearchController.getPermissionFeatureWhere);
+scientificResearchRouter.get('/getWhere', scientificResearchController.getScientificResearchWhere);
+scientificResearchRouter.get('/getListSRJoined', scientificResearchController.getListSRJoined);
 scientificResearchRouter.put('/updateSRMulti/:ids', scientificResearchController.updateScientificResearchMulti);
 scientificResearchRouter.get('/:id', scientificResearchController.getScientificResearchById);
 scientificResearchRouter.post('/', scientificResearchController.createScientificResearch);

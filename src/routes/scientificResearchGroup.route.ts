@@ -11,6 +11,7 @@ scientificResearchGroupRoute.post('/import', scientificResearchGroupController.i
 scientificResearchGroupRoute.get('/', scientificResearchGroupController.getAllScientificResearchGroups);
 scientificResearchGroupRoute.put('/updateSRGMulti/:ids', scientificResearchGroupController.updateScientificResearchGroupMulti);
 scientificResearchGroupRoute.get('/getWhere', scientificResearchGroupController.getSRGWhere);
+scientificResearchGroupRoute.get('/checkValidDateCreateSR', scientificResearchGroupController.checkValidDateCreateSR);
 scientificResearchGroupRoute.get('/:id', scientificResearchGroupController.getScientificResearchGroupById);
 scientificResearchGroupRoute.post('/', scientificResearchGroupController.createScientificResearchGroup);
 scientificResearchGroupRoute.put('/:id', scientificResearchGroupController.updateScientificResearchGroup);

@@ -232,20 +232,28 @@ export class ScientificResearch_UserService {
 
 	// Lấy danh sách số lượng đk
 	public getByListSRId = async (ids: string[]): Promise<ScientificResearch_User[] | null> => {
-		const options: FindManyOptions<ScientificResearch_User> = {
-			where: { scientificResearch: { scientificResearchId: In(ids) } },
-			relations: [
-				'scientificResearch',
-				'user',
-				'scientificResearch.instructor',
-				'scientificResearch.status',
-				// 'scientificResearch.follower',
-				// 'scientificResearch.follower.followerDetails',
-				// 'scientificResearch.follower.followerDetails.user',
-				'scientificResearch.scientificResearchGroup.faculty'
-			]
-		};
-		return this.scientificResearchUserRepository.find(options);
+		const queryBuilder = this.scientificResearchUserRepository.createQueryBuilder('sru');
+
+		queryBuilder.andWhere('sru.scientificResearchId IN(:scientificResearchId)', {
+			scientificResearchId: ids
+		});
+
+		queryBuilder.select([
+			'sru.id',
+			'sru.group',
+			'sru.isLeader',
+			'sru.isApprove',
+		]);
+		queryBuilder
+			.leftJoin('sru.user', 'user')
+			.addSelect(['user.userId', 'user.fullname', 'user.avatar', 'user.GPA']);
+
+		queryBuilder
+			.leftJoin('sru.scientificResearch', 'scientificResearch')
+			.addSelect(['scientificResearch.scientificResearchId']);
+
+
+		return queryBuilder.getMany();
 	}
 
 	//Lấy Danh Sách Người Theo Dõi
