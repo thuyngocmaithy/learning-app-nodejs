@@ -295,28 +295,6 @@ export class ScientificResearchService {
 
 
 	public getBySRGIdAndCheckApprove = async (scientificResearchGroupId: string, userId: string): Promise<any[]> => {
-		// // Tạo điều kiện where theo scientificResearchGroupId
-		// const whereCondition = (scientificResearchGroupId && scientificResearchGroupId !== "null")
-		// 	? {
-		// 		scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId },
-		// 		isDisable: false
-		// 	}
-		// 	: { isDisable: false }; // Bỏ qua điều kiện scientificResearchGroup nếu scientificResearchGroupId là null
-
-		// const options: FindManyOptions<ScientificResearch> = {
-		// 	where: whereCondition,
-		// 	relations: [
-		// 		'status',
-		// 		'instructor',
-		// 		'createUser',
-		// 		'lastModifyUser',
-		// 		'follower',
-		// 		'follower.followerDetails',
-		// 		'follower.followerDetails.user',
-		// 		'scientificResearchGroup.faculty'
-		// 	]
-		// };
-
 		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
 
 		if (scientificResearchGroupId && scientificResearchGroupId !== "null") {

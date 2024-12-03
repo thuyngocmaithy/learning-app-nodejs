@@ -6,7 +6,6 @@ import { FollowerService } from './follower.service';
 import { FollowerDetailService } from './followerDetail.service';
 import { AppDataSource } from '../data-source';
 import { Follower, FollowerDetail } from '../entities/Follower';
-import { ThesisGroup } from '../entities/ThesisGroup';
 
 export class Thesis_UserService {
 	private thesisUserRepository: Repository<Thesis_User>;
@@ -228,19 +227,27 @@ export class Thesis_UserService {
 
 	// Lấy danh sách số lượng đk
 	public getByListThesisId = async (ids: string[]): Promise<Thesis_User[] | null> => {
-		const options: FindManyOptions<Thesis_User> = {
-			where: { thesis: { thesisId: In(ids) } },
-			relations: [
-				'thesis',
-				'user',
-				'thesis.instructor',
-				'thesis.status',
-				//'thesis.follower',
-				//'thesis.follower.followerDetails',
-				//'thesis.follower.followerDetails.user',
-				'thesis.thesisGroup.faculty'
-			]
-		};
-		return this.thesisUserRepository.find(options);
+		const queryBuilder = this.thesisUserRepository.createQueryBuilder('tu');
+
+		queryBuilder.andWhere('tu.thesisId IN(:thesisId)', {
+			thesisId: ids
+		});
+
+		queryBuilder.select([
+			'tu.id',
+			'tu.group',
+			'tu.isLeader',
+			'tu.isApprove',
+		]);
+		queryBuilder
+			.leftJoin('tu.user', 'user')
+			.addSelect(['user.userId', 'user.fullname', 'user.avatar', 'user.GPA']);
+
+		queryBuilder
+			.leftJoin('tu.thesis', 'thesis')
+			.addSelect(['thesis.thesisId']);
+
+
+		return queryBuilder.getMany();
 	};
 }
