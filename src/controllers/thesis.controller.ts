@@ -3,6 +3,7 @@ import { ThesisService } from '../services/thesis.service';
 import { DataSource } from 'typeorm';
 import { RequestHandler } from '../utils/requestHandler';
 import { Thesis } from '../entities/Thesis';
+import { StatusCodes } from 'http-status-codes';
 
 export class ThesisController {
 	private thesisService: ThesisService;
@@ -64,79 +65,18 @@ export class ThesisController {
 		}
 	}
 
-
-	public async importThesis(req: Request, res: Response): Promise<Response<any, Record<string, any>>> {
+	public importThesis = async (req: Request, res: Response) => {
 		try {
 			const { data, createUserId } = req.body;
 
-			// Kiểm tra dữ liệu đầu vào
-			if (!Array.isArray(data) || !createUserId) {
-				return res.status(400).json({
-					message: 'Dữ liệu không hợp lệ hoặc thiếu CreateUserId',
-				});
+			if (!Array.isArray(data) || data.length === 0) {
+				return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Không có dữ liệu' });
 			}
-
-			// Hàm parse ngày
-			const parseDate = (dateString: string): Date | null => {
-				const [day, month, year] = dateString.split('-').map(Number);
-				if (!day || !month || !year) return null;
-				return new Date(year, month - 1, day);
-			};
-
-			// Validate dữ liệu
-			const isValidData = data.every(row => {
-				const startDate = parseDate(row[7]);
-				const finishDate = parseDate(row[8]);
-				return (
-					Array.isArray(row) &&
-					row.length >= 8 &&
-					typeof row[0] === 'string' &&
-					typeof row[1] === 'string' &&
-					typeof row[2] === 'string' &&
-					typeof row[3] === 'string' &&
-					!isNaN(Number(row[4])) &&
-					typeof row[5] === 'string' &&
-					typeof row[6] === 'string' &&
-					startDate instanceof Date && !isNaN(startDate.getTime()) &&
-					finishDate instanceof Date && !isNaN(finishDate.getTime())
-				);
-			});
-
-			if (!isValidData) {
-				return res.status(400).json({
-					message: 'Cấu trúc dữ liệu không hợp lệ',
-				});
-			}
-
-			// Chuẩn hóa dữ liệu
-			const processedData = data.map(row => {
-				const startDate = parseDate(row[7]);
-				const finishDate = parseDate(row[8]);
-				return [
-					row[0],
-					row[1],
-					row[2],
-					row[3],
-					row[4],
-					row[5],
-					row[6],
-					startDate ? startDate.toISOString() : null,
-					finishDate ? finishDate.toISOString() : null
-				];
-			});
-
-			// Gọi service
-			await this.thesisService.importThesis(processedData, createUserId);
-
-			return res.status(200).json({
-				message: 'Import đề tài thành công',
-			});
-		} catch (error: any) {
-			console.error('[ThesisController - importThesis]:', error);
-			return res.status(500).json({
-				message: 'Có lỗi xảy ra khi import dữ liệu',
-				error: error.message,
-			});
+			const response = await this.thesisService.importThesis(data, createUserId);
+			res.status(StatusCodes.CREATED).json({ message: 'success', data: response });
+		} catch (error) {
+			console.error('Error importing thesis:', error);
+			res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error importing ScienceResearch', error: (error as Error).message });
 		}
 	}
 

@@ -3,6 +3,7 @@ import { ThesisGroupService } from '../services/thesisGroup.service';
 import { DataSource } from 'typeorm';
 import { RequestHandler } from '../utils/requestHandler';
 import { ThesisGroup } from '../entities/ThesisGroup';
+import { StatusCodes } from 'http-status-codes';
 
 export class ThesisGroupController {
 	private thesisGroupService: ThesisGroupService;
@@ -39,55 +40,18 @@ export class ThesisGroupController {
 		}
 	}
 
-	public async importThesisGroup(req: Request, res: Response): Promise<Response<any, Record<string, any>>> {
+	public importThesisGroup = async (req: Request, res: Response) => {
 		try {
-			const { data, createUserId } = req.body;
+			const { thesisGroups, createUserId } = req.body; // Lấy danh sách thesisGroup
 
-			// Kiểm tra dữ liệu
-			if (!Array.isArray(data) || !createUserId) {
-				return res.status(400).json({
-					message: 'Dữ liệu không hợp lệ hoặc thiếu CreateUserId',
-				});
+			if (!Array.isArray(thesisGroups) || thesisGroups.length === 0) {
+				return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Không có dữ liệu' });
 			}
-
-			// Validate dữ liệu từng hàng
-			const isValidData = data.every(row =>
-				Array.isArray(row) &&
-				row.length >= 6 && // Chỉ cần tối thiểu 6 cột
-				typeof row[0] === 'string' && // thesisGroupId
-				typeof row[1] === 'string' && // thesisGroupName
-				typeof row[2] === 'string' && // statusName
-				!isNaN(Number(row[3])) && // startYear
-				(row[4] === null || !isNaN(Number(row[4]))) && // finishYear
-				typeof row[5] === 'string' // facultyName
-			);
-
-			if (!isValidData) {
-				return res.status(400).json({
-					message: 'Cấu trúc dữ liệu không hợp lệ',
-				});
-			}
-
-			// Xử lý dữ liệu ngày mặc định nếu thiếu
-			const processedData = data.map(row => {
-				// Thêm giá trị ngày mặc định là null nếu không có
-				if (row.length < 7) row.push(null); // startCreateThesisDate
-				if (row.length < 8) row.push(null); // endCreateThesisDate
-				return row;
-			});
-
-			// Gọi service để import dữ liệu
-			await this.thesisGroupService.importThesisGroup(processedData, createUserId);
-
-			return res.status(200).json({
-				message: 'Import nhóm đề tài khóa luận thành công',
-			});
-		} catch (error: any) {
-			console.error('[ThesisGroupController - importThesisGroup]:', error);
-			return res.status(500).json({
-				message: 'Có lỗi xảy ra khi import dữ liệu',
-				error: error.message,
-			});
+			const response = await this.thesisGroupService.importThesisGroup(thesisGroups, createUserId);
+			res.status(StatusCodes.CREATED).json({ message: 'success', data: response });
+		} catch (error) {
+			console.error('Error importing thesisGroups:', error);
+			res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error importing thesisGroups', error: (error as Error).message });
 		}
 	}
 

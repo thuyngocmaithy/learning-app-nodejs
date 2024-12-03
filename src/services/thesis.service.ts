@@ -45,7 +45,7 @@ export class ThesisService {
 			.leftJoin('thesis.status', 'status')
 			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
 
-
+		queryBuilder.orderBy("thesis.createDate", 'DESC');
 		return queryBuilder.getMany();
 	}
 
@@ -215,7 +215,7 @@ export class ThesisService {
 			.leftJoin('thesis.instructor', 'user')
 			.addSelect(['user.fullname', 'user.userId']);
 
-		queryBuilder.orderBy('thesis.createDate', 'ASC');
+		queryBuilder.orderBy('thesis.createDate', 'DESC');
 		return queryBuilder.getMany();
 	}
 
@@ -283,7 +283,7 @@ export class ThesisService {
 			.leftJoin('thesis.instructor', 'user')
 			.addSelect(['user.userId', 'user.fullname']);
 
-		queryBuilder.orderBy('thesis.createDate', 'ASC');
+		queryBuilder.orderBy('thesis.createDate', 'DESC');
 
 		return queryBuilder.getMany();
 	}
@@ -329,7 +329,7 @@ export class ThesisService {
 			.addSelect(['followerUser.userId', 'followerUser.fullname', 'followerUser.avatar']);
 
 
-		queryBuilder.orderBy('thesis.createDate', 'ASC');
+		queryBuilder.orderBy('thesis.createDate', 'DESC');
 
 		const listThesis = await queryBuilder.getMany();
 
@@ -356,94 +356,55 @@ export class ThesisService {
 	}
 
 
-	async importThesis(data: any[], createUserId: string): Promise<void> {
-		// Kiểm tra createUserId hợp lệ
-		const createUser = await this.userRepository.findOne({ where: { userId: createUserId } });
-		if (!createUser) {
-			throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
-		}
+	async importThesis(data: any[], createUserId: string): Promise<Thesis[]> {
+		let thesisSaved = [];
+		for (const thesis of data) {
 
-		const thesisToSave = await Promise.all(
-			data.map(async (thesisData) => {
-				const thesisId = thesisData[0];
-				const thesisName = thesisData[1];
-				const thesisGroupName = thesisData[2];
-				const fullname = thesisData[3]; // tên người hướng dẫn
-				const numberOfMember = thesisData[4];
-				const statusName = thesisData[5];
-				const description = thesisData[6];
-				const startDate = new Date(thesisData[7]);
-				const finishDate = new Date(thesisData[8]);
-
-
-				// Tìm statusId từ statusName
-				const status = await this.statusRepository.findOne({ where: { statusName: thesisData.statusName } });
-				if (!status) {
-					throw new Error(`Không tìm thấy trạng thái với tên: ${statusName}`);
-				}
-				const statusId = status.statusId;
-
-				// Tìm userId từ userfullname
-				const user = await this.userRepository.findOne({ where: { fullname } });
-				if (!user) {
-					throw new Error(`Không tìm thấy người hướng dẫn: ${fullname}`);
-				}
-				const userId = user.userId;
-
-
-				const thesisGroup = await this.thesisGroupRepository.findOne({ where: { thesisGroupName } });
-				if (!thesisGroup) {
-					throw new Error(`Không tìm thấy người hướng dẫn: ${thesisGroupName}`);
-				}
-				const thesisGroupId = thesisGroup?.thesisGroupId;
-
-
-				// Kiểm tra xem đề tài đã tồn tại chưa
-				const existingThesis = await this.thesisRepository.findOne({
-					where: { thesisId },
+			// Kiểm tra và chuyển đổi nhóm đề tài
+			if (thesis.thesisGroupId) {
+				const entity = await this.thesisGroupRepository.findOne({
+					where: { thesisGroupId: thesis.thesisGroupId },
+					relations: ['faculty']
 				});
-
-				if (existingThesis) {
-					// Nếu đã tồn tại, cập nhật thông tin nhóm đề tài
-					existingThesis.thesisName = thesisName;
-					existingThesis.status = status;
-					existingThesis.instructor = user;
-					existingThesis.numberOfMember = numberOfMember;
-					existingThesis.description = description;
-					existingThesis.startDate = new Date(startDate);
-					existingThesis.finishDate = new Date(finishDate);
-					existingThesis.lastModifyUser = createUser;
-
-					existingThesis.lastModifyDate = new Date();
-					if (thesisGroup)
-						existingThesis.thesisGroup = thesisGroup;
-
-					return existingThesis;
-				} else {
-					// Nếu chưa tồn tại, tạo nhóm đề tài mới
-					const thesis = new Thesis();
-					thesis.thesisId = thesisId || '';
-					thesis.thesisName = thesisName;
-					thesis.status = status;
-					thesis.numberOfMember = numberOfMember;
-					thesis.startDate = new Date(startDate);
-					thesis.finishDate = new Date(finishDate);
-					thesis.description = description;
-					thesis.instructor = user;
-					thesis.createUser = createUser;
-					thesis.lastModifyUser = createUser;
-
-					if (thesisGroup)
-						thesis.thesisGroup = thesisGroup;
-
-
-					return thesis;
+				if (!entity) {
+					throw new Error('Không có dữ liệu nhóm đề tài');
 				}
-			})
-		);
+				thesis.thesisGroup = entity;
+				const id = await this.generateNewId(entity?.faculty?.facultyId);
+				thesis.thesisId = id;
+			}
+			else {
+				throw new Error('Không có dữ liệu nhóm đề tài');
+			}
+			// Kiểm tra và chuyển đổi trạng thái
+			if (thesis.status) {
+				const entity = await this.statusRepository.findOneBy({ statusId: thesis.status });
+				if (entity) {
+					thesis.status = entity;
+				} else {
+					thesis.status = null;
+				}
+			}
+			// Kiểm tra và chuyển đổi gv hướng dẫn
+			if (thesis.instructorName) {
+				const entity = await this.userRepository.findOneBy({ fullname: Like(`%${thesis.instructorName}%`) });
+				if (entity) {
+					thesis.instructor = entity;
+				} else {
+					thesis.instructor = null;
+				}
+			}
+			// Kiểm tra và chuyển đổi người tạo
+			if (createUserId) {
+				const entity = await this.userRepository.findOneBy({ userId: createUserId });
+				if (entity) {
+					thesis.createUser = entity;
+				}
+			}
 
-		// Lưu danh sách đề tài vào database
-		await this.thesisRepository.save(thesisToSave);
+			thesisSaved.push(await this.thesisRepository.save(thesis));
+		}
+		return thesisSaved;
 	}
 
 }
