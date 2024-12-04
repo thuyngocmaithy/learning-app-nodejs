@@ -414,7 +414,6 @@ export class SguAuthService {
 		if (!account) {
 			account = new Account();
 			account.username = userName;
-			account.email = principal;
 			account.password = await bcrypt.hash(password, 10);
 			account.access_token = access_token;
 			// Thiết lập quyền

@@ -114,7 +114,7 @@ export class ScientificResearch {
   /**
    * Nhóm đề tài NCKH
    */
-  @ManyToOne(() => ScientificResearchGroup, data => data.scientificResearchGroupId, { nullable: true })
+  @ManyToOne(() => ScientificResearchGroup, data => data.scientificResearchGroupId, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'scientificResearchGroupId' })
   scientificResearchGroup: ScientificResearchGroup;
 
@@ -123,5 +123,5 @@ export class ScientificResearch {
    */
   @Column({ nullable: false, default: false })
   isDisable: boolean;
-	existingResearch: ScientificResearch;
+  existingResearch: ScientificResearch;
 }

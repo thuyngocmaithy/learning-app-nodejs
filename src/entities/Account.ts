@@ -25,12 +25,6 @@ export class Account {
   password: string;
 
   /**
-   * Email (duy nhất, không rỗng)
-   */
-  @Column({ unique: true, nullable: false })
-  email: string;
-
-  /**
    * Token làm mới (có thể rỗng)
    */
   @Column({ nullable: true, type: 'text' })

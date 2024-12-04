@@ -365,7 +365,7 @@ export class ScientificResearchService {
 	public async importScientificResearch(data: any[], createUserId: string): Promise<ScientificResearch[]> {
 		let scientificResearchSaved = [];
 		for (const scientificResearch of data) {
-			// Kiểm tra và chuyển đổi ngành
+			// Kiểm tra và chuyển đổi nhóm đề tài
 			if (scientificResearch.scientificResearchGroupId) {
 				const entity = await this.scientificResearchGroupRepository.findOneBy({ scientificResearchGroupId: scientificResearch.scientificResearchGroupId });
 				if (entity) {

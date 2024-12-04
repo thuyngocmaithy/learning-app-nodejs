@@ -104,7 +104,7 @@ export class Thesis {
   /**
    * Nhóm đề tài Khóa luận
    */
-  @ManyToOne(() => ThesisGroup, data => data.thesisGroupId, { nullable: true })
+  @ManyToOne(() => ThesisGroup, data => data.thesisGroupId, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'thesisGroupId' })
   thesisGroup: ThesisGroup;
 
