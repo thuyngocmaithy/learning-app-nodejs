@@ -302,7 +302,7 @@ export class ScientificResearchService {
 		if (scientificResearchGroupId && scientificResearchGroupId !== "null") {
 			queryBuilder.andWhere(
 				'sr.scientificResearchGroupId = :scientificResearchGroupId ' +
-				'sr.isDisable = false', {
+				'AND sr.isDisable = false', {
 				scientificResearchGroupId: scientificResearchGroupId
 			});
 		}
