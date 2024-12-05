@@ -294,7 +294,7 @@ export class ThesisService {
 		if (thesisGroupId && thesisGroupId !== "null") {
 			queryBuilder.andWhere(
 				'thesis.thesisGroupId = :thesisGroupId ' +
-				'thesis.isDisable = false', {
+				'AND thesis.isDisable = false', {
 				thesisGroupId: thesisGroupId
 			});
 		}
