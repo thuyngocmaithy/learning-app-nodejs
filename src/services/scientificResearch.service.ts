@@ -6,7 +6,6 @@ import { Status } from '../entities/Status';
 import { AppDataSource } from '../data-source';
 import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 import { ScientificResearch_User } from '../entities/ScientificResearch_User';
-import { ThesisService } from './thesis.service';
 
 export class ScientificResearchService {
 	private scientificResearchRepository: Repository<ScientificResearch>;
@@ -206,7 +205,6 @@ export class ScientificResearchService {
 			'sr.scientificResearchName',
 			'sr.startDate',
 			'sr.finishDate',
-			'sr.description',
 			'sr.description',
 			'sr.numberOfMember',
 			'sr.level',

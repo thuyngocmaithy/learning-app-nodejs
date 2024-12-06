@@ -8,13 +8,11 @@ export class ThesisGroupService {
 	private thesisGroupRepository: Repository<ThesisGroup>;
 	private facultyRepository: Repository<Faculty>;
 	private statusRepository: Repository<Status>;
-	private userRepository: Repository<User>;
 
 	constructor(dataSource: DataSource) {
 		this.thesisGroupRepository = dataSource.getRepository(ThesisGroup);
 		this.facultyRepository = dataSource.getRepository(Faculty);
 		this.statusRepository = dataSource.getRepository(Status);
-		this.userRepository = dataSource.getRepository(User);
 	}
 
 	async getAll(): Promise<ThesisGroup[]> {
@@ -167,7 +165,7 @@ export class ThesisGroupService {
 				{ currentDate }
 			);
 			queryBuilder.andWhere(
-				'(thesisgroup.endCreateThesisDate IS NULL OR thesisgroup.startCreateThesisDate > :currentDate)',
+				'(thesisgroup.endCreateThesisDate IS NULL OR thesisgroup.endCreateThesisDate > :currentDate)',
 				{ currentDate }
 			);
 		}
