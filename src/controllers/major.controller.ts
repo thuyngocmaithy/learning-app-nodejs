@@ -4,6 +4,7 @@ import { MajorService } from '../services/major.service';
 import { DataSource } from 'typeorm';
 import { RequestHandler } from '../utils/requestHandler';
 import { Major } from '../entities/Major';
+import { StatusCodes } from 'http-status-codes';
 
 export class MajorController {
     private majorService: MajorService;
@@ -20,24 +21,18 @@ export class MajorController {
     public deleteMajor = (req: Request, res: Response) => RequestHandler.delete(req, res, this.majorService);
     public getMajorWhere = (req: Request, res: Response) => RequestHandler.getWhere<Major>(req, res, this.majorService);
 
-    public async importMajor(req: Request, res: Response) { 
+    public async importMajor(req: Request, res: Response) {
         try {
-            const majors = req.body;
-    
-            if (!Array.isArray(majors)) {
-                return res.status(400).json({ message: 'Dữ liệu không hợp lệ' });
+            const data = req.body;
+            if (!Array.isArray(data) || data.length === 0) {
+                return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Không có dữ liệu' });
             }
-    
-            await this.majorService.importMajor(majors);
-    
-            res.status(200).json({ message: 'Import thành công' });
-        } catch (error: any) {
-            console.error('[MajorController - importMajor]:', error);
-            res.status(500).json({
-                message: 'Có lỗi xảy ra khi import dữ liệu',
-                error: error.message,
-            });
+            const response = await this.majorService.importMajor(data);
+            res.status(StatusCodes.CREATED).json({ message: 'success', data: response });
+        } catch (error) {
+            console.error('Error importing faculties:', error);
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error importing faculties', error: (error as Error).message });
         }
     }
-    
+
 }

@@ -7,6 +7,7 @@ const thesisRouter = Router();
 const thesisController = new ThesisController(AppDataSource);
 
 thesisRouter.post('/import', thesisController.importThesis);
+thesisRouter.get('/getListThesisJoined', thesisController.getListThesisJoined);
 thesisRouter.get('/', thesisController.getAllThesis);
 thesisRouter.get('/getByThesisGroupId', thesisController.getByThesisIGroupId);
 thesisRouter.get('/getByThesisGroupIdAndCheckApprove', thesisController.getByThesisGroupIdAndCheckApprove);

@@ -9,6 +9,7 @@ const thesisGroupController = new ThesisGroupController(AppDataSource);
 
 thesisGroupRoute.post('/import', thesisGroupController.importThesisGroup);
 thesisGroupRoute.get('/', thesisGroupController.getAllThesisGroups);
+thesisGroupRoute.get('/checkValidDateCreateThesis', thesisGroupController.checkValidDateCreateThesis);
 thesisGroupRoute.put('/updateThesisGroupMulti/:ids', thesisGroupController.updateThesisGroupMulti);
 thesisGroupRoute.get('/getWhere', thesisGroupController.getThesisGroupWhere);
 thesisGroupRoute.get('/:id', thesisGroupController.getThesisGroupById);

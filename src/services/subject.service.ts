@@ -126,7 +126,6 @@ export class SubjectService {
 				's.subjectId AS subjectId',
 				's.subjectName as subjectName',
 				's.creditHour as creditHour',
-				's.isCompulsory as isCompulsory',
 				'sb.subjectId AS subjectBefore',
 				'se.subjectId AS subjectEqual',
 				's.createDate as createDate',
@@ -149,10 +148,6 @@ export class SubjectService {
 
 		if (condition.creditHour) {
 			queryBuilder.andWhere('s.creditHour = :creditHour', { creditHour: condition.creditHour });
-		}
-
-		if (condition.isCompulsory !== undefined) {
-			queryBuilder.andWhere('s.isCompulsory = :isCompulsory', { isCompulsory: condition.isCompulsory });
 		}
 
 		if (condition.subjectBeforeId) {

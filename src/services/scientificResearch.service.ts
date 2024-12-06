@@ -1,4 +1,3 @@
-// scientificResearch.service.ts
 import { DataSource, Repository, Like, FindManyOptions, In, MoreThan, LessThanOrEqual } from 'typeorm';
 import { ScientificResearch } from '../entities/ScientificResearch';
 import { Faculty } from '../entities/Faculty';
@@ -7,7 +6,6 @@ import { Status } from '../entities/Status';
 import { AppDataSource } from '../data-source';
 import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 import { ScientificResearch_User } from '../entities/ScientificResearch_User';
-import { ThesisService } from './thesis.service';
 
 export class ScientificResearchService {
 	private scientificResearchRepository: Repository<ScientificResearch>;
@@ -27,10 +25,29 @@ export class ScientificResearchService {
 	}
 
 	async getAll(): Promise<ScientificResearch[]> {
-		return this.scientificResearchRepository.find({
-			order: { createDate: 'DESC' },
-			relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower', 'scientificResearchGroup']
-		});
+		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
+
+		queryBuilder.select([
+			'sr.scientificResearchId',
+			'sr.scientificResearchName',
+			'sr.startDate',
+			'sr.finishDate',
+			'sr.description',
+			'sr.numberOfMember',
+			'sr.level',
+			'sr.budget',
+			'sr.isDisable',
+		]);
+		queryBuilder
+			.leftJoin('sr.instructor', 'user')
+			.addSelect(['user.userId', 'user.fullname']);
+
+		queryBuilder
+			.leftJoin('sr.status', 'status')
+			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
+
+		queryBuilder.orderBy('sr.createDate', 'DESC');
+		return queryBuilder.getMany();
 	}
 
 	async getById(scientificResearchId: string): Promise<ScientificResearch | null> {
@@ -79,7 +96,9 @@ export class ScientificResearchService {
 		const followerDetails = [{ user: scientificResearchData.createUserId }];
 
 		// Nếu instructor khác với createUserId, thêm instructor vào followerDetails
-		if (scientificResearchData.instructorId !== scientificResearchData.createUserId.userId) {
+		if ((scientificResearchData.instructorId !== scientificResearchData.createUserId.userId)
+			&& (scientificResearchData.instructor.userId !== scientificResearchData.createUserId.userId)
+		) {
 			followerDetails.push({ user: instructor });
 		}
 
@@ -172,20 +191,35 @@ export class ScientificResearchService {
 	}
 
 	public getByScientificResearchGroupId = async (scientificResearchGroupId: string): Promise<ScientificResearch[]> => {
-		const options: FindManyOptions<ScientificResearch> = {
-			where: { scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId } },
-			relations: [
-				'status',
-				'instructor',
-				'createUser',
-				'lastModifyUser',
-				'follower',
-				'follower.followerDetails',
-				'follower.followerDetails.user',
-				'scientificResearchGroup.faculty'
-			]
-		};
-		return this.scientificResearchRepository.find(options);
+		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
+
+		if (scientificResearchGroupId) {
+			queryBuilder.andWhere('sr.scientificResearchGroupId = :scientificResearchGroupId', {
+				scientificResearchGroupId: scientificResearchGroupId
+			});
+		}
+
+		queryBuilder.select([
+			'sr.scientificResearchGroupId',
+			'sr.scientificResearchId',
+			'sr.scientificResearchName',
+			'sr.startDate',
+			'sr.finishDate',
+			'sr.description',
+			'sr.numberOfMember',
+			'sr.level',
+			'sr.isDisable',
+		]);
+		queryBuilder
+			.leftJoin('sr.status', 'status')
+			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
+
+		queryBuilder
+			.leftJoin('sr.instructor', 'user')
+			.addSelect(['user.fullname', 'user.userId']);
+
+		queryBuilder.orderBy('sr.createDate', 'DESC');
+		return queryBuilder.getMany();
 	}
 
 	async getWhere(condition: any): Promise<ScientificResearch[]> {
@@ -222,34 +256,88 @@ export class ScientificResearchService {
 		return this.scientificResearchRepository.find({
 			order: { createDate: 'DESC' },
 			where: whereCondition,
-			relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'],
+			relations: ['status', 'instructor', 'follower'],
 		});
+	}
+
+	async getListSRJoined(condition: any): Promise<ScientificResearch[]> {
+		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
+
+		if (condition.instructorId && condition.instructorId !== 'undefined') {
+			queryBuilder.andWhere('sr.instructorId = :instructorId', {
+				instructorId: condition.instructorId
+			});
+		}
+
+		if (condition.scientificResearchGroup && condition.scientificResearchGroup !== 'undefined') {
+			queryBuilder.andWhere('sr.scientificResearchGroup = :scientificResearchGroup', {
+				scientificResearchGroup: condition.scientificResearchGroup
+			});
+		}
+		queryBuilder.select([
+			'sr.scientificResearchId',
+			'sr.scientificResearchName',
+			'sr.startDate',
+			'sr.finishDate'
+		]);
+		queryBuilder
+			.leftJoin('sr.status', 'status')
+			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
+
+		queryBuilder
+			.leftJoin('sr.instructor', 'user')
+			.addSelect(['user.userId', 'user.fullname']);
+
+		queryBuilder.orderBy('sr.createDate', 'DESC');
+
+		return queryBuilder.getMany();
 	}
 
 
 	public getBySRGIdAndCheckApprove = async (scientificResearchGroupId: string, userId: string): Promise<any[]> => {
-		// Tạo điều kiện where theo scientificResearchGroupId
-		const whereCondition = (scientificResearchGroupId && scientificResearchGroupId !== "null")
-			? {
-				scientificResearchGroup: { scientificResearchGroupId: scientificResearchGroupId },
-				isDisable: false
-			}
-			: { isDisable: false }; // Bỏ qua điều kiện scientificResearchGroup nếu scientificResearchGroupId là null
+		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
 
-		const options: FindManyOptions<ScientificResearch> = {
-			where: whereCondition,
-			relations: [
-				'status',
-				'instructor',
-				'createUser',
-				'lastModifyUser',
-				'follower',
-				'follower.followerDetails',
-				'follower.followerDetails.user',
-				'scientificResearchGroup.faculty'
-			]
-		};
-		const listSR = await this.scientificResearchRepository.find(options);
+		if (scientificResearchGroupId && scientificResearchGroupId !== "null") {
+			queryBuilder.andWhere(
+				'sr.scientificResearchGroupId = :scientificResearchGroupId ' +
+				'AND sr.isDisable = false', {
+				scientificResearchGroupId: scientificResearchGroupId
+			});
+		}
+		else {
+			queryBuilder.andWhere('sr.isDisable = false');
+		}
+
+		queryBuilder.select([
+			'sr.scientificResearchId',
+			'sr.scientificResearchName',
+			'sr.startDate',
+			'sr.finishDate'
+		]);
+		queryBuilder
+			.leftJoin('sr.status', 'status')
+			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
+
+		queryBuilder
+			.leftJoin('sr.instructor', 'instructor')
+			.addSelect(['instructor.userId', 'instructor.fullname']);
+
+		queryBuilder
+			.leftJoin('sr.scientificResearchGroup', 'scientificResearchGroup')
+			.leftJoin('scientificResearchGroup.faculty', 'faculty')
+			.addSelect(['faculty.facultyId', 'faculty.facultyName']);
+
+
+		queryBuilder
+			.leftJoin('sr.follower', 'follower')
+			.leftJoin('follower.followerDetails', 'follower_detail')
+			.leftJoin('follower_detail.user', 'followerUser')
+			.addSelect(['followerUser.userId', 'followerUser.fullname', 'followerUser.avatar']);
+
+
+		queryBuilder.orderBy('sr.createDate', 'DESC');
+
+		const listSR = await queryBuilder.getMany();
 
 		const promises = listSR.map(async (SR) => {
 			const responseCountRegister = await this.scientificResearch_UserRepository.findBy({ scientificResearch: { scientificResearchId: SR.scientificResearchId } });
@@ -272,100 +360,47 @@ export class ScientificResearchService {
 		return result;
 	}
 
-	public async importScientificResearch(data: any[], createUserId: string): Promise<void> {
+	public async importScientificResearch(data: any[], createUserId: string): Promise<ScientificResearch[]> {
+		let scientificResearchSaved = [];
+		for (const scientificResearch of data) {
+			// Kiểm tra và chuyển đổi nhóm đề tài
+			if (scientificResearch.scientificResearchGroupId) {
+				const entity = await this.scientificResearchGroupRepository.findOneBy({ scientificResearchGroupId: scientificResearch.scientificResearchGroupId });
+				if (entity) {
+					scientificResearch.scientificResearchGroup = entity;
+				} else {
+					scientificResearch.scientificResearchGroup = null;
+				}
+			}
+			// Kiểm tra và chuyển đổi trạng thái
+			if (scientificResearch.statusId) {
+				const entity = await this.statusRepository.findOneBy({ statusId: scientificResearch.statusId });
+				if (entity) {
+					scientificResearch.status = entity;
+				} else {
+					scientificResearch.status = null;
+				}
+			}
+			// Kiểm tra và chuyển đổi gv hướng dẫn
+			if (scientificResearch.instructorName) {
+				const entity = await this.userRepository.findOneBy({ fullname: Like(`%${scientificResearch.instructorName}%`) });
+				if (entity) {
+					scientificResearch.instructor = entity;
+				} else {
+					scientificResearch.instructor = null;
+				}
+			}
+			// Kiểm tra và chuyển đổi người tạo
+			if (createUserId) {
+				const entity = await this.userRepository.findOneBy({ userId: createUserId });
+				if (entity) {
+					scientificResearch.createUserId = entity;
+				}
+			}
 
-		const createUser = await this.userRepository.findOne({ where: { userId: createUserId } });
-		if (!createUser) {
-			throw new Error(`Không tìm thấy người dùng với ID: ${createUserId}`);
+			scientificResearchSaved.push(await this.create(scientificResearch));
 		}
-
-		const ScientificResearchToSave = await Promise.all(
-			data.map(async (scientificData) => {
-				const scientificResearchId = scientificData[0];
-				const scientificResearchName = scientificData[1];
-				const scientificResearchGroup = scientificData[2];
-				const description = scientificData[3];
-				const numberOfMember = scientificData[4];
-				const statusName = scientificData[5];
-				const instructor = scientificData[6];
-				const level = scientificData[7];
-				const budget = parseInt(scientificData[8]) || 0;
-				const startDate = new Date(scientificData[9]);
-				const finishDate = new Date(scientificData[10]);
-
-				console.log(scientificData);
-
-				if (!['Cơ sở', 'Thành phố', 'Bộ', 'Quốc gia', 'Quốc tế'].includes(level)) {
-					throw new Error(`Giá trị cột cấp không đúng: ${level}`);
-				}
-
-
-
-				const status = await this.statusRepository.findOne({ where: { statusName: scientificData.statusName } });
-				if (!status) {
-					throw new Error(`Không tìm thấy trạng thái với tên: ${statusName}`);
-				}
-
-				const user = await this.userRepository.findOne({ where: { userId: scientificData.instructor } });
-				if (!user) {
-					throw new Error(`Không tìm thấy người hướng dẫn: ${instructor}`);
-				}
-
-				const researchGroup = await this.scientificResearchGroupRepository.findOne({
-					where: { scientificResearchGroupId: scientificData.scientificResearchGroup }
-				});
-
-				if (!researchGroup) {
-					throw new Error(`Không tìm thấy nhóm đề tài nghiên cứu khoa học: ${researchGroup}`);
-				}
-
-
-				// Kiểm tra xem đề tài đã tồn tại chưa
-				const existingResearch = await this.scientificResearchRepository.findOne({
-					where: { scientificResearchId },
-				});
-
-				if (existingResearch) {
-					existingResearch.scientificResearchName = scientificResearchName;
-					existingResearch.scientificResearchGroup = researchGroup;
-					existingResearch.description = description;
-					existingResearch.numberOfMember = numberOfMember;
-					existingResearch.status = status;
-					existingResearch.instructor = user;
-					existingResearch.level = ['Cơ sở', 'Thành phố', 'Bộ', 'Quốc gia', 'Quốc tế'].includes(level) ? level : 'Cơ sở';
-					existingResearch.budget = budget;
-					existingResearch.startDate = new Date(startDate);
-					existingResearch.finishDate = new Date(finishDate);
-
-					existingResearch.lastModifyDate = new Date();
-					existingResearch.lastModifyUser = createUser;
-
-					return existingResearch;
-				}
-				else {
-					let research = new ScientificResearch();
-					research.scientificResearchId = scientificResearchId;
-					research.scientificResearchName = scientificResearchName;
-					research.scientificResearchGroup = researchGroup;
-					research.description = description;
-					research.numberOfMember = numberOfMember;;
-					research.status = status;
-					research.instructor = user;
-					research.level = ['Cơ sở', 'Thành phố', 'Bộ', 'Quốc gia', 'Quốc tế'].includes(level) ? level : 'Cơ sở';
-					research.budget = budget;
-					research.startDate = new Date(startDate);
-					research.finishDate = new Date(finishDate);
-					research.createUser = createUser;
-					research.lastModifyUser = createUser;
-					research.lastModifyDate = new Date();
-
-					return research;
-				}
-			})
-		);
-
-
-		await this.scientificResearchRepository.save(ScientificResearchToSave);
+		return scientificResearchSaved;
 	}
 }
 

@@ -1,4 +1,4 @@
-import { Repository, DataSource, FindOneOptions, Int32, FindManyOptions, In, FindOptions } from 'typeorm';
+import { Repository, DataSource, FindOneOptions, FindManyOptions, In } from 'typeorm';
 import { ScientificResearch_User } from '../entities/ScientificResearch_User'
 import { User } from '../entities/User';
 import { ScientificResearch } from '../entities/ScientificResearch';
@@ -12,7 +12,6 @@ export class ScientificResearch_UserService {
 	private scientificResearchUserRepository: Repository<ScientificResearch_User>;
 	private followerDetailRepository: Repository<FollowerDetail>;
 	private followerRepository: Repository<Follower>;
-	private srgRepository: Repository<ScientificResearchGroup>;
 	private userRepository: Repository<User>;
 	private srRepository: Repository<ScientificResearch>;
 	private followerService: FollowerService;
@@ -22,7 +21,6 @@ export class ScientificResearch_UserService {
 		this.scientificResearchUserRepository = dataSource.getRepository(ScientificResearch_User);
 		this.followerDetailRepository = dataSource.getRepository(FollowerDetail);
 		this.followerRepository = dataSource.getRepository(Follower);
-		this.srgRepository = dataSource.getRepository(ScientificResearchGroup);
 		this.userRepository = dataSource.getRepository(User);
 		this.srRepository = dataSource.getRepository(ScientificResearch);
 		this.followerService = new FollowerService(AppDataSource);
@@ -232,34 +230,28 @@ export class ScientificResearch_UserService {
 
 	// Lấy danh sách số lượng đk
 	public getByListSRId = async (ids: string[]): Promise<ScientificResearch_User[] | null> => {
-		const options: FindManyOptions<ScientificResearch_User> = {
-			where: { scientificResearch: { scientificResearchId: In(ids) } },
-			relations: [
-				'scientificResearch',
-				'user',
-				'scientificResearch.instructor',
-				'scientificResearch.status',
-				// 'scientificResearch.follower',
-				// 'scientificResearch.follower.followerDetails',
-				// 'scientificResearch.follower.followerDetails.user',
-				'scientificResearch.scientificResearchGroup.faculty'
-			]
-		};
-		return this.scientificResearchUserRepository.find(options);
+		const queryBuilder = this.scientificResearchUserRepository.createQueryBuilder('sru');
+
+		queryBuilder.andWhere('sru.scientificResearchId IN(:scientificResearchId)', {
+			scientificResearchId: ids
+		});
+
+		queryBuilder.select([
+			'sru.id',
+			'sru.group',
+			'sru.isLeader',
+			'sru.isApprove',
+		]);
+		queryBuilder
+			.leftJoin('sru.user', 'user')
+			.addSelect(['user.userId', 'user.fullname', 'user.avatar', 'user.GPA']);
+
+		queryBuilder
+			.leftJoin('sru.scientificResearch', 'scientificResearch')
+			.addSelect(['scientificResearch.scientificResearchId']);
+
+
+		return queryBuilder.getMany();
 	}
-
-	//Lấy Danh Sách Người Theo Dõi
-	public getFollowersByListSRId = async (ids: string[]): Promise<any> => {
-		const options: FindManyOptions<ScientificResearch_User> = {
-			where: { scientificResearch: { scientificResearchId: In(ids) } },
-			relations: [
-				'scientificResearch.follower',
-				'scientificResearch.follower.followerDetails',
-				'scientificResearch.follower.followerDetails.user',
-			]
-		};
-		return this.scientificResearchUserRepository.find(options);
-	};
-
 
 }

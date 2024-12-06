@@ -10,11 +10,9 @@ import { StatusCodes } from 'http-status-codes';
 
 export class SubjectController {
 	private subjectService: SubjectService;
-	private subjectRepository: Repository<Subject>;
 
 	constructor(dataSource: DataSource) {
 		this.subjectService = new SubjectService(dataSource);
-		this.importSubject = this.importSubject.bind(this);
 	}
 
 	public getAllSubjects = (req: Request, res: Response) => RequestHandler.getAll<Subject>(req, res, this.subjectService);
