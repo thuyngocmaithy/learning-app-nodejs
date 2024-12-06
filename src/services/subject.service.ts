@@ -169,7 +169,7 @@ export class SubjectService {
 		return queryBuilder.getRawMany();
 	}
 
-	async importSubject(subjects: Partial<Subject>[], createUserId: string): Promise<Subject[]> {
+	async importSubject(subjects: Partial<Subject>[], createUserId: string) {
 		// Lưu từng môn học vào db
 		let subjectSaved = [];
 		for (const subject of subjects) {
@@ -188,5 +188,6 @@ export class SubjectService {
 				}
 			}
 
-
+		}
+	}
 }
