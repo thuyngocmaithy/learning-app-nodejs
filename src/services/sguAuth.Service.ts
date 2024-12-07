@@ -932,7 +932,7 @@ export class SguAuthService {
 		});
 
 		// Tắt cache thông qua route
-		await page.route('**/*', (route) => {
+		await page.route('**/*', (route: { request: () => any; continue: (arg0: { headers: any; }) => void; }) => {
 			const request = route.request();
 			const headers = {
 				...request.headers(),

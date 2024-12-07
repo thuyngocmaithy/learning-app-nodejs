@@ -164,7 +164,7 @@ export class SubjectService {
 		return queryBuilder.getRawMany();
 	}
 
-	async importSubject(subjects: Partial<Subject>[], createUserId: string): Promise<Subject[]> {
+	async importSubject(subjects: Partial<Subject>[], createUserId: string) {
 		// Lưu từng môn học vào db
 		let subjectSaved = [];
 		for (const subject of subjects) {
@@ -183,16 +183,6 @@ export class SubjectService {
 				}
 			}
 
-			// Kiểm tra và chuyển đổi người tạo
-			if (createUserId) {
-				const entity = await this.userRepository.findOneBy({ userId: createUserId });
-				if (entity) {
-					subject.createUser = entity;
-				}
-			}
-
-			subjectSaved.push(await this.create(subject));
 		}
-		return subjectSaved;
 	}
 }
