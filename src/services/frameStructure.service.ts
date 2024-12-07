@@ -50,6 +50,10 @@ export class FrameStructureService {
       whereCondition.studyFrame = { frameId: condition.studyFrame }
     }
 
+    if (condition.studyFrameComponent) {
+      whereCondition.studyFrameComponent = { frameComponentId: condition.studyFrameComponent }
+    }
+
     return this.frameStructureRepository.find({
       where: whereCondition,
       relations: ['studyFrame', 'studyFrameComponent', 'studyFrameComponentParent']

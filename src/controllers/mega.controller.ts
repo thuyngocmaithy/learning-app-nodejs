@@ -155,6 +155,7 @@ export class MegaController {
             await this.megaService.deleteFiles(fileNames);
             // Gọi hàm xóa data trong table attach
             await this.attachService.delete(fileNames);
+
             return res.status(200).json({ message: 'Xóa file thành công.' });
         } catch (error) {
             console.error('Lỗi khi xóa file: ', error);

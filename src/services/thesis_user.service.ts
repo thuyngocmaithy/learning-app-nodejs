@@ -79,6 +79,7 @@ export class Thesis_UserService {
 	}
 
 	public update = async (id: string[], thesisUserData: Partial<Thesis_User>): Promise<Thesis_User[] | null> => {
+		// Cập nhật thông tin chính
 		await this.thesisUserRepository.update(
 			{ id: In(id) },
 			thesisUserData
@@ -90,53 +91,67 @@ export class Thesis_UserService {
 		});
 
 		if (updatedThesisUser) {
-			updatedThesisUser.forEach(async (updatedSRU) => {
-				// Tìm follower bằng thesisId
-				const follower = await this.followerService.getByThesisId(updatedSRU.thesis.thesisId);
-				// Nếu đã có follower => Thêm detail
-				if (follower) {
-					const followerDetail = await this.followerDetailService.findByUserAndFollower(updatedSRU.user, follower);
-					if (thesisUserData.isApprove) {
-						// Thêm người theo dõi
-						if (!followerDetail) {
-							const newFollowerDetail = new FollowerDetail();
-							newFollowerDetail.follower = follower;
-							newFollowerDetail.user = updatedSRU.user;
-							await this.followerDetailRepository.save(newFollowerDetail);
-						}
-					} else {
-						// Xóa người theo dõi
-						if (followerDetail) {
-							await this.followerDetailRepository.remove(followerDetail);
-						}
-					}
-				}
-				else {
-					// Chưa có follower => Tạo mới follower trước khi thêm detail
-					// Chưa có follower => không xử lý trường hợp Hủy duyệt (isApprove = false)
-					// Do Hủy duyệt => Xóa followerDetail nhưng chưa có follower nên không cần xử lý
-					if (thesisUserData.isApprove) {
-						updatedThesisUser.forEach(async (updatedSRU) => {
-							const newFollower = new Follower();
-							newFollower.thesis = updatedSRU.thesis;
-							const newfollowerCreate = await this.followerRepository.save(newFollower);
-							const followerDetail = await this.followerDetailService.findByUserAndFollower(updatedSRU.user, newfollowerCreate);
+			for (const updatedSRU of updatedThesisUser) {
+				try {
+					// Tìm follower bằng thesisId
+					const follower = await this.followerService.getByThesisId(updatedSRU.thesis.thesisId);
 
-							// Thêm người theo dõi
+					if (follower) {
+						// Kiểm tra followerDetail đã tồn tại chưa
+						const followerDetail = await this.followerDetailService.findByUserAndFollower(updatedSRU.user, follower);
+
+						if (thesisUserData.isApprove) {
+							// Thêm người theo dõi nếu chưa tồn tại
 							if (!followerDetail) {
 								const newFollowerDetail = new FollowerDetail();
-								newFollowerDetail.follower = newfollowerCreate;
+								newFollowerDetail.follower = follower;
 								newFollowerDetail.user = updatedSRU.user;
 								await this.followerDetailRepository.save(newFollowerDetail);
 							}
-						})
+						} else {
+							// Xóa người theo dõi nếu tồn tại
+							if (followerDetail) {
+								await this.followerDetailRepository.remove(followerDetail);
+							}
+						}
+					} else {
+						// Chưa có follower => Tạo mới follower trước khi thêm detail
+						if (thesisUserData.isApprove) {
+							// Kiểm tra nếu follower đã tồn tại
+							let newFollower = await this.followerRepository.findOne({
+								where: { thesis: updatedSRU.thesis },
+							});
+
+							if (!newFollower) {
+								newFollower = new Follower();
+								newFollower.thesis = updatedSRU.thesis;
+								newFollower = await this.followerRepository.save(newFollower);
+							}
+
+							// Kiểm tra nếu followerDetail đã tồn tại
+							const existingFollowerDetail = await this.followerDetailService.findByUserAndFollower(
+								updatedSRU.user,
+								newFollower
+							);
+
+							if (!existingFollowerDetail) {
+								const newFollowerDetail = new FollowerDetail();
+								newFollowerDetail.follower = newFollower;
+								newFollowerDetail.user = updatedSRU.user;
+								await this.followerDetailRepository.save(newFollowerDetail);
+							}
+						}
 					}
+				} catch (error) {
+					console.error('Error processing updatedSRU: ', updatedSRU, error);
 				}
-			})
+			}
 		}
 
 		return updatedThesisUser;
-	}
+	};
+
+
 
 
 	public delete = async (ids: string[]): Promise<boolean> => {

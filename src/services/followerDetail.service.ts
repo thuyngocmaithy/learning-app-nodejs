@@ -88,8 +88,8 @@ export class FollowerDetailService {
   public findByUserAndFollower = async (user: User, follower: Follower): Promise<FollowerDetail | null> => {
     return this.followerDetailRepository.findOne({
       where: {
-        user: user,
-        follower: follower
+        user: { userId: user.userId },
+        follower: { id: follower.id }
       }
     });
   };
