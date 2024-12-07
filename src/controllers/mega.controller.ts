@@ -30,6 +30,26 @@ export class MegaController {
         this.userRepository = AppDataSource.getRepository(User);
     }
 
+    // Hàm retry để thử lại một hành động (operation) khi gặp lỗi
+    private retryOperation = async (operation: any, retries = 3, delay = 1000) => {
+        for (let i = 0; i < retries; i++) {
+            try {
+                // Thử thực hiện hành động
+                return await operation();
+            } catch (error) {
+                const err = error as Error;
+                console.error(`Lần thử thứ ${i + 1} thất bại. Lỗi: ${err.message}`);
+                if (i < retries - 1) {
+                    // Chờ một khoảng thời gian trước khi thử lại
+                    await new Promise((res) => setTimeout(res, delay));
+                } else {
+                    // Nếu hết số lần thử, ném lỗi
+                    throw error;
+                }
+            }
+        }
+    }
+
     // Hàm upload nhiều file
     public uploadFiles = async (req: any, res: Response) => {
         upload(req, res, async (err) => {
@@ -48,7 +68,7 @@ export class MegaController {
             for (const file of files) {
                 try {
                     // Upload trực tiếp từ buffer
-                    const uploadedFile = await this.megaService.uploadFileFromBuffer(file.buffer, file.originalname);
+                    const uploadedFile = await this.retryOperation(() => this.megaService.uploadFileFromBuffer(file.buffer, file.originalname))
 
                     if (uploadedFile) {
                         uploadedFiles.push(uploadedFile);
@@ -120,4 +140,27 @@ export class MegaController {
             return res.status(500).json({ message: 'Lỗi', error: err.message });
         }
     }
+
+
+    public deleteFiles = async (req: Request, res: Response) => {
+        try {
+            const { fileNames } = req.body; // Dữ liệu file name cần xóa từ request body
+
+            // Kiểm tra danh sách fileNames
+            if (!fileNames || !Array.isArray(fileNames) || fileNames.length === 0) {
+                return res.status(400).json({ message: 'Danh sách file cần xóa không hợp lệ hoặc rỗng.' });
+            }
+
+            // Gọi hàm service deleteFiles
+            await this.megaService.deleteFiles(fileNames);
+            // Gọi hàm xóa data trong table attach
+            await this.attachService.delete(fileNames);
+            return res.status(200).json({ message: 'Xóa file thành công.' });
+        } catch (error) {
+            console.error('Lỗi khi xóa file: ', error);
+            return res.status(500).json({ message: 'Có lỗi trong quá trình xóa file.', error: error });
+        }
+    };
+
+
 }

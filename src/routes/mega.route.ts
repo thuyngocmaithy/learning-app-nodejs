@@ -9,5 +9,7 @@ const megaController = new MegaController(AppDataSource);
 router.post('/upload', megaController.uploadFiles);
 // Route để download file từ MEGA
 router.get('/download/:fileId', megaController.downloadFile);
+// Xóa file
+router.delete('/delete', megaController.deleteFiles);
 
 export default router;

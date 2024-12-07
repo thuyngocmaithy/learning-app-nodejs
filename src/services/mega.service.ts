@@ -53,7 +53,7 @@ export class MegaService {
             const existingFiles = new Set(folder.children?.map(file => file.name).filter((name): name is string => name !== null));
             const newFileName = this.getUniqueFileName(existingFiles, fileName);
 
-            const chunkSize = 5 * 1024 * 1024; // 5MB mỗi phần
+            const chunkSize = 1 * 1024 * 1024; // 1MB mỗi phần
             const chunks = Math.ceil(fileBuffer.length / chunkSize);
             const uploadPromises: Promise<File>[] = [];
 
@@ -66,25 +66,29 @@ export class MegaService {
                 const uploadStream = folder.upload({
                     name: newFileName,
                     size: chunkBuffer.length,
-                    maxConnections: 1,
+                    maxConnections: 10, // Tăng kết nối song song
                 });
 
-                uploadPromises.push(new Promise<File>((resolve, reject) => {
-                    uploadStream.on('complete', (file: File) => {
-                        resolve(file);
-                    });
-
-                    uploadStream.on('error', (err: any) => {
-                        reject(new Error(`Lỗi khi upload file chunk: ${err.message}`));
-                    });
-
-                    uploadStream.end(chunkBuffer);
-                }));
+                uploadPromises.push(
+                    new Promise<File>((resolve, reject) => {
+                        uploadStream.on('complete', (file: File) => resolve(file));
+                        uploadStream.on('error', (err: any) => reject(err));
+                        uploadStream.end(chunkBuffer);
+                    })
+                );
             }
 
-            // Chờ tất cả các upload hoàn thành
-            const uploadedFiles = await Promise.all(uploadPromises);
-            return uploadedFiles[0]; // Trả về file đầu tiên (hoặc kết hợp chúng nếu cần)
+            // Chờ tất cả các promise hoàn thành (bỏ qua các chunk thất bại)
+            const results = await Promise.allSettled(uploadPromises);
+            const uploadedFiles = results
+                .filter((result) => result.status === 'fulfilled')
+                .map((result) => (result as PromiseFulfilledResult<File>).value);
+
+            if (uploadedFiles.length === 0) {
+                throw new Error('Không thể tải lên bất kỳ chunk nào.');
+            }
+
+            return uploadedFiles[0]; // Trả về file đầu tiên 
 
         } catch (error) {
             console.error('Lỗi khi upload file từ buffer:', error);
@@ -140,5 +144,52 @@ export class MegaService {
             throw error;
         }
     }
+
+    // Thêm phương thức deleteFiles để xóa nhiều file dựa trên danh sách tên file hoặc ID
+    async deleteFiles(fileNames: string[]): Promise<void> {
+        try {
+            const storage = await this.loginToMega();
+            const folder = storage.root.navigate(megaConfig.folder as string);
+
+            if (!folder) {
+                throw new Error(`Thư mục không tồn tại: ${megaConfig.folder}`);
+            }
+
+            // An toàn lọc các file hợp lệ
+            const filesToDelete = folder.children?.filter((child) =>
+                child.name !== null && fileNames.includes(child.name)
+            );
+
+            if (!filesToDelete || filesToDelete.length === 0) {
+                throw new Error('Không tìm thấy file nào để xóa.');
+            }
+
+            const deletePromises = filesToDelete.map((file) => {
+                return new Promise<void>((resolve, reject) => {
+                    try {
+                        if (file && file.delete) {
+                            // Thay thế bằng logic promise phù hợp
+                            file.delete().then(() => {
+                                resolve();
+                            }).catch((error) => {
+                                reject(new Error(`Không thể xóa file ${file.name}: ${error.message}`));
+                            });
+                        } else {
+                            reject(new Error('File hoặc delete() không hợp lệ.'));
+                        }
+                    } catch (error) {
+                        reject(new Error(`Có lỗi trong quá trình xóa file: ${error}`));
+                    }
+                });
+            });
+
+            await Promise.allSettled(deletePromises);
+        } catch (error) {
+            console.error(`Lỗi khi xóa file: ${error}`);
+            throw error;
+        }
+    }
+
+
 
 }
