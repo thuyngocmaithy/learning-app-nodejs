@@ -76,11 +76,11 @@ export class MegaController {
                         console.warn(`Upload thất bại cho file: ${file.originalname}`);
                     }
 
-                    const { scientificResearchId, thesisId, userId } = req.body;
+                    const { scientificResearchId, thesisId, createUserId } = req.body;
                     const attach = new Attach();
                     const scientificResearch = scientificResearchId && await this.scientificResearchRepository.findOneBy({ scientificResearchId });
                     const thesis = thesisId && await this.thesisRepository.findOneBy({ thesisId });
-                    const user = await this.userRepository.findOneBy({ userId });
+                    const user = await this.userRepository.findOneBy({ userId: createUserId });
 
                     // Kiểm tra nếu không có scientificResearch hoặc thesis thì trả về lỗi
                     if (!scientificResearch && !thesis) {

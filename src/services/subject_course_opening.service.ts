@@ -200,7 +200,7 @@ export class Subject_Course_OpeningService {
 				},
 			});
 
-			return result.affected !== null && result.affected !== undefined && result.affected > 0;
+			return true;
 		} catch (error) {
 			console.error('Error in deleteSubjectCourseOpeningService:', error);
 			throw new Error('Service error');

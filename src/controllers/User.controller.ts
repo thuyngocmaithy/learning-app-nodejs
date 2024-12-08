@@ -66,8 +66,24 @@ export class UserController {
 
 	public createUser = (req: Request, res: Response) => RequestHandler.create<User>(req, res, this.userService);
 	public updateUser = (req: Request, res: Response) => RequestHandler.update<User>(req, res, this.userService);
-	public deleteUser = (req: Request, res: Response) => RequestHandler.delete(req, res, this.userService);
 	public getUserWhere = (req: Request, res: Response) => RequestHandler.getWhere<User>(req, res, this.userService);
+
+
+	public deleteUser = async (req: Request, res: Response) => {
+		try {
+			const ids = (req.query.ids as String).split(',');
+
+			// Gọi service để thực hiện việc xóa
+			const result = await this.userService.delete(ids);
+
+			// Dựa vào kết quả, trả về thông báo tương ứng
+			res.status(200).json({ message: result });
+		} catch (error) {
+			// Xử lý lỗi và trả về phản hồi thích hợp
+			res.status(204).json({ message: 'An error occurred while deleting users', error: error });
+		}
+	};
+
 
 
 	public addUserFromExcel = async (req: Request, res: Response) => {
