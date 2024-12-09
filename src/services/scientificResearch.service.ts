@@ -78,7 +78,7 @@ export class ScientificResearchService {
 			throw new Error('Invalid instructor ID');
 		}
 
-		const status = await this.statusRepository.findOne({ where: { statusId: scientificResearchData.statusId } });
+		const status = await this.statusRepository.findOne({ where: { statusId: scientificResearchData.status } });
 		if (!status) {
 			throw new Error('Invalid Status ID');
 		}

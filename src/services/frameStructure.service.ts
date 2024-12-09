@@ -39,7 +39,7 @@ export class FrameStructureService {
   }
 
   async delete(ids: string[]): Promise<boolean> {
-    const result = await this.frameStructureRepository.delete({ id: In(ids) });
+    const result = await this.frameStructureRepository.delete({ studyFrame: { frameId: In(ids) } });
     return result.affected !== 0;
   }
 
@@ -50,9 +50,13 @@ export class FrameStructureService {
       whereCondition.studyFrame = { frameId: condition.studyFrame }
     }
 
+    if (condition.studyFrameComponent) {
+      whereCondition.studyFrameComponent = { frameComponentId: condition.studyFrameComponent }
+    }
+
     return this.frameStructureRepository.find({
       where: whereCondition,
-      relations: ['studyFrame', 'studyFrameComponent', 'studyFrameComponentParent']
+      relations: ['studyFrame', 'studyFrameComponent', 'studyFrameComponent.major', 'studyFrameComponentParent']
     });
   }
 
@@ -85,8 +89,10 @@ export class FrameStructureService {
 
       // Lấy danh sách các item hiện có trong db
       const existingItems = await this.frameStructureRepository.find({
-        where: { studyFrame: { frameId: flattenedData[0].studyFrameId } }, // tất cả item trong cùng một studyFrame
+        where: { studyFrame: { frameId: flattenedData[0]?.studyFrameId } }, // tất cả item trong cùng một studyFrame
       });
+
+      if (!existingItems) return;
 
       // Lấy các ID của các item từ `flattenedData`
       const newIds = flattenedData.map((item) => item.key);

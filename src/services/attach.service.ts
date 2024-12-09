@@ -29,7 +29,7 @@ export class AttachService {
   }
 
   async delete(ids: string[]): Promise<boolean> {
-    const result = await this.attachRepository.delete({ id: In(ids) });
+    const result = await this.attachRepository.delete({ filename: In(ids) });
     return result.affected !== null && result.affected !== undefined && result.affected > 0;
   }
 

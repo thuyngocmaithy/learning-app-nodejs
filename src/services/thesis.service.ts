@@ -77,7 +77,7 @@ export class ThesisService {
 			throw new Error('Invalid instructor ID');
 		}
 
-		const status = await this.statusRepository.findOne({ where: { statusId: thesisData.statusId } });
+		const status = await this.statusRepository.findOne({ where: { statusId: thesisData.status } });
 		if (!status) {
 			throw new Error('Invalid Status ID');
 		}
