@@ -65,7 +65,7 @@ export class SubjectService {
 	async getAll(): Promise<Subject[]> {
 		return this.subjectRepository.find({
 			order: { createDate: 'DESC' },
-			relations: ['subjectBefore']
+			relations: ['subjectBefore', 'isCompulsory']
 		});
 	}
 

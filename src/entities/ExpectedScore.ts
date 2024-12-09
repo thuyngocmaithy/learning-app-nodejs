@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Unique } from 'typeorm';
 import { User } from './User';
 import { Subject } from './Subject';
 
@@ -7,6 +7,7 @@ import { Subject } from './Subject';
  * Lưu trữ các điểm và chỉ số học tập dự kiến của sinh viên
  */
 @Entity()
+@Unique(['student', 'subject'])
 export class ExpectedScore {
     /**
      * Khóa chính tự động sinh
