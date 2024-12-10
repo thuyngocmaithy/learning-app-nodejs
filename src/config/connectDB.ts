@@ -6,13 +6,13 @@ const MAX_RETRIES = 5; // Giới hạn số lần thử lại
 export const connectDB = async (): Promise<void> => {
   try {
     if (!AppDataSource.isInitialized) {
-      console.log('Bắt đầu kết nối đến cơ sở dữ liệu...');
+      console.log('Bắt đầu kết nối đến db...');
       await AppDataSource.initialize();
     }
-    console.log('Cơ sở dữ liệu MySQL được kết nối thành công');
+    console.log('Kêt nối db thành công');
   } catch (error) {
     retryCount++;
-    console.error('Không thể kết nối với cơ sở dữ liệu MySQL:', error);
+    console.error('Không thể kết nối với db MySQL:', error);
 
     // Kiểm tra số lần thử lại
     if (retryCount <= MAX_RETRIES) {
