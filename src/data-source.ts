@@ -10,37 +10,44 @@ export const AppDataSource = new DataSource({
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    synchronize: true,
-    logging: false,
+    synchronize: process.env.NODE_ENV !== 'production', // Chỉ bật trong môi trường phát triển
+    logging: process.env.NODE_ENV === 'development', // Bật log trong môi trường dev
     entities: [__dirname + '/entities/*{.js,.ts}'],
     migrations: [__dirname + '/migrations/**{.js,.ts}'],
     subscribers: [__dirname + '/subscribers/**{.js,.ts}'],
-    // Cấu hình connection pool đúng cú pháp cho TypeORM
-    connectTimeout: 30000,
-    maxQueryExecutionTime: 5000,
-    poolSize: 10,
+    connectTimeout: 30000, // 30s timeout
+    maxQueryExecutionTime: 5000, // 5s tối đa cho 1 query
     extra: {
-        connectionLimit: 10,
+        connectionLimit: 100, // Tối đa 10 kết nối đồng thời
         waitForConnections: true,
-        queueLimit: 0,
-        // Các cấu hình pool được đặt trong extra
-        pool: {
-            min: 0,
-            max: 10,
-            idle: 10000,
-            acquire: 30000
-        }
-    }
+        queueLimit: 0, // Không giới hạn hàng đợi
+    },
 });
 
-// Xử lý khởi tạo kết nối
-AppDataSource.initialize()
-    .then(() => {
-        console.log("Data Source has been initialized!");
-    })
-    .catch((err) => {
-        console.error("Error during Data Source initialization:", err);
-    });
+// Xử lý khởi tạo kết nối với retry
+async function initializeDatabase() {
+    const maxRetries = 5; // Số lần thử lại tối đa
+    let retries = 0;
+    while (retries < maxRetries) {
+        try {
+            await AppDataSource.initialize();
+            console.log("Data Source has been initialized!");
+            return;
+        } catch (err) {
+            console.error(`Failed to connect to database (attempt ${retries + 1}/${maxRetries}):`, err);
+            retries++;
+            if (retries < maxRetries) {
+                console.log("Retrying connection in 5 seconds...");
+                await new Promise((resolve) => setTimeout(resolve, 5000));
+            } else {
+                console.error("Could not connect to database after maximum retries");
+                process.exit(1);
+            }
+        }
+    }
+}
+
+initializeDatabase();
 
 // Xử lý đóng kết nối khi tắt ứng dụng
 process.on('SIGINT', () => {
