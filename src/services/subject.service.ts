@@ -65,7 +65,7 @@ export class SubjectService {
 	async getAll(): Promise<Subject[]> {
 		return this.subjectRepository.find({
 			order: { createDate: 'DESC' },
-			relations: ['subjectBefore', 'isCompulsory']
+			relations: ['subjectBefore']
 		});
 	}
 
@@ -106,7 +106,7 @@ export class SubjectService {
 			return subjects; // Adapt based on how the result is returned
 		} catch (error) {
 			console.error('Error fetching subjects by faculty ID:', error);
-			throw new Error('Unable to fetch subjects. Please try again later.'); // Optionally, you can throw a custom error
+			throw new Error('Không thể load dữ liệu, vui lòng thử lại.'); // Optionally, you can throw a custom error
 		}
 	}
 
@@ -117,7 +117,7 @@ export class SubjectService {
 		}
 		catch (error) {
 			console.error('Error fetching subject Detail:', error);
-			throw new Error('Unable to fetch subjects. Please try again later.'); // Optionally, you can throw a custom error
+			throw new Error('Không thể load dữ liệu, vui lòng thử lại.'); // Optionally, you can throw a custom error
 		}
 	}
 	async getWhere(condition: any): Promise<any[]> {
