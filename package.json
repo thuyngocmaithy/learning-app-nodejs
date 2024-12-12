@@ -33,7 +33,6 @@
         "jsonwebtoken": "^9.0.2",
         "learning-app-server": "file:",
         "megajs": "^1.3.3",
-        "mongoose": "^8.4.3",
         "multer": "^1.4.5-lts.1",
         "mysql2": "^3.10.3",
         "node-cache": "^5.1.2",

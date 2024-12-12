@@ -10,7 +10,7 @@ export const AppDataSource = new DataSource({
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    synchronize: true,
+    synchronize: false,
     logging: false,
     entities: [__dirname + '/entities/*{.js,.ts}'],
     migrations: [__dirname + '/migrations/**{.js,.ts}'],
@@ -46,4 +46,12 @@ process.on('SIGINT', () => {
             console.error('Error during Data Source closure:', err);
             process.exit(1);
         });
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
