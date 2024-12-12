@@ -1,6 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn, PrimaryColumn, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from './User';
-import { Conversation } from './Conversation';
 import { Thesis } from './Thesis';
 import { ScientificResearch } from './ScientificResearch';
 
@@ -44,7 +43,7 @@ export class Message {
     /**
      * ID dự án (tham chiếu đến thực thể ScientificResearch, có thể rỗng)
      */
-    @ManyToOne(() => ScientificResearch, data => data.scientificResearchId, { nullable: true })
+    @ManyToOne(() => ScientificResearch, data => data.scientificResearchId, { nullable: true, onDelete: "CASCADE" })
     @JoinColumn({ name: 'scientificResearchId' })
     scientificResearch: ScientificResearch;
 

@@ -7,6 +7,7 @@ const permissionRouter = Router();
 const permissionController = new PermissionController(AppDataSource);
 
 permissionRouter.get('/', permissionController.getAllPermissions);
+permissionRouter.get('/checkRelatedData', permissionController.checkRelatedData.bind(permissionController));
 permissionRouter.get('/:id', permissionController.getPermissionByPermissionId);
 permissionRouter.post('/', permissionController.createPermission);
 permissionRouter.put('/:id', permissionController.updatePermission);

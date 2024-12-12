@@ -3,16 +3,19 @@ import { DataSource, In, Like, Repository } from 'typeorm';
 import { Major } from '../entities/Major';
 import { User } from '../entities/User';
 import { Faculty } from '../entities/Faculty';
+import { StudyFrame, StudyFrame_Component } from '../entities/StudyFrame';
 
 export class MajorService {
 	private majorRepository: Repository<Major>;
 	private userRepository: Repository<User>;
 	private facultyRepository: Repository<Faculty>
+	private studyFrameCompRepository: Repository<StudyFrame_Component>
 
 	constructor(dataSource: DataSource) {
 		this.majorRepository = dataSource.getRepository(Major);
 		this.userRepository = dataSource.getRepository(User);
 		this.facultyRepository = dataSource.getRepository(Faculty);
+		this.studyFrameCompRepository = dataSource.getRepository(StudyFrame_Component);
 	}
 
 	async getAll(): Promise<Major[]> {
@@ -67,6 +70,31 @@ export class MajorService {
 		this.majorRepository.merge(major, data);
 		return this.majorRepository.save(major);
 	}
+
+	async checkRelatedData(majorIds: string[]): Promise<{ success: boolean; message?: string }> {
+		const relatedRepositories = [
+			{ repo: this.studyFrameCompRepository, name: 'dữ liệu khối kiến thức' },
+			{ repo: this.userRepository, name: 'dữ liệu người dùng' },
+		];
+		// Lặp qua tất cả các bảng quan hệ để kiểm tra dữ liệu liên kết
+		for (const { repo, name } of relatedRepositories) {
+			let count = 0;
+			try {
+				count = await repo.count({ where: { major: { majorId: In(majorIds) } } });
+			} catch (error) {
+				console.error(error);
+			}
+
+			if (count > 0) {
+				return {
+					success: false,
+					message: `Chuyên ngành đang được sử dụng trong ${name}. Không thể xóa.`,
+				};
+			}
+		}
+		return { success: true };
+	}
+
 
 	async delete(majorIds: string[]): Promise<boolean> {
 		const result = await this.majorRepository.delete({ majorId: In(majorIds) });

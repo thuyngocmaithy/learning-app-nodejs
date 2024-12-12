@@ -40,8 +40,8 @@ export class Account {
   /**
    * Quyền (tham chiếu đến thực thể Permission)
    */
-  @ManyToOne(() => Permission)
-  @JoinColumn({ name: 'permissionId' })
+  @ManyToOne(() => Permission, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'permissionId', })
   permission: Permission;
 
   /**

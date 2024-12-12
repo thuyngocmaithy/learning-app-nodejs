@@ -2,9 +2,10 @@ import { Repository, DataSource, FindOneOptions, In, getRepository } from 'typeo
 import { Score } from '../entities/Score';
 import { Semester } from '../entities/Semester';
 import { Subject } from '../entities/Subject';
-import { UserService } from './User.service';
 import { User } from '../entities/User';
 import { Cycle } from '../entities/Cycle';
+import { Subject_Course_Opening } from '../entities/Subject_Course_Opening';
+import { UserRegisterSubject } from '../entities/User_Register_Subject';
 
 export class ScoreService {
 	private scoreRepository: Repository<Score>;
@@ -13,6 +14,7 @@ export class ScoreService {
 	private userRepository: Repository<User>;
 	private cycleRepository: Repository<Cycle>;
 	private dataSource: DataSource;
+
 
 	constructor(dataSource: DataSource) {
 		this.scoreRepository = dataSource.getRepository(Score);

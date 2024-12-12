@@ -33,7 +33,19 @@ export class FacultyController {
 	public getFacultyWhere = (req: Request, res: Response) => RequestHandler.getWhere<Faculty>(req, res, this.facultyService);
 	public createFaculty = (req: Request, res: Response) => RequestHandler.create<Faculty>(req, res, this.facultyService);
 	public updateFaculty = (req: Request, res: Response) => RequestHandler.update<Faculty>(req, res, this.facultyService);
-	public deleteFaculty = (req: Request, res: Response) => RequestHandler.delete(req, res, this.facultyService);
+	// public deleteFaculty = (req: Request, res: Response) => RequestHandler.delete(req, res, this.facultyService);
+
+	public deleteFaculty = async (req: Request, res: Response) => {
+		const ids = (req.query.ids as String).split(',');
+		const response = await this.facultyService.delete(ids);
+
+		if (response.success) {
+			return res.status(200).json({ success: true, message: response.message });
+		} else {
+			return res.status(400).json({ success: false, message: response.message });
+		}
+	};
+
 
 	public importFaculty = async (req: Request, res: Response) => {
 		try {

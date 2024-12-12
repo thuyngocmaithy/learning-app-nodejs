@@ -1,291 +1,312 @@
-import { Major } from './../entities/Major';
-// studyFrame.service.ts
 import { DataSource, In, LessThanOrEqual, Like, MoreThan, Repository } from 'typeorm';
 import { StudyFrame, StudyFrame_Component } from '../entities/StudyFrame';
 import { User } from '../entities/User';
 import { Cycle } from '../entities/Cycle';
 import { AppDataSource } from '../data-source';
 import { Faculty } from '../entities/Faculty';
+import { Subject_Course_Opening } from '../entities/Subject_Course_Opening';
 
 export class StudyFrameService {
-  private studyFrameRepository: Repository<StudyFrame>;
-  private userRepository: Repository<User>;
-  private cycleRepository: Repository<Cycle>;
-  private facultyRepository: Repository<Faculty>;
-  private studyFrameComponentRepository: Repository<StudyFrame_Component>;
-  private dataSource: DataSource;
+	private studyFrameRepository: Repository<StudyFrame>;
+	private userRepository: Repository<User>;
+	private cycleRepository: Repository<Cycle>;
+	private facultyRepository: Repository<Faculty>;
+	private studyFrameComponentRepository: Repository<StudyFrame_Component>;
+	private subjectCourseOpeningRepository: Repository<Subject_Course_Opening>;
+	private dataSource: DataSource;
 
-  constructor(dataSource: DataSource) {
-    this.studyFrameRepository = dataSource.getRepository(StudyFrame);
-    this.userRepository = AppDataSource.getRepository(User);
-    this.cycleRepository = AppDataSource.getRepository(Cycle);
-    this.facultyRepository = AppDataSource.getRepository(Faculty);
-    this.studyFrameComponentRepository = dataSource.getRepository(StudyFrame_Component);
-    this.dataSource = dataSource;
-  }
+	constructor(dataSource: DataSource) {
+		this.studyFrameRepository = dataSource.getRepository(StudyFrame);
+		this.userRepository = AppDataSource.getRepository(User);
+		this.cycleRepository = AppDataSource.getRepository(Cycle);
+		this.facultyRepository = AppDataSource.getRepository(Faculty);
+		this.subjectCourseOpeningRepository = AppDataSource.getRepository(Subject_Course_Opening);
+		this.studyFrameComponentRepository = AppDataSource.getRepository(StudyFrame_Component);
+		this.dataSource = dataSource;
+	}
 
-  async create(data: any): Promise<StudyFrame> {
-    // Tìm entity cycle
-    const cycle = await this.cycleRepository.findOne({ where: { cycleId: data.cycleId } });
-    if (!cycle) {
-      throw new Error('SemesterService - create - Not found cycle');
-    }
+	async create(data: any): Promise<StudyFrame> {
+		// Tìm entity cycle
+		const cycle = await this.cycleRepository.findOne({ where: { cycleId: data.cycleId } });
+		if (!cycle) {
+			throw new Error('SemesterService - create - Not found cycle');
+		}
 
-    // Tìm entity faculty update theo id
-    const faculty = await this.facultyRepository.findOne({ where: { facultyId: data.facultyId } });
-    if (!faculty) {
-      throw new Error('SemesterService - create - Not found cycle');
-    }
+		// Tìm entity faculty update theo id
+		const faculty = await this.facultyRepository.findOne({ where: { facultyId: data.facultyId } });
+		if (!faculty) {
+			throw new Error('SemesterService - create - Not found cycle');
+		}
 
-    const dataCreate = {
-      frameId: data.frameId,
-      frameName: data.frameName,
-      cycle: cycle,
-      faculty: faculty
-    }
+		const dataCreate = {
+			frameId: data.frameId,
+			frameName: data.frameName,
+			cycle: cycle,
+			faculty: faculty
+		}
 
-    const studyFrame = this.studyFrameRepository.create(dataCreate);
-    return this.studyFrameRepository.save(studyFrame);
-  }
+		const studyFrame = this.studyFrameRepository.create(dataCreate);
+		return this.studyFrameRepository.save(studyFrame);
+	}
 
-  async getAll(): Promise<StudyFrame[]> {
-    return this.studyFrameRepository.find({ relations: ['cycle', 'faculty'] });
-  }
+	async getAll(): Promise<StudyFrame[]> {
+		return this.studyFrameRepository.find({ relations: ['cycle', 'faculty'] });
+	}
 
-  async getById(id: string): Promise<StudyFrame | null> {
-    return this.studyFrameRepository.findOne({
-      where: { frameId: id },
-      relations: ['faculty', 'cycle']
-    });
-  }
+	async getById(id: string): Promise<StudyFrame | null> {
+		return this.studyFrameRepository.findOne({
+			where: { frameId: id },
+			relations: ['faculty', 'cycle']
+		});
+	}
 
-  async update(id: string, data: any): Promise<StudyFrame | null> {
-    const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: id } });
-    if (!studyFrame) {
-      return null;
-    }
-    // Tìm entity cycle
-    const cycle = await this.cycleRepository.findOne({ where: { cycleId: data.cycleId } });
-    if (!cycle) {
-      throw new Error('StudyFrameService - update - Not found cycle');
-    }
+	async update(id: string, data: any): Promise<StudyFrame | null> {
+		const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: id } });
+		if (!studyFrame) {
+			return null;
+		}
+		// Tìm entity cycle
+		const cycle = await this.cycleRepository.findOne({ where: { cycleId: data.cycleId } });
+		if (!cycle) {
+			throw new Error('StudyFrameService - update - Not found cycle');
+		}
 
-    // Tìm entity faculty update theo id
-    const faculty = await this.facultyRepository.findOne({ where: { facultyId: data.facultyId } });
-    if (!faculty) {
-      throw new Error('StudyFrameService - update - Not found faculty');
-    }
+		// Tìm entity faculty update theo id
+		const faculty = await this.facultyRepository.findOne({ where: { facultyId: data.facultyId } });
+		if (!faculty) {
+			throw new Error('StudyFrameService - update - Not found faculty');
+		}
 
-    const dataUpdate = {
-      frameName: data.frameName,
-      cycle: cycle,
-      faculty: faculty
-    }
+		const dataUpdate = {
+			frameName: data.frameName,
+			cycle: cycle,
+			faculty: faculty
+		}
 
-    this.studyFrameRepository.merge(studyFrame, dataUpdate);
-    return this.studyFrameRepository.save(studyFrame);
-  }
+		this.studyFrameRepository.merge(studyFrame, dataUpdate);
+		return this.studyFrameRepository.save(studyFrame);
+	}
 
-  async delete(ids: string[]): Promise<boolean> {
-    const result = await this.studyFrameRepository.delete({ frameId: In(ids) });
-    return result.affected !== 0;
-  }
+	async checkRelatedData(ids: string[]): Promise<{ success: boolean; message?: string }> {
+		const relatedRepositories = [
+			{ repo: this.studyFrameRepository, name: 'dữ liệu khung đào tạo' },
+			{ repo: this.subjectCourseOpeningRepository, name: 'dữ liệu mở học phần' },
+		];
+		// Lặp qua tất cả các bảng quan hệ để kiểm tra dữ liệu liên kết
+		for (const { repo, name } of relatedRepositories) {
+			const count = await repo.count({ where: { studyFrame: { frameId: In(ids) } } });
 
+			if (count > 0) {
+				return {
+					success: false,
+					message: `Khung đào tạo đang được sử dụng trong ${name}. Không thể xóa.`,
+				};
+			}
+		}
 
-  // Gọi store lấy danh sách môn theo khung
-  async GetSubjectByMajor(userId: string): Promise<any> {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { userId: userId },
-        relations: ['faculty', 'major']
-      });
-      if (!user) {
-        throw new Error('Not found entity user');
-      }
-      // Lấy năm đầu tiên của niên khóa
-      const startYear = parseInt(user.nien_khoa.split("-")[0], 10); // Chuyển startYear thành number
+		return { success: true };
+	}
 
-      // Tìm chu kỳ của user => Năm đầu tiên của niên khóa lớn hơn hoặc bằng startYear, nhỏ hơn endYear
-      const cycle = await this.cycleRepository.findOne({
-        where: {
-          startYear: LessThanOrEqual(startYear),
-          endYear: MoreThan(startYear)
-        },
-      });
-      if (!cycle) {
-        throw new Error('Not found entity cycle');
-      }
-
-      // Tìm khung đào tạo theo ngành và chu kỳ
-      const studyFrame = await this.studyFrameRepository.findOne({
-        where: {
-          faculty: user.faculty,
-          cycle: cycle
-        }
-      }
-      )
-
-      const query = 'CALL GetSubjectByMajor(?,?)';
-      const [results] = await this.dataSource.query(query,
-        [user.major.majorId, studyFrame?.frameId]
-      );
-
-      // MySQL returns an array of arrays for stored procedures
-      // The first element is the actual result set
-      const resultSet = results[0];
-
-      if (!resultSet || resultSet.length === 0) {
-        return [];
-      }
-      // No need to parse JSON, as MySQL already returns it as an object
-      return results;
-    } catch (error) {
-      console.error('Lỗi khi gọi stored procedure GetSubjectByMajor', error);
-      throw new Error('Lỗi khi gọi stored procedure');
-    }
-  };
+	async delete(ids: string[]): Promise<boolean> {
+		const result = await this.studyFrameRepository.delete({ frameId: In(ids) });
+		return result.affected !== 0;
+	}
 
 
+	// Gọi store lấy danh sách môn theo khung
+	async GetSubjectByMajor(userId: string): Promise<any> {
+		try {
+			const user = await this.userRepository.findOne({
+				where: { userId: userId },
+				relations: ['faculty', 'major']
+			});
+			if (!user) {
+				throw new Error('Not found entity user');
+			}
+			// Lấy năm đầu tiên của niên khóa
+			const startYear = parseInt(user.nien_khoa.split("-")[0], 10); // Chuyển startYear thành number
 
-  // Tìm khung CTĐT theo userId
-  async findKhungCTDTByUserId(userId: string): Promise<StudyFrame | null> {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { userId: userId },
-        relations: ['faculty']
-      });
-      if (!user) {
-        throw new Error('Not found entity user');
-      }
-      // Lấy năm đầu tiên của niên khóa
-      const startYear = parseInt(user.nien_khoa.split("-")[0], 10); // Chuyển startYear thành number
+			// Tìm chu kỳ của user => Năm đầu tiên của niên khóa lớn hơn hoặc bằng startYear, nhỏ hơn endYear
+			const cycle = await this.cycleRepository.findOne({
+				where: {
+					startYear: LessThanOrEqual(startYear),
+					endYear: MoreThan(startYear)
+				},
+			});
+			if (!cycle) {
+				throw new Error('Not found entity cycle');
+			}
 
-      // Tìm chu kỳ của user => Năm đầu tiên của niên khóa lớn hơn hoặc bằng startYear, nhỏ hơn endYear
-      const cycle = await this.cycleRepository.findOne({
-        where: {
-          startYear: LessThanOrEqual(startYear),
-          endYear: MoreThan(startYear)
-        },
-      });
-      if (!cycle) {
-        throw new Error('Not found entity cycle');
-      }
+			// Tìm khung đào tạo theo ngành và chu kỳ
+			const studyFrame = await this.studyFrameRepository.findOne({
+				where: {
+					faculty: user.faculty,
+					cycle: cycle
+				}
+			}
+			)
 
-      // Tìm khung đào tạo theo ngành và chu kỳ
-      const studyFrame = await this.studyFrameRepository.findOne({
-        where: {
-          faculty: user.faculty,
-          cycle: cycle
-        },
-      })
-      return studyFrame;
-    } catch (error) {
-      throw new Error('Lỗi khi tìm KHUNG CTDT theo userId');
-    }
-  }
+			const query = 'CALL GetSubjectByMajor(?,?)';
+			const [results] = await this.dataSource.query(query,
+				[user.major.majorId, studyFrame?.frameId]
+			);
 
-  // Tìm khung CTĐT theo năm và khoa hoặc theo cycle
-  async findKhungCTDTDepartment(startYear: number | null, facultyId: string, cycleId: string | null): Promise<StudyFrame | null> {
-    try {
-      let cycle;
-      if (cycleId) {
-        // Nếu có cycleId => tìm theo cycleId
-        cycle = await this.cycleRepository.findOneBy({
-          cycleId: cycleId
-        });
-      }
+			// MySQL returns an array of arrays for stored procedures
+			// The first element is the actual result set
+			const resultSet = results[0];
 
-      if (startYear && facultyId) {
-        // Tìm chu kỳ của user => Năm đầu tiên của niên khóa lớn hơn hoặc bằng startYear, nhỏ hơn endYear
-        cycle = await this.cycleRepository.findOne({
-          where: {
-            startYear: LessThanOrEqual(startYear),
-            endYear: MoreThan(startYear)
-          },
-        });
-      }
+			if (!resultSet || resultSet.length === 0) {
+				return [];
+			}
+			// No need to parse JSON, as MySQL already returns it as an object
+			return results;
+		} catch (error) {
+			console.error('Lỗi khi gọi stored procedure GetSubjectByMajor', error);
+			throw new Error('Lỗi khi gọi stored procedure');
+		}
+	};
 
-      if (!cycle) {
-        throw new Error('Not found entity cycle');
-      }
 
-      // Tìm khung đào tạo theo ngành và chu kỳ
-      const studyFrame = await this.studyFrameRepository.findOne({
-        where: {
-          faculty: { facultyId: facultyId },
-          cycle: cycle
-        },
-      })
 
-      return studyFrame;
-    } catch (error) {
-      throw new Error('Lỗi khi tìm KHUNG CTDT');
-    }
-  }
+	// Tìm khung CTĐT theo userId
+	async findKhungCTDTByUserId(userId: string): Promise<StudyFrame | null> {
+		try {
+			const user = await this.userRepository.findOne({
+				where: { userId: userId },
+				relations: ['faculty']
+			});
+			if (!user) {
+				throw new Error('Not found entity user');
+			}
+			// Lấy năm đầu tiên của niên khóa
+			const startYear = parseInt(user.nien_khoa.split("-")[0], 10); // Chuyển startYear thành number
 
-  async callKhungCTDT(studyFrameId: string): Promise<any> {
-    try {
-      const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: studyFrameId } });
-      if (!studyFrame) {
-        throw new Error('Lỗi khi tìm KHUNG CTDT');
-      }
+			// Tìm chu kỳ của user => Năm đầu tiên của niên khóa lớn hơn hoặc bằng startYear, nhỏ hơn endYear
+			const cycle = await this.cycleRepository.findOne({
+				where: {
+					startYear: LessThanOrEqual(startYear),
+					endYear: MoreThan(startYear)
+				},
+			});
+			if (!cycle) {
+				throw new Error('Not found entity cycle');
+			}
 
-      const query = 'CALL KhungCTDT(?)';
-      const [results] = await this.dataSource.query(
-        query,
-        [studyFrame?.frameId]
-      );
+			// Tìm khung đào tạo theo ngành và chu kỳ
+			const studyFrame = await this.studyFrameRepository.findOne({
+				where: {
+					faculty: user.faculty,
+					cycle: cycle
+				},
+			})
+			return studyFrame;
+		} catch (error) {
+			throw new Error('Lỗi khi tìm KHUNG CTDT theo userId');
+		}
+	}
 
-      const resultSet = results[0];
+	// Tìm khung CTĐT theo năm và khoa hoặc theo cycle
+	async findKhungCTDTDepartment(startYear: number | null, facultyId: string, cycleId: string | null): Promise<StudyFrame | null> {
+		try {
+			let cycle;
+			if (cycleId) {
+				// Nếu có cycleId => tìm theo cycleId
+				cycle = await this.cycleRepository.findOneBy({
+					cycleId: cycleId
+				});
+			}
 
-      if (!resultSet || resultSet.length === 0) {
-        return [];
-      }
+			if (startYear && facultyId) {
+				// Tìm chu kỳ của user => Năm đầu tiên của niên khóa lớn hơn hoặc bằng startYear, nhỏ hơn endYear
+				cycle = await this.cycleRepository.findOne({
+					where: {
+						startYear: LessThanOrEqual(startYear),
+						endYear: MoreThan(startYear)
+					},
+				});
+			}
 
-      return results;
-    } catch (error) {
-      console.error('Lỗi khi gọi stored procedure callKhungCTDT', error);
-      throw new Error('Lỗi khi gọi stored procedure');
-    }
-  }
+			if (!cycle) {
+				throw new Error('Not found entity cycle');
+			}
 
-  async getAllComponents(): Promise<StudyFrame_Component[]> {
-    return this.studyFrameComponentRepository.find({
-      select: [
-        'id',
-        'frameComponentId',
-        'frameComponentName',
-        'description',
-        'creditHour',
-      ]
-    });
-  }
+			// Tìm khung đào tạo theo ngành và chu kỳ
+			const studyFrame = await this.studyFrameRepository.findOne({
+				where: {
+					faculty: { facultyId: facultyId },
+					cycle: cycle
+				},
+			})
 
-  async getWhere(condition: any): Promise<StudyFrame[]> {
-    const whereCondition: any = {};
+			return studyFrame;
+		} catch (error) {
+			throw new Error('Lỗi khi tìm KHUNG CTDT');
+		}
+	}
 
-    if (condition.frameId) {
-      whereCondition.frameId = Like(`%${condition.frameId}%`);
-    }
-    if (condition.frameName) {
-      whereCondition.frameName = Like(`%${condition.frameName}%`);
-    }
+	async callKhungCTDT(studyFrameId: string): Promise<any> {
+		try {
+			const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: studyFrameId } });
+			if (!studyFrame) {
+				throw new Error('Lỗi khi tìm KHUNG CTDT');
+			}
 
-    if (condition.cycle) {
-      whereCondition.cycle = { cycleId: condition.cycle };
-    }
+			const query = 'CALL KhungCTDT(?)';
+			const [results] = await this.dataSource.query(
+				query,
+				[studyFrame?.frameId]
+			);
 
-    if (condition.faculty) {
-      whereCondition.faculty = { facultyId: condition.faculty };
-    }
+			const resultSet = results[0];
 
-    return this.studyFrameRepository.find({
-      where: whereCondition,
-      relations: [
-        'faculty',
-        'cycle'
-      ],
-    });
-  }
+			if (!resultSet || resultSet.length === 0) {
+				return [];
+			}
+
+			return results;
+		} catch (error) {
+			console.error('Lỗi khi gọi stored procedure callKhungCTDT', error);
+			throw new Error('Lỗi khi gọi stored procedure');
+		}
+	}
+
+	async getAllComponents(): Promise<StudyFrame_Component[]> {
+		return this.studyFrameComponentRepository.find({
+			select: [
+				'id',
+				'frameComponentId',
+				'frameComponentName',
+				'description',
+				'creditHour',
+			]
+		});
+	}
+
+	async getWhere(condition: any): Promise<StudyFrame[]> {
+		const whereCondition: any = {};
+
+		if (condition.frameId) {
+			whereCondition.frameId = Like(`%${condition.frameId}%`);
+		}
+		if (condition.frameName) {
+			whereCondition.frameName = Like(`%${condition.frameName}%`);
+		}
+
+		if (condition.cycle) {
+			whereCondition.cycle = { cycleId: condition.cycle };
+		}
+
+		if (condition.faculty) {
+			whereCondition.faculty = { facultyId: condition.faculty };
+		}
+
+		return this.studyFrameRepository.find({
+			where: whereCondition,
+			relations: [
+				'faculty',
+				'cycle'
+			],
+		});
+	}
 
 }

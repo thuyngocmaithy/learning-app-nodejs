@@ -17,7 +17,7 @@ export class PermissionFeature {
     /**
      * ID quyền (tham chiếu đến thực thể Permission, không rỗng)
      */
-    @ManyToOne(() => Permission, data => data.permissionId, { nullable: false })
+    @ManyToOne(() => Permission, data => data.permissionId, { nullable: false, onDelete: "CASCADE" })
     @JoinColumn({ name: 'permissionId' })
     permission: Permission;
 

@@ -1,7 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany, UpdateDateColumn, JoinColumn, CreateDateColumn, PrimaryColumn, JoinTable } from 'typeorm';
-import { StudyFrame, StudyFrame_Component } from './StudyFrame';
+import { Entity, Column, ManyToOne, UpdateDateColumn, JoinColumn, CreateDateColumn, PrimaryColumn } from 'typeorm';
 import { User } from './User';
-import { Major } from './Major';
 
 /**
  * Thực thể Môn học

@@ -5,6 +5,7 @@ import { AppDataSource } from '../data-source';
 const majorRouter = Router();
 const majorController = new MajorController(AppDataSource);
 
+majorRouter.get('/checkRelatedData', majorController.checkRelatedData.bind(majorController));
 majorRouter.post('/import', majorController.importMajor);
 majorRouter.get('/', majorController.getAllMajors);
 majorRouter.get('/getWhere', majorController.getMajorWhere);

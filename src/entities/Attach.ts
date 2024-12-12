@@ -36,7 +36,7 @@ export class Attach {
   /**
    * ID dự án (tham chiếu đến thực thể ScientificResearch, có thể rỗng)
    */
-  @ManyToOne(() => ScientificResearch, data => data.scientificResearchId, { nullable: true })
+  @ManyToOne(() => ScientificResearch, data => data.scientificResearchId, { nullable: true, onDelete: "CASCADE" })
   @JoinColumn({ name: 'scientificResearchId' })
   scientificResearch: ScientificResearch;
 

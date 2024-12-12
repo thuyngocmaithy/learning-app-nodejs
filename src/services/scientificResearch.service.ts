@@ -6,6 +6,9 @@ import { Status } from '../entities/Status';
 import { AppDataSource } from '../data-source';
 import { ScientificResearchGroup } from '../entities/ScientificResearchGroup';
 import { ScientificResearch_User } from '../entities/ScientificResearch_User';
+import { Attach } from '../entities/Attach';
+import { Follower } from '../entities/Follower';
+import { Message } from '../entities/Message';
 
 export class ScientificResearchService {
 	private scientificResearchRepository: Repository<ScientificResearch>;
@@ -14,6 +17,9 @@ export class ScientificResearchService {
 	private statusRepository: Repository<Status>;
 	private scientificResearchGroupRepository: Repository<ScientificResearchGroup>;
 	private facultyRepository: Repository<Faculty>;
+	private attachRepository: Repository<Attach>;
+	private followerRepository: Repository<Follower>;
+	private messageRepository: Repository<Message>;
 
 	constructor(dataSource: DataSource) {
 		this.scientificResearchRepository = dataSource.getRepository(ScientificResearch);
@@ -22,6 +28,9 @@ export class ScientificResearchService {
 		this.statusRepository = dataSource.getRepository(Status);
 		this.scientificResearchGroupRepository = dataSource.getRepository(ScientificResearchGroup);
 		this.facultyRepository = dataSource.getRepository(Faculty);
+		this.attachRepository = dataSource.getRepository(Attach);
+		this.followerRepository = dataSource.getRepository(Follower);
+		this.messageRepository = dataSource.getRepository(Message);
 	}
 
 	async getAll(): Promise<ScientificResearch[]> {
@@ -164,6 +173,29 @@ export class ScientificResearchService {
 
 		// Lưu tất cả các bản ghi đã cập nhật
 		return this.scientificResearchRepository.save(scientificResearchList);
+	}
+
+
+	async checkRelatedData(scientificResearchIds: string[]): Promise<{ success: boolean; message?: string }> {
+		const relatedRepositories = [
+			{ repo: this.attachRepository, name: 'dữ liệu đính kèm' },
+			{ repo: this.followerRepository, name: 'dữ liệu người theo dõi' },
+			{ repo: this.messageRepository, name: 'dữ liệu tin nhắn' },
+			{ repo: this.scientificResearch_UserRepository, name: 'dữ liệu đăng ký đề tài' },
+		];
+		// Lặp qua tất cả các bảng quan hệ để kiểm tra dữ liệu liên kết
+		for (const { repo, name } of relatedRepositories) {
+			const count = await repo.count({ where: { scientificResearch: { scientificResearchId: In(scientificResearchIds) } } });
+
+			if (count > 0) {
+				return {
+					success: false,
+					message: `Đề tài NCKH đang được sử dụng trong ${name}. Bạn có chắc chắn xóa?`,
+				};
+			}
+		}
+
+		return { success: true };
 	}
 
 	async delete(scientificResearchIds: string[]): Promise<boolean> {

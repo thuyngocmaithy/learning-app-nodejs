@@ -6,6 +6,7 @@ const semesterRouter = Router();
 const semesterController = new SemesterController(AppDataSource);
 
 semesterRouter.get('/', semesterController.getAllSemesters);
+semesterRouter.get('/checkRelatedData', semesterController.checkRelatedData.bind(semesterController));
 semesterRouter.get('/getWhere', semesterController.getSemesterWhere);
 semesterRouter.get('/:id', semesterController.getSemesterById);
 semesterRouter.post('/', semesterController.createSemester);

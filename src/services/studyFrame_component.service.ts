@@ -118,6 +118,25 @@ export class StudyFrame_ComponentService {
 		return this.studyFrameCompRepository.save(studyFrameComp);
 	}
 
+	async checkRelatedData(ids: string[]): Promise<{ success: boolean; message?: string }> {
+		const count = await this.frameStructureRepository.count({
+			where: [
+				{ studyFrameComponent: { frameComponentId: In(ids) } },
+				{ studyFrameComponentParent: { frameComponentId: In(ids) } }
+			],
+		});
+
+
+		if (count > 0) {
+			return {
+				success: false,
+				message: `Khối kiến thức được sử dụng trong khung đào tạo. Không thể xóa.`,
+			};
+		}
+
+		return { success: true };
+	}
+
 	async delete(ids: string[]): Promise<boolean> {
 		const result = await this.studyFrameCompRepository.delete({ frameComponentId: In(ids) });
 		return result.affected !== 0;

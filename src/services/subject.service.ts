@@ -3,16 +3,28 @@ import { Repository, DataSource, FindOneOptions, In } from 'typeorm';
 import { Subject } from '../entities/Subject';
 import { Subject_StudyFrameComp } from '../entities/Subject_StudyFrameComp';
 import { User } from '../entities/User';
+import { ExpectedScore } from '../entities/ExpectedScore';
+import { Score } from '../entities/Score';
+import { Subject_Course_Opening } from '../entities/Subject_Course_Opening';
+import { UserRegisterSubject } from '../entities/User_Register_Subject';
 
 export class SubjectService {
 	private subjectRepository: Repository<Subject>;
 	private userRepository: Repository<User>;
+	private expectedScoreRepository: Repository<ExpectedScore>;
+	private scoreRepository: Repository<Score>;
+	private subjectCourseOpeningRepository: Repository<Subject_Course_Opening>;
+	private userRegisterSubjectRepository: Repository<UserRegisterSubject>;
 	private dataSource: DataSource;
 
 
 	constructor(dataSource: DataSource) {
 		this.subjectRepository = dataSource.getRepository(Subject);
 		this.userRepository = dataSource.getRepository(User);
+		this.expectedScoreRepository = dataSource.getRepository(ExpectedScore);
+		this.scoreRepository = dataSource.getRepository(Score);
+		this.subjectCourseOpeningRepository = dataSource.getRepository(Subject_Course_Opening);
+		this.userRegisterSubjectRepository = dataSource.getRepository(UserRegisterSubject);
 		this.dataSource = dataSource;
 	}
 
@@ -35,6 +47,41 @@ export class SubjectService {
 		} finally {
 			await queryRunner.release();
 		}
+	}
+
+
+	async checkRelatedData(subjectIds: string[]): Promise<{ success: boolean; message?: string }> {
+		const relatedRepositories = [
+			{ repo: this.expectedScoreRepository, name: 'dữ liệu điểm dự kiến của sinh viên' },
+			{ repo: this.scoreRepository, name: 'dữ liệu điểm' },
+			{ repo: this.subjectCourseOpeningRepository, name: 'dữ liệu mở học phần' },
+			{ repo: this.subjectRepository, name: 'dữ liệu môn học (Môn học trước/ Môn học tương đương)' },
+			{ repo: this.userRegisterSubjectRepository, name: 'dữ liệu đăng ký môn học của sinh viên' },
+		];
+		// Lặp qua tất cả các bảng quan hệ để kiểm tra dữ liệu liên kết
+		for (const { repo, name } of relatedRepositories) {
+			let count = 0;
+			if (name === 'dữ liệu môn học (Môn học trước/ Môn học tương đương)') {
+				count = await repo.count({
+					where: [
+						{ subjectBefore: { subjectId: In(subjectIds) } },
+						{ subjectEqual: { subjectId: In(subjectIds) } },
+					]
+				});
+			}
+			else {
+				count = await repo.count({ where: { subject: { subjectId: In(subjectIds) } } });
+			}
+
+			if (count > 0) {
+				return {
+					success: false,
+					message: `Môn học đang được sử dụng trong ${name}. Không thể xóa.`,
+				};
+			}
+		}
+
+		return { success: true };
 	}
 
 	async delete(subjectIds: string[]): Promise<boolean> {

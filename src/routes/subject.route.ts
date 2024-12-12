@@ -7,6 +7,7 @@ const subjectRouter = Router();
 const subjectController = new SubjectController(AppDataSource);
 
 subjectRouter.post('/import', subjectController.importSubject);
+subjectRouter.get('/checkRelatedData', subjectController.checkRelatedData.bind(subjectController));
 subjectRouter.get('/faculty/:facultyId', subjectController.getSubjectByFacultyId);
 subjectRouter.get('/getWhere', subjectController.getSubjectWhere);
 subjectRouter.get('/detail/', subjectController.getAllSubjectDetail);
