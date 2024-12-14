@@ -55,6 +55,10 @@ export class ScientificResearchService {
 			.leftJoin('sr.status', 'status')
 			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
 
+		queryBuilder
+			.leftJoin('sr.createUser', 'user2')
+			.addSelect(['user2.userId']);
+
 		queryBuilder.orderBy('sr.createDate', 'DESC');
 		return queryBuilder.getMany();
 	}
@@ -250,6 +254,10 @@ export class ScientificResearchService {
 			.leftJoin('sr.instructor', 'user')
 			.addSelect(['user.fullname', 'user.userId']);
 
+		queryBuilder
+			.leftJoin('sr.createUser', 'user2')
+			.addSelect(['user2.userId']);
+
 		queryBuilder.orderBy('sr.createDate', 'DESC');
 		return queryBuilder.getMany();
 	}
@@ -320,6 +328,10 @@ export class ScientificResearchService {
 			.leftJoin('sr.instructor', 'user')
 			.addSelect(['user.userId', 'user.fullname']);
 
+		queryBuilder
+			.leftJoin('sr.createUser', 'user2')
+			.addSelect(['user2.userId']);
+
 		queryBuilder.orderBy('sr.createDate', 'DESC');
 
 		return queryBuilder.getMany();
@@ -366,6 +378,9 @@ export class ScientificResearchService {
 			.leftJoin('follower_detail.user', 'followerUser')
 			.addSelect(['followerUser.userId', 'followerUser.fullname', 'followerUser.avatar']);
 
+		queryBuilder
+			.leftJoin('sr.createUser', 'user2')
+			.addSelect(['user2.userId']);
 
 		queryBuilder.orderBy('sr.createDate', 'DESC');
 

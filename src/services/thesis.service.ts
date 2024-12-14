@@ -47,12 +47,16 @@ export class ThesisService {
 			'thesis.isDisable',
 		]);
 		queryBuilder
-			.leftJoin('thesis.instructor', 'user')
-			.addSelect(['user.userId', 'user.fullname']);
+			.leftJoin('thesis.instructor', 'user1')
+			.addSelect(['user1.userId', 'user1.fullname']);
 
 		queryBuilder
 			.leftJoin('thesis.status', 'status')
 			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
+
+		queryBuilder
+			.leftJoin('thesis.createUser', 'user2')
+			.addSelect(['user2.userId']);
 
 		queryBuilder.orderBy("thesis.createDate", 'DESC');
 		return queryBuilder.getMany();
@@ -248,6 +252,10 @@ export class ThesisService {
 			.leftJoin('thesis.instructor', 'user')
 			.addSelect(['user.fullname', 'user.userId']);
 
+		queryBuilder
+			.leftJoin('thesis.createUser', 'user2')
+			.addSelect(['user2.userId']);
+
 		queryBuilder.orderBy('thesis.createDate', 'DESC');
 		return queryBuilder.getMany();
 	}
@@ -316,6 +324,10 @@ export class ThesisService {
 			.leftJoin('thesis.instructor', 'user')
 			.addSelect(['user.userId', 'user.fullname']);
 
+		queryBuilder
+			.leftJoin('thesis.createUser', 'user2')
+			.addSelect(['user2.userId']);
+
 		queryBuilder.orderBy('thesis.createDate', 'DESC');
 
 		return queryBuilder.getMany();
@@ -360,6 +372,10 @@ export class ThesisService {
 			.leftJoin('follower.followerDetails', 'follower_detail')
 			.leftJoin('follower_detail.user', 'followerUser')
 			.addSelect(['followerUser.userId', 'followerUser.fullname', 'followerUser.avatar']);
+
+		queryBuilder
+			.leftJoin('thesis.createUser', 'user2')
+			.addSelect(['user2.userId']);
 
 
 		queryBuilder.orderBy('thesis.createDate', 'DESC');

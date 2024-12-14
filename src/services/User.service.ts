@@ -17,7 +17,7 @@ export class UserService {
 	async getAll(): Promise<User[]> {
 		return this.userRepository.find({
 			order: { createDate: 'DESC' },
-			relations: ['faculty', 'major', 'account']
+			relations: ['faculty', 'major', 'account', 'createUser']
 		});
 	}
 
@@ -127,7 +127,7 @@ export class UserService {
 		return this.userRepository.find({
 			where: whereCondition,
 			order: { createDate: 'DESC' },
-			relations: ['faculty', 'major', 'account'],
+			relations: ['faculty', 'major', 'account', 'createUser'],
 		});
 	}
 

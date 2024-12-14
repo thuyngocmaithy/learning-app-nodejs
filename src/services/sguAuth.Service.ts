@@ -316,6 +316,8 @@ export class SguAuthService {
 		const majorHTTT = await this.majorRepository.findOneBy({ majorId: "HTTT" });
 		const majorKHMT = await this.majorRepository.findOneBy({ majorId: "KHMT" });
 		const majorKTMT = await this.majorRepository.findOneBy({ majorId: "KTMT" });
+		const createUser = await this.userService.getByUserId('admin');
+
 		if (!user) {
 			user = new User();
 			user.userId = studentId;
@@ -342,6 +344,8 @@ export class SguAuthService {
 			user.hoc_vi = studentInfo.hoc_vi;
 			user.GPA = gpaData;
 			user.currentCreditHour = currentCreditHour;
+			if (createUser)
+				user.createUser = createUser;
 			switch (true) {
 				case studentInfo.bo_mon === 'Kỹ thuật phần mềm' || studentInfo.chuyen_nganh === 'Kỹ thuật phần mềm':
 					if (majorKTPM)

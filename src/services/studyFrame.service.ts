@@ -5,6 +5,7 @@ import { Cycle } from '../entities/Cycle';
 import { AppDataSource } from '../data-source';
 import { Faculty } from '../entities/Faculty';
 import { Subject_Course_Opening } from '../entities/Subject_Course_Opening';
+import { FrameStructure } from '../entities/FrameStructure';
 
 export class StudyFrameService {
 	private studyFrameRepository: Repository<StudyFrame>;
@@ -13,6 +14,7 @@ export class StudyFrameService {
 	private facultyRepository: Repository<Faculty>;
 	private studyFrameComponentRepository: Repository<StudyFrame_Component>;
 	private subjectCourseOpeningRepository: Repository<Subject_Course_Opening>;
+	private frameStructureRepository: Repository<FrameStructure>;
 	private dataSource: DataSource;
 
 	constructor(dataSource: DataSource) {
@@ -22,6 +24,7 @@ export class StudyFrameService {
 		this.facultyRepository = AppDataSource.getRepository(Faculty);
 		this.subjectCourseOpeningRepository = AppDataSource.getRepository(Subject_Course_Opening);
 		this.studyFrameComponentRepository = AppDataSource.getRepository(StudyFrame_Component);
+		this.frameStructureRepository = AppDataSource.getRepository(FrameStructure);
 		this.dataSource = dataSource;
 	}
 
@@ -89,7 +92,7 @@ export class StudyFrameService {
 
 	async checkRelatedData(ids: string[]): Promise<{ success: boolean; message?: string }> {
 		const relatedRepositories = [
-			{ repo: this.studyFrameRepository, name: 'dữ liệu khung đào tạo' },
+			{ repo: this.frameStructureRepository, name: 'cấu trúc khung đào tạo' },
 			{ repo: this.subjectCourseOpeningRepository, name: 'dữ liệu mở học phần' },
 		];
 		// Lặp qua tất cả các bảng quan hệ để kiểm tra dữ liệu liên kết
