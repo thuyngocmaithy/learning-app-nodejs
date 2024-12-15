@@ -195,6 +195,7 @@ export class ScientificResearch_UserService {
 		});
 	}
 
+
 	public getByScientificResearch = async (scientificResearch: ScientificResearch): Promise<ScientificResearch_User[] | null> => {
 		const options: FindManyOptions<ScientificResearch_User> = {
 			where: { scientificResearch: { scientificResearchId: scientificResearch.scientificResearchId } },
@@ -253,5 +254,4 @@ export class ScientificResearch_UserService {
 
 		return queryBuilder.getMany();
 	}
-
 }

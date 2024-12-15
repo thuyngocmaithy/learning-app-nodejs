@@ -62,22 +62,160 @@ export class ThesisService {
 		return queryBuilder.getMany();
 	}
 
-	async getById(thesisId: string): Promise<Thesis | null> {
-		return this.thesisRepository.findOne({
-			where: { thesisId },
-			relations: [
-				'status',
-				'instructor',
-				'createUser',
-				'lastModifyUser',
-				'follower',
-				'follower.followerDetails',
-				'follower.followerDetails.user',
-				'thesisGroup.faculty',
-				'thesisGroup'
-			]
-		});
+	async getById(thesisId: string): Promise<any | null> {
+		const queryBuilder = this.thesisRepository.createQueryBuilder('thesis');
+
+		queryBuilder
+			.where('thesis.thesisId = :thesisId', { thesisId })
+			.select([
+				'thesis.thesisId as thesisId',
+				'thesis.thesisName as thesisName',
+				'thesis.startDate as startDate',
+				'thesis.finishDate as finishDate',
+				'thesis.createDate as createDate',
+				'thesis.lastModifyDate as lastModifyDate',
+				'thesis.numberOfMember as numberOfMember',
+				'thesis.budget as budget',
+				'thesis.description as description',
+				'status.statusId as statusId',
+				'status.statusName as statusName',
+				'status.color as color',
+				'instructor.userId as instructorUserId',
+				'instructor.fullname as instructorFullname',
+				'createUser.userId as creatorUserId',
+				'createUser.fullname as creatorFullname',
+				'lastModifyUser.userId as lastModifierUserId',
+				'lastModifyUser.fullname as lastModifierFullname',
+				'faculty.facultyId as facultyId',
+				'faculty.facultyName as facultyName',
+				'group.thesisGroupId as groupId',
+				'group.thesisGroupName as groupName',
+				'group.facultyId as groupFacultyId',
+				'user.userId as userId',
+				'user.fullname as userFullname',
+				'userThesis.isLeader as isLeader',
+				'userThesis.isApprove as isApprove',
+				'follower.id as followerId',
+				'followerDetail.id as followerDetailId',
+				'followerUser.userId as followerUserId',
+				'followerUser.fullname as followerFullname',
+				'followerUser.avatar as followerAvatar',
+			])
+			.leftJoin('thesis.status', 'status')
+			.leftJoin('thesis.instructor', 'instructor')
+			.leftJoin('thesis.createUser', 'createUser')
+			.leftJoin('thesis.lastModifyUser', 'lastModifyUser')
+			.leftJoin('thesis.thesisGroup', 'group')
+			.leftJoin('group.faculty', 'faculty')
+			.leftJoin(Thesis_User, 'userThesis', 'userThesis.thesisId = thesis.thesisId') // Liên kết bảng trung gian Thesis_User
+			.leftJoin('userThesis.user', 'user') // Lấy thông tin user từ bảng liên kết
+			.leftJoin('thesis.follower', 'follower')
+			.leftJoin('follower.followerDetails', 'followerDetail')
+			.leftJoin('followerDetail.user', 'followerUser');
+
+		const rawResults = await queryBuilder.getRawMany();
+
+		if (!rawResults.length) {
+			return null; // Trả về null nếu không có dữ liệu
+		}
+
+		const userSet = new Set<string>(); // Set để loại bỏ trùng lặp user
+		const groupedResult = rawResults.reduce((acc, row) => {
+			if (!acc.thesisId) {
+				acc = {
+					thesisId: row.thesisId,
+					thesisName: row.thesisName,
+					startDate: row.startDate,
+					finishDate: row.finishDate,
+					createDate: row.createDate,
+					lastModifyDate: row.lastModifyDate,
+					numberOfMember: row.numberOfMember,
+					budget: row.budget,
+					description: row.description,
+					status: {
+						statusId: row.statusId,
+						statusName: row.statusName,
+						color: row.color,
+					},
+					instructor: {
+						userId: row.instructorUserId,
+						fullname: row.instructorFullname,
+					},
+					createUser: {
+						userId: row.creatorUserId,
+						fullname: row.creatorFullname,
+					},
+					lastModifyUser: {
+						userId: row.lastModifierUserId,
+						fullname: row.lastModifierFullname,
+					},
+					thesisGroup: {
+						thesisGroupId: row.groupId,
+						thesisGroupName: row.groupName,
+						faculty: {
+							facultyId: row.facultyId,
+							facultyName: row.facultyName,
+						},
+					},
+					users: [],
+					follower: [],
+				};
+			}
+
+			// Thêm thông tin user từ Thesis_User (không trùng lặp)
+			if (row.userId && !userSet.has(row.userId)) {
+				acc.users.push({
+					userId: row.userId,
+					fullname: row.userFullname,
+					isLeader: row.isLeader,
+					isApprove: row.isApprove,
+				});
+				userSet.add(row.userId); // Đánh dấu userId đã được thêm
+			}
+
+			// Thêm thông tin follower từ FollowerDetail
+			if (row.followerId) {
+				const existingFollower = acc.follower.find((f: any) => f.followerId === row.followerId);
+				if (existingFollower) {
+					// Nếu đã tồn tại follower, thêm thông tin chi tiết
+					if (row.followerUserId) {
+						const userExists = existingFollower.followerDetails.some(
+							(detail: any) => detail.userId === row.followerUserId
+						);
+						if (!userExists) {
+							existingFollower.followerDetails.push({
+								id: row.followerDetailId,
+								userId: row.followerUserId,
+								fullname: row.followerFullname,
+								avatar: row.followerAvatar,
+							});
+						}
+					}
+				} else {
+					// Nếu chưa tồn tại follower, tạo mới
+					acc.follower.push({
+						followerId: row.followerId,
+						followerDetails: row.followerUserId
+							? [
+								{
+									id: row.followerDetailId,
+									userId: row.followerUserId,
+									fullname: row.followerFullname,
+									avatar: row.followerAvatar,
+								},
+							]
+							: [],
+					});
+				}
+			}
+
+			return acc;
+		}, {});
+
+		return groupedResult;
 	}
+
+
 
 	public create = async (thesisData: any): Promise<Thesis> => {
 		const faculty = await this.facultyRepository.findOne({ where: { facultyId: thesisData.facultyId } });
@@ -296,113 +434,184 @@ export class ThesisService {
 	}
 
 
-	async getListThesisJoined(condition: any): Promise<Thesis[]> {
+	async getListThesisJoined(condition: any): Promise<any[]> {
 		const queryBuilder = this.thesisRepository.createQueryBuilder('thesis');
 
+		// Áp dụng điều kiện lọc
 		if (condition.instructorId && condition.instructorId !== 'undefined') {
 			queryBuilder.andWhere('thesis.instructorId = :instructorId', {
 				instructorId: condition.instructorId
 			});
 		}
 
-		if (condition.thesisGroup && condition.thesisGroup !== 'undefined') {
+		if (condition.thesisGroup && condition.thesisGroup !== 'undefined' && condition.thesisGroup !== 'null') {
 			queryBuilder.andWhere('thesis.thesisGroup = :thesisGroup', {
 				thesisGroup: condition.thesisGroup
 			});
 		}
-		queryBuilder.select([
-			'thesis.thesisId',
-			'thesis.thesisName',
-			'thesis.startDate',
-			'thesis.finishDate'
-		]);
+
+		// Chọn các cột cần thiết
 		queryBuilder
+			.select([
+				'thesis.thesisId as thesisId',
+				'thesis.thesisName as thesisName',
+				'thesis.startDate as startDate',
+				'thesis.finishDate as finishDate',
+				'status.statusId as statusId',
+				'status.statusName as statusName',
+				'status.color as color',
+				'user.userId as instructorUserId',
+				'user.fullname as instructorFullname',
+				'user2.userId as creatorUserId',
+				'thesisUser.isLeader as isLeader',
+				'thesisUser.isApprove as isApprove',
+				'userDetail.userId as userId',
+				'userDetail.fullname as fullname'
+			])
 			.leftJoin('thesis.status', 'status')
-			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
-
-		queryBuilder
 			.leftJoin('thesis.instructor', 'user')
-			.addSelect(['user.userId', 'user.fullname']);
-
-		queryBuilder
 			.leftJoin('thesis.createUser', 'user2')
-			.addSelect(['user2.userId']);
+			.leftJoin(Thesis_User, 'thesisUser', 'thesisUser.thesisId = thesis.thesisId')
+			.leftJoin('thesisUser.user', 'userDetail')
+			.orderBy('thesis.createDate', 'DESC');
 
-		queryBuilder.orderBy('thesis.createDate', 'DESC');
+		const rawResults = await queryBuilder.getRawMany();
 
-		return queryBuilder.getMany();
+		// Gom nhóm người dùng theo thesisId
+		const groupedResults = rawResults.reduce((acc, row) => {
+			const thesisId = row.thesisId;
+
+			if (!acc[thesisId]) {
+				acc[thesisId] = {
+					thesisId: row.thesisId,
+					thesisName: row.thesisName,
+					startDate: row.startDate,
+					finishDate: row.finishDate,
+					status: {
+						statusId: row.statusId,
+						statusName: row.statusName,
+						color: row.color
+					},
+					instructor: {
+						userId: row.instructorUserId,
+						fullname: row.instructorFullname
+					},
+					createUser: {
+						userId: row.creatorUserId
+					},
+					users: []
+				};
+			}
+
+			if (row.userId) {
+				acc[thesisId].users.push({
+					userId: row.userId,
+					fullname: row.fullname,
+					isLeader: row.isLeader,
+					isApprove: row.isApprove
+				});
+			}
+
+			return acc;
+		}, {});
+
+		return Object.values(groupedResults);
 	}
 
+	/**
+	 * Lấy danh sách khóa luận theo thesisGroupId và kiểm tra trạng thái duyệt
+	 * @param thesisGroupId ID của nhóm khóa luận
+	 * @param userId ID của người dùng cần kiểm tra trạng thái duyệt
+	 * @returns Danh sách các khóa luận cùng với thông tin số lượng đăng ký và trạng thái duyệt của người dùng
+	 */
 	public getByThesisGroupIdAndCheckApprove = async (thesisGroupId: string, userId: string): Promise<any[]> => {
+		// Tạo queryBuilder cho bảng thesis
 		const queryBuilder = this.thesisRepository.createQueryBuilder('thesis');
 
+		// Thêm điều kiện lọc theo nhóm hoặc lọc theo trạng thái
 		if (thesisGroupId && thesisGroupId !== "null") {
 			queryBuilder.andWhere(
-				'thesis.thesisGroupId = :thesisGroupId ' +
-				'AND thesis.isDisable = false', {
-				thesisGroupId: thesisGroupId
+				'thesis.thesisGroupId = :thesisGroupId AND thesis.isDisable = false', {
+				thesisGroupId
 			});
-		}
-		else {
+		} else {
 			queryBuilder.andWhere('thesis.isDisable = false');
 		}
 
-		queryBuilder.select([
-			'thesis.thesisId',
-			'thesis.thesisName',
-			'thesis.startDate',
-			'thesis.finishDate'
-		]);
+		// Chọn các cột cần thiết và thêm thông tin liên kết
 		queryBuilder
+			.select([
+				'thesis.thesisId',
+				'thesis.thesisName',
+				'thesis.startDate',
+				'thesis.finishDate',
+				'status.statusId',
+				'status.statusName',
+				'status.color',
+				'instructor.userId',
+				'instructor.fullname',
+				'faculty.facultyId',
+				'faculty.facultyName'
+			])
 			.leftJoin('thesis.status', 'status')
-			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
-
-		queryBuilder
 			.leftJoin('thesis.instructor', 'instructor')
-			.addSelect(['instructor.userId', 'instructor.fullname']);
-
-		queryBuilder
 			.leftJoin('thesis.thesisGroup', 'thesisGroup')
 			.leftJoin('thesisGroup.faculty', 'faculty')
-			.addSelect(['faculty.facultyId', 'faculty.facultyName']);
-
-
-		queryBuilder
 			.leftJoin('thesis.follower', 'follower')
 			.leftJoin('follower.followerDetails', 'follower_detail')
 			.leftJoin('follower_detail.user', 'followerUser')
-			.addSelect(['followerUser.userId', 'followerUser.fullname', 'followerUser.avatar']);
-
-		queryBuilder
+			.addSelect(['followerUser.userId', 'followerUser.fullname', 'followerUser.avatar'])
 			.leftJoin('thesis.createUser', 'user2')
-			.addSelect(['user2.userId']);
+			.addSelect(['user2.userId'])
+			.orderBy('thesis.createDate', 'DESC');
 
-
-		queryBuilder.orderBy('thesis.createDate', 'DESC');
-
+		// Lấy danh sách khóa luận
 		const listThesis = await queryBuilder.getMany();
 
+		// Tạo danh sách ID để kiểm tra đăng ký
+		const thesisIds = listThesis.map(thesis => thesis.thesisId);
 
-		const promises = listThesis.map(async (thesis) => {
-			const responseCountRegister = await this.thesis_UserRepository.findBy({ thesis: { thesisId: thesis.thesisId } });
-			const count = responseCountRegister.length;
-
-			const responseUserRegister = await this.thesis_UserRepository.findOneBy(
-				{
-					thesis: { thesisId: thesis.thesisId },
-					user: { userId: userId }
-				}
-			);
-			const approve = responseUserRegister?.isApprove;
-
-			return { ...thesis, count, approve };
+		// Lấy tất cả bản ghi đăng ký liên quan đến danh sách khóa luận và người dùng
+		const registrations = await this.thesis_UserRepository.find({
+			where: { thesis: { thesisId: In(thesisIds) } },
+			relations: ['thesis', 'user']
 		});
 
-		// Đợi tất cả các Promise hoàn thành
-		const result = await Promise.all(promises);
+
+		// Tạo map để đếm số lượng đăng ký và kiểm tra trạng thái duyệt
+		const registrationMap = new Map();
+		registrations.forEach(reg => {
+			const { thesisId } = reg.thesis;
+			const { userId: regUserId } = reg.user;
+			const { isApprove } = reg;
+
+			if (!registrationMap.has(thesisId)) {
+				registrationMap.set(thesisId, {
+					count: 0,
+					approveForUser: false
+				});
+			}
+
+			const data = registrationMap.get(thesisId);
+			data.count += 1;
+			if (regUserId === userId) {
+				data.approveForUser = isApprove;
+			}
+		});
+
+		// Kết hợp dữ liệu để trả về kết quả cuối cùng
+		const result = listThesis.map(thesis => {
+			const regData = registrationMap.get(thesis.thesisId) || { count: 0, approveForUser: false };
+			return {
+				...thesis,
+				count: regData.count,
+				approveForUser: regData.approveForUser
+			};
+		});
 
 		return result;
-	}
+	};
+
 
 
 	async importThesis(data: any[], createUserId: string): Promise<Thesis[]> {

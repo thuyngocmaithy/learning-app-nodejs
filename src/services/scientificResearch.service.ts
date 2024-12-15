@@ -1,4 +1,4 @@
-import { DataSource, Repository, Like, FindManyOptions, In, MoreThan, LessThanOrEqual } from 'typeorm';
+import { DataSource, Repository, Like, FindManyOptions, In, MoreThan, LessThanOrEqual, Not } from 'typeorm';
 import { ScientificResearch } from '../entities/ScientificResearch';
 import { Faculty } from '../entities/Faculty';
 import { User } from '../entities/User';
@@ -12,7 +12,7 @@ import { Message } from '../entities/Message';
 
 export class ScientificResearchService {
 	private scientificResearchRepository: Repository<ScientificResearch>;
-	private scientificResearch_UserRepository: Repository<ScientificResearch_User>;
+	private scientific_research_userRepository: Repository<ScientificResearch_User>;
 	private userRepository: Repository<User>;
 	private statusRepository: Repository<Status>;
 	private scientificResearchGroupRepository: Repository<ScientificResearchGroup>;
@@ -23,7 +23,7 @@ export class ScientificResearchService {
 
 	constructor(dataSource: DataSource) {
 		this.scientificResearchRepository = dataSource.getRepository(ScientificResearch);
-		this.scientificResearch_UserRepository = dataSource.getRepository(ScientificResearch_User);
+		this.scientific_research_userRepository = dataSource.getRepository(ScientificResearch_User);
 		this.userRepository = dataSource.getRepository(User);
 		this.statusRepository = dataSource.getRepository(Status);
 		this.scientificResearchGroupRepository = dataSource.getRepository(ScientificResearchGroup);
@@ -63,22 +63,160 @@ export class ScientificResearchService {
 		return queryBuilder.getMany();
 	}
 
-	async getById(scientificResearchId: string): Promise<ScientificResearch | null> {
-		return this.scientificResearchRepository.findOne({
-			where: { scientificResearchId },
-			relations: [
-				'status',
-				'instructor',
-				'createUser',
-				'lastModifyUser',
-				'follower',
-				'follower.followerDetails',
-				'follower.followerDetails.user',
-				'scientificResearchGroup.faculty',
-				'scientificResearchGroup'
-			]
-		});
+	async getById(scientificResearchId: string): Promise<any | null> {
+		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
+
+		queryBuilder
+			.where('sr.scientificResearchId = :scientificResearchId', { scientificResearchId })
+			.select([
+				'sr.scientificResearchId as scientificResearchId',
+				'sr.scientificResearchName as scientificResearchName',
+				'sr.startDate as startDate',
+				'sr.finishDate as finishDate',
+				'sr.level as level',
+				'sr.createDate as createDate',
+				'sr.lastModifyDate as lastModifyDate',
+				'sr.numberOfMember as numberOfMember',
+				'sr.budget as budget',
+				'sr.description as description',
+				'status.statusId as statusId',
+				'status.statusName as statusName',
+				'status.color as color',
+				'instructor.userId as instructorUserId',
+				'instructor.fullname as instructorFullname',
+				'createUser.userId as creatorUserId',
+				'createUser.fullname as creatorFullname',
+				'lastModifyUser.userId as lastModifierUserId',
+				'lastModifyUser.fullname as lastModifierFullname',
+				'faculty.facultyId as facultyId',
+				'faculty.facultyName as facultyName',
+				'sruUser.userId as userId',
+				'sruUser.fullname as fullname',
+				'sru.isLeader as isLeader',
+				'sru.isApprove as isApprove',
+				'follower.id as followerId',
+				'followerDetail.id as followerDetailId',
+				'followerUser.userId as followerUserId',
+				'followerUser.fullname as followerFullname',
+				'followerUser.avatar as followerAvatar',
+				'scientificResearchGroup.scientificResearchGroupId as scientificResearchGroupId',
+				'scientificResearchGroup.scientificResearchGroupName as scientificResearchGroupName',
+			])
+			.leftJoin('sr.status', 'status')
+			.leftJoin('sr.instructor', 'instructor')
+			.leftJoin('sr.createUser', 'createUser')
+			.leftJoin('sr.lastModifyUser', 'lastModifyUser')
+			.leftJoin('sr.scientificResearchGroup', 'scientificResearchGroup')
+			.leftJoin('scientificResearchGroup.faculty', 'faculty')
+			.leftJoin(ScientificResearch_User, 'sru', 'sru.scientificResearchId = sr.scientificResearchId')
+			.leftJoin('sru.user', 'sruUser')
+			.leftJoin('sr.follower', 'follower')
+			.leftJoin('follower.followerDetails', 'followerDetail')
+			.leftJoin('followerDetail.user', 'followerUser');
+
+		const rawResults = await queryBuilder.getRawMany();
+
+		if (!rawResults.length) {
+			return null; // Trả về null nếu không có dữ liệu
+		}
+
+		const userSet = new Set<string>(); // Set để loại bỏ trùng lặp user
+		const groupedResult = rawResults.reduce((acc, row) => {
+			if (!acc.scientificResearchId) {
+				acc = {
+					scientificResearchId: row.scientificResearchId,
+					scientificResearchName: row.scientificResearchName,
+					startDate: row.startDate,
+					finishDate: row.finishDate,
+					level: row.level,
+					createDate: row.createDate,
+					lastModifyDate: row.lastModifyDate,
+					numberOfMember: row.numberOfMember,
+					budget: row.budget,
+					description: row.description,
+					scientificResearchGroup: {
+						scientificResearchGroupId: row.scientificResearchGroupId,
+						scientificResearchGroupName: row.scientificResearchGroupName,
+						faculty: {
+							facultyId: row.facultyId,
+							facultyName: row.facultyName
+						},
+					},
+					status: {
+						statusId: row.statusId,
+						statusName: row.statusName,
+						color: row.color
+					},
+					instructor: {
+						userId: row.instructorUserId,
+						fullname: row.instructorFullname
+					},
+					createUser: {
+						userId: row.creatorUserId,
+						fullname: row.creatorFullname
+					},
+					lastModifyUser: {
+						userId: row.lastModifierUserId,
+						fullname: row.lastModifierFullname
+					},
+					users: [],
+					follower: []
+				};
+			}
+
+			// Thêm thông tin user từ ScientificResearch_User (không trùng lặp)
+			if (row.userId && !userSet.has(row.userId)) {
+				acc.users.push({
+					userId: row.userId,
+					fullname: row.fullname,
+					isLeader: row.isLeader,
+					isApprove: row.isApprove
+				});
+				userSet.add(row.userId); // Đánh dấu userId đã được thêm
+			}
+
+			// Thêm thông tin follower từ FollowerDetail
+			if (row.followerId) {
+				const existingFollower = acc.follower.find((f: any) => f.followerId === row.followerId);
+				if (existingFollower) {
+					// Nếu đã tồn tại follower, thêm thông tin chi tiết vào `followerDetails`
+					if (row.followerUserId) {
+						const userExists = existingFollower.followerDetails.some(
+							(detail: any) => detail.userId === row.followerUserId
+						);
+						if (!userExists) {
+							existingFollower.followerDetails.push({
+								id: row.followerDetailId,
+								userId: row.followerUserId,
+								fullname: row.followerFullname,
+								avatar: row.followerAvatar
+							});
+						}
+					}
+				} else {
+					// Nếu chưa tồn tại follower, tạo mới
+					acc.follower.push({
+						followerId: row.followerId,
+						followerDetails: row.followerUserId
+							? [
+								{
+									id: row.followerDetailId,
+									userId: row.followerUserId,
+									fullname: row.followerFullname,
+									avatar: row.followerAvatar
+								}
+							]
+							: []
+					});
+				}
+			}
+
+			return acc;
+		}, {});
+
+		return groupedResult;
 	}
+
 
 	public create = async (scientificResearchData: any): Promise<ScientificResearch> => {
 		const faculty = await this.facultyRepository.findOne({ where: { facultyId: scientificResearchData.facultyId } });
@@ -185,7 +323,7 @@ export class ScientificResearchService {
 			{ repo: this.attachRepository, name: 'dữ liệu đính kèm' },
 			{ repo: this.followerRepository, name: 'dữ liệu người theo dõi' },
 			{ repo: this.messageRepository, name: 'dữ liệu tin nhắn' },
-			{ repo: this.scientificResearch_UserRepository, name: 'dữ liệu đăng ký đề tài' },
+			{ repo: this.scientific_research_userRepository, name: 'dữ liệu đăng ký đề tài' },
 		];
 		// Lặp qua tất cả các bảng quan hệ để kiểm tra dữ liệu liên kết
 		for (const { repo, name } of relatedRepositories) {
@@ -300,112 +438,196 @@ export class ScientificResearchService {
 		});
 	}
 
-	async getListSRJoined(condition: any): Promise<ScientificResearch[]> {
+	async getListSRJoined(condition: any): Promise<any[]> {
 		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
 
+		// Áp dụng điều kiện lọc
 		if (condition.instructorId && condition.instructorId !== 'undefined') {
 			queryBuilder.andWhere('sr.instructorId = :instructorId', {
 				instructorId: condition.instructorId
 			});
 		}
 
-		if (condition.scientificResearchGroup && condition.scientificResearchGroup !== 'undefined') {
+		if (condition.scientificResearchGroup && condition.scientificResearchGroup !== 'undefined' && condition.scientificResearchGroup !== 'null') {
 			queryBuilder.andWhere('sr.scientificResearchGroup = :scientificResearchGroup', {
 				scientificResearchGroup: condition.scientificResearchGroup
 			});
 		}
-		queryBuilder.select([
-			'sr.scientificResearchId',
-			'sr.scientificResearchName',
-			'sr.startDate',
-			'sr.finishDate'
-		]);
+
+		// Chọn các cột cần thiết
 		queryBuilder
+			.select([
+				'sr.scientificResearchId as scientificResearchId',
+				'sr.scientificResearchName scientificResearchName',
+				'sr.startDate as startDate',
+				'sr.finishDate as finishDate',
+				'sr.level as level',
+				'status.statusId as statusId',
+				'status.statusName as statusName',
+				'status.color as color',
+				'user.userId as instructorUserId',
+				'user.fullname as instructorFullname',
+				'user2.userId as creatorUserId',
+				'sru.isLeader as isLeader',
+				'sru.isApprove as isApprove',
+				'sruUser.userId as userId',
+				'sruUser.fullname as fullname',
+			])
 			.leftJoin('sr.status', 'status')
-			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
-
-		queryBuilder
 			.leftJoin('sr.instructor', 'user')
-			.addSelect(['user.userId', 'user.fullname']);
-
-		queryBuilder
 			.leftJoin('sr.createUser', 'user2')
-			.addSelect(['user2.userId']);
+			.leftJoin(ScientificResearch_User, 'sru', 'sru.scientificResearchId = sr.scientificResearchId')
+			.leftJoin('sru.user', 'sruUser')
+			.orderBy('sr.createDate', 'DESC');
 
-		queryBuilder.orderBy('sr.createDate', 'DESC');
+		const rawResults = await queryBuilder.getRawMany();
 
-		return queryBuilder.getMany();
+		// Gom nhóm người dùng theo scientificResearchId
+		const groupedResults = rawResults.reduce((acc, row) => {
+			const srId = row.scientificResearchId;
+
+			if (!acc[srId]) {
+				acc[srId] = {
+					scientificResearchId: row.scientificResearchId,
+					scientificResearchName: row.scientificResearchName,
+					startDate: row.startDate,
+					finishDate: row.finishDate,
+					level: row.level,
+					status: {
+						statusId: row.statusId,
+						statusName: row.statusName,
+						color: row.color
+					},
+					instructor: {
+						userId: row.instructorUserId,
+						fullname: row.instructorFullname
+					},
+					createUser: {
+						userId: row.creatorUserId
+					},
+					users: []
+				};
+			}
+
+			if (row.userId) {
+				acc[srId].users.push({
+					userId: row.userId,
+					fullname: row.fullname,
+					isLeader: row.isLeader,
+					isApprove: row.isApprove
+				});
+			}
+
+			return acc;
+		}, {});
+
+		return Object.values(groupedResults);
 	}
 
 
+	/**
+	 * Lấy danh sách đề tài theo scientificResearchGroupId và kiểm tra trạng thái duyệt
+	 * @param scientificResearchGroupId ID của nhóm đề tài nghiên cứu khoa học
+	 * @param userId ID của người dùng cần kiểm tra trạng thái duyệt
+	 * @returns Danh sách các đề tài cùng với thông tin số lượng đăng ký và trạng thái duyệt của người dùng
+	 */
 	public getBySRGIdAndCheckApprove = async (scientificResearchGroupId: string, userId: string): Promise<any[]> => {
+		// Tạo queryBuilder cho bảng scientificResearch
 		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
 
+		// Thêm điều kiện lọc theo nhóm hoặc lọc theo trạng thái
 		if (scientificResearchGroupId && scientificResearchGroupId !== "null") {
 			queryBuilder.andWhere(
-				'sr.scientificResearchGroupId = :scientificResearchGroupId ' +
-				'AND sr.isDisable = false', {
-				scientificResearchGroupId: scientificResearchGroupId
+				'sr.scientificResearchGroupId = :scientificResearchGroupId AND sr.isDisable = false', {
+				scientificResearchGroupId
 			});
-		}
-		else {
+		} else {
 			queryBuilder.andWhere('sr.isDisable = false');
 		}
 
-		queryBuilder.select([
-			'sr.scientificResearchId',
-			'sr.scientificResearchName',
-			'sr.startDate',
-			'sr.finishDate'
-		]);
+		// Chọn các cột cần thiết và thêm thông tin liên kết
 		queryBuilder
+			.select([
+				'sr.scientificResearchId',
+				'sr.scientificResearchName',
+				'sr.startDate',
+				'sr.finishDate',
+				'status.statusId',
+				'status.statusName',
+				'status.color',
+				'instructor.userId',
+				'instructor.fullname',
+				'faculty.facultyId',
+				'faculty.facultyName'
+			])
 			.leftJoin('sr.status', 'status')
-			.addSelect(['status.statusId', 'status.statusName', 'status.color']);
-
-		queryBuilder
 			.leftJoin('sr.instructor', 'instructor')
-			.addSelect(['instructor.userId', 'instructor.fullname']);
-
-		queryBuilder
 			.leftJoin('sr.scientificResearchGroup', 'scientificResearchGroup')
 			.leftJoin('scientificResearchGroup.faculty', 'faculty')
-			.addSelect(['faculty.facultyId', 'faculty.facultyName']);
-
-
-		queryBuilder
 			.leftJoin('sr.follower', 'follower')
 			.leftJoin('follower.followerDetails', 'follower_detail')
 			.leftJoin('follower_detail.user', 'followerUser')
-			.addSelect(['followerUser.userId', 'followerUser.fullname', 'followerUser.avatar']);
-
-		queryBuilder
+			.addSelect(['followerUser.userId', 'followerUser.fullname', 'followerUser.avatar'])
 			.leftJoin('sr.createUser', 'user2')
-			.addSelect(['user2.userId']);
+			.addSelect(['user2.userId'])
+			.orderBy('sr.createDate', 'DESC');
 
-		queryBuilder.orderBy('sr.createDate', 'DESC');
-
+		// Lấy danh sách đề tài
 		const listSR = await queryBuilder.getMany();
 
-		const promises = listSR.map(async (SR) => {
-			const responseCountRegister = await this.scientificResearch_UserRepository.findBy({ scientificResearch: { scientificResearchId: SR.scientificResearchId } });
-			const count = responseCountRegister.length;
+		// Tạo danh sách ID để kiểm tra đăng ký
+		const scientificResearchIds = listSR.map(sr => sr.scientificResearchId);
 
-			const responseUserRegister = await this.scientificResearch_UserRepository.findOneBy(
-				{
-					scientificResearch: { scientificResearchId: SR.scientificResearchId },
-					user: { userId: userId }
-				}
-			);
-			const approve = responseUserRegister?.isApprove;
-
-			return { ...SR, count, approve };
+		// Lấy tất cả bản ghi đăng ký liên quan đến danh sách đề tài và người dùng
+		const registrations = await this.scientific_research_userRepository.find({
+			where: { scientificResearch: { scientificResearchId: In(scientificResearchIds) } },
+			relations: ['scientificResearch', 'user']
 		});
 
-		// Đợi tất cả các Promise hoàn thành
-		const result = await Promise.all(promises);
+		// Tạo map để đếm số lượng đăng ký và kiểm tra trạng thái duyệt
+		const registrationMap = new Map();
+		registrations.forEach(reg => {
+			const { scientificResearchId } = reg.scientificResearch;
+			const { userId: regUserId } = reg.user;
+			const { isApprove } = reg;
+
+			if (!registrationMap.has(scientificResearchId)) {
+				registrationMap.set(scientificResearchId, {
+					count: 0,
+					approveForUser: false,
+					hasOtherApproved: false
+				});
+			}
+
+			const data = registrationMap.get(scientificResearchId);
+			data.count += 1;
+			if (regUserId === userId) {
+				data.approveForUser = isApprove;
+			} else if (isApprove) {
+				data.hasOtherApproved = true;
+			}
+		});
+
+		// Kết hợp dữ liệu để trả về kết quả cuối cùng
+		const result = listSR
+			.map(sr => {
+				const regData = registrationMap.get(sr.scientificResearchId) || { count: 0, approveForUser: false, hasOtherApproved: false };
+				if (regData.hasOtherApproved) {
+					return null;
+				}
+				return {
+					...sr,
+					count: regData.count,
+					approveForUser: regData.approveForUser
+				};
+			})
+			.filter(item => item !== null);
 
 		return result;
-	}
+	};
+
+
+
 
 	public async importScientificResearch(data: any[], createUserId: string): Promise<ScientificResearch[]> {
 		let scientificResearchSaved = [];
