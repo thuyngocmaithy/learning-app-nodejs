@@ -1,4 +1,4 @@
-import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn, OneToMany, JoinColumn, Index } from 'typeorm';
 import { User } from './User';
 import { Status } from './Status';
 import { Faculty } from './Faculty';
@@ -7,6 +7,9 @@ import { Faculty } from './Faculty';
  * Thực thể Nhóm đề tài NCKH
  */
 @Entity()
+@Index("IDX_SR_GROUP_FACULTY", ["faculty"])  // Chỉ mục cho cột facultyId
+@Index("IDX_SR_GROUP_STATUS", ["status"])  // Chỉ mục cho cột statusId
+@Index("IDX_SR_GROUP_USER", ["createUser", "lastModifyUser"])  // Chỉ mục cho cột createUserId và lastModifyUserId
 export class ScientificResearchGroup {
   /**
    * Mã nhóm đề tài NCKH

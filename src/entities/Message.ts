@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn, PrimaryColumn, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, PrimaryColumn, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { User } from './User';
 import { Thesis } from './Thesis';
 import { ScientificResearch } from './ScientificResearch';
@@ -7,6 +7,9 @@ import { ScientificResearch } from './ScientificResearch';
  * Thực thể tin nhắn
  */
 @Entity()
+@Index('IDX_MESSAGE_SENDER', ['sender']) // Index cho người gửi
+@Index('IDX_MESSAGE_THESIS', ['thesis']) // Index cho ID khóa luận
+@Index('IDX_MESSAGE_SCIENTIFIC_RESEARCH', ['scientificResearch']) // Index cho ID dự án
 export class Message {
     /**
      * Khóa chính

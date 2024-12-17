@@ -1,4 +1,4 @@
-import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn, OneToMany, JoinColumn, Index } from 'typeorm';
 import { User } from './User';
 import { Status } from './Status';
 import { Faculty } from './Faculty';
@@ -38,6 +38,7 @@ export class ScientificResearch {
   /**
    * Trạng thái (tham chiếu đến thực thể Status, không rỗng)
    */
+  @Index('idx_status_id') // Thêm chỉ số cho cột statusId
   @ManyToOne(() => Status, data => data.statusId, { nullable: false })
   @JoinColumn({ name: 'statusId' })
   status: Status;
@@ -57,6 +58,7 @@ export class ScientificResearch {
   /**
    * Người hướng dẫn (tham chiếu đến thực thể User, không rỗng)
    */
+  @Index('idx_instructor')
   @ManyToOne(() => User, data => data.userId, { nullable: true })
   @JoinColumn({ name: 'instructorId' })
   instructor: User;
@@ -72,7 +74,7 @@ export class ScientificResearch {
 
 
   /**
-   * Số lượng đã đăng ký (có thể rỗng)
+   * Ngân sách
    */
   @Column('decimal', { precision: 15, scale: 2, nullable: true })
   budget: number;
@@ -80,6 +82,7 @@ export class ScientificResearch {
   /**
    * ID người tạo (tham chiếu đến thực thể User, không rỗng)
    */
+  @Index('idx_createUser')
   @ManyToOne(() => User, data => data.userId, { nullable: false })
   @JoinColumn({ name: 'createUserId' })
   createUser: User;
@@ -93,6 +96,7 @@ export class ScientificResearch {
   /**
    * ID người chỉnh sửa cuối cùng (tham chiếu đến thực thể User, không rỗng)
    */
+  @Index('idx_lastModifyUser')
   @ManyToOne(() => User, data => data.userId, { nullable: true })
   @JoinColumn({ name: 'lastModifyUserId' })
   lastModifyUser: User;
@@ -116,6 +120,7 @@ export class ScientificResearch {
    */
   @ManyToOne(() => ScientificResearchGroup, data => data.scientificResearchGroupId, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'scientificResearchGroupId' })
+  @Index('idx_scientificResearchGroup')
   scientificResearchGroup: ScientificResearchGroup;
 
   /**

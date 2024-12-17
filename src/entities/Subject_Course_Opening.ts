@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 import { StudyFrame } from './StudyFrame';
 import { Subject } from './Subject';
 import { Semester } from './Semester';
@@ -8,6 +8,9 @@ import { Cycle } from './Cycle';
  * Mở học phần: 1 môn có thể được mở nhiều năm, nhiều khung
  */
 @Entity('subject_course_opening')
+@Index("IDX_SUBJECT_SEMESTER", ["subject", "semester"])  // Chỉ mục composite cho subjectId và semesterId
+@Index("IDX_STUDYFRAME_SEMESTER", ["studyFrame", "semester"])  // Chỉ mục composite cho studyFrameId và semesterId
+@Index("IDX_SUBJECT_STUDYFRAME", ["subject", "studyFrame"])  // Chỉ mục composite cho subjectId và studyFrameId
 export class Subject_Course_Opening {
   /**
    * Khóa chính tự động tạo

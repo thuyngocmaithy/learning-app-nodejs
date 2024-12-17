@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Column } from 'typeorm';
+import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Column, Index } from 'typeorm';
 import { User } from './User';
 import { Subject } from './Subject';
 import { Semester } from './Semester';
@@ -7,6 +7,9 @@ import { Semester } from './Semester';
  * Thực thể đăng ký môn học của sinh viên
  */
 @Entity()
+@Index("IDX_USER_ID", ["user"])  // Chỉ mục cho userId
+@Index("IDX_SUBJECT_ID", ["subject"])  // Chỉ mục cho subjectId
+@Index("IDX_SEMESTER_ID", ["semester"])  // Chỉ mục cho semesterId
 export class UserRegisterSubject {
   /**
    * Khóa chính tự động tạo

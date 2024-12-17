@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn, ManyToMany } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn, ManyToMany, Index } from 'typeorm';
 import { Faculty } from './Faculty';
 import { Major } from './Major';
 import { Account } from './Account';
@@ -8,6 +8,8 @@ import { Notification } from './Notification';
  * Thực thể Người dùng
  */
 @Entity()
+@Index('IDX_USER_FACULTY', ['faculty'])
+@Index('IDX_USER_MAJOR', ['major'])
 export class User {
   /**
    * Mã người dùng (duy nhất, không rỗng)

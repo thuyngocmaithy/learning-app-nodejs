@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, OneToOne, UpdateDateColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, OneToOne, UpdateDateColumn, CreateDateColumn, Index } from 'typeorm';
 import { Subject } from './Subject';
 import { User } from './User';
 import { Semester } from './Semester';
@@ -6,6 +6,7 @@ import { Semester } from './Semester';
  * Thực thể Điểm
  */
 @Entity()
+@Index('idx_score_subject_student', ['subject', 'student'])  // Tạo chỉ mục cho subjectId và studentId
 export class Score {
   /**
    * Khóa chính
@@ -75,6 +76,7 @@ export class Score {
  * Thực thể Điểm thành phần
  */
 @Entity()
+@Index('idx_component_score_score', ['score'])
 export class ComponentScore {
   /**
    * Khóa chính

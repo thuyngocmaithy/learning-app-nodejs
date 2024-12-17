@@ -1,12 +1,15 @@
-import { Entity, Column, PrimaryColumn, ManyToMany, JoinTable, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn, ManyToMany, JoinTable, Index } from 'typeorm';
 import { Cycle } from './Cycle';
 
 /**
  * Thực thể Học kỳ
- * Một học kỳ thuộc về một chu kỳ
+ * Một học kỳ có thể thuộc nhiều chu kỳ
  */
 @Entity()
+@Index("IDX_SEMESTER_ACADEMIC_YEAR", ["academicYear"])  // Chỉ mục cho cột academicYear
+@Index("IDX_SEMESTER_NAME", ["semesterName"])  // Chỉ mục cho cột semesterName
 export class Semester {
+
   /**
    * Khóa chính
    */
@@ -26,10 +29,20 @@ export class Semester {
   academicYear: number;
 
   /**
-   * Chu kỳ học tập (mỗi học kỳ thuộc một chu kỳ)
-   * Nhớ đổi lại nullable true
+   * Chu kỳ học tập
+   * Một học kỳ có thể thuộc nhiều chu kỳ
    */
-  @ManyToOne(() => Cycle, cycle => cycle.semesters, { nullable: true })
-  @JoinColumn({ name: 'cycleId' })
-  cycle: Cycle;
+  @ManyToMany(() => Cycle, cycle => cycle.semesters)
+  @JoinTable({
+    name: 'semester_cycle', // Tên bảng liên kết
+    joinColumn: {
+      name: 'semesterId',
+      referencedColumnName: 'semesterId',
+    },
+    inverseJoinColumn: {
+      name: 'cycleId',
+      referencedColumnName: 'cycleId',
+    },
+  })
+  cycles: Cycle[];
 }

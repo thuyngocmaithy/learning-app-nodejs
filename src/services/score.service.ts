@@ -143,10 +143,18 @@ export class ScoreService {
 					semester.semesterId = score.semester.semesterId;
 					semester.semesterName = parseInt(score.semester.semesterId.substring(4)) || 0;
 					semester.academicYear = parseInt(score.semester.semesterId.substring(0, 4)) || 0;
-					semester.cycle = cycle;
+
+					// Thêm chu kỳ vào mảng cycles
+					semester.cycles = [cycle];
 					newSemesters.push(semester);
 					semesterMap.set(semester.semesterId, semester);
+				} else {
+					// Nếu học kỳ đã tồn tại, thêm chu kỳ vào mảng cycles (nếu chưa tồn tại)
+					if (!semester.cycles.some(c => c.cycleId === cycle.cycleId)) {
+						semester.cycles.push(cycle);
+					}
 				}
+
 
 				// Tìm hoặc tạo môn học
 				let subject = subjectMap.get(score.subject.subjectId.toString());

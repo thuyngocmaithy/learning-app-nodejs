@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, Index } from 'typeorm';
 import { StudyFrame_Component } from './StudyFrame';
 import { Subject } from './Subject';
 
@@ -6,6 +6,8 @@ import { Subject } from './Subject';
  * Thực thể môn học thuộc: thành phần khung đào tạo, chuyên ngành
  */
 @Entity('subject_studyFrameComp')
+@Index("IDX_SUBJECT_STUDYFRAMECOMP_SUBJECTID", ["subject"])  // Chỉ mục cho cột subjectId
+@Index("IDX_SUBJECT_STUDYFRAMECOMP_STUDYFRAMECOMPONENTID", ["studyFrameComponent"])  // Chỉ mục cho cột studyFrameComponentId
 export class Subject_StudyFrameComp {
   /**
    * Khóa chính tự động tạo

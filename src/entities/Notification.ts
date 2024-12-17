@@ -7,6 +7,7 @@ import {
   JoinTable,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from './User';
 
@@ -14,6 +15,8 @@ import { User } from './User';
  * Thực thể Thông báo
  */
 @Entity()
+@Index('IDX_NOTIFICATION_TYPE', ['type']) // Index cho cột type
+@Index('IDX_NOTIFICATION_ISREAD', ['isRead']) // Index cho trạng thái đã đọc
 export class Notification {
   /**
    * Khóa chính

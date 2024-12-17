@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, UpdateDateColumn, JoinColumn, CreateDateColumn, PrimaryColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, UpdateDateColumn, JoinColumn, CreateDateColumn, PrimaryColumn, Index } from 'typeorm';
 import { User } from './User';
 
 /**
@@ -32,6 +32,7 @@ export class Subject {
     */
   @ManyToOne(() => Subject, data => data.subjectId, { nullable: true })
   @JoinColumn({ name: 'subjectBefore' })
+  @Index('IDX_SUBJECT_BEFORE') // Index cho môn học trước
   subjectBefore: Subject | null; // Thêm "| null"
 
   /**
@@ -68,6 +69,7 @@ export class Subject {
    */
   @ManyToOne(() => User, data => data.userId, { nullable: true })
   @JoinColumn({ name: 'createUserId' })
+  @Index('IDX_CREATE_USER') // Index cho người chỉnh sửa cuối cùng
   createUser: User;
 
   /**
@@ -81,6 +83,7 @@ export class Subject {
    */
   @ManyToOne(() => User, data => data.userId, { nullable: true })
   @JoinColumn({ name: 'lastModifyUserId' })
+  @Index('IDX_LAST_MODIFY_USER') // Index cho người chỉnh sửa cuối cùng
   lastModifyUser: User;
 
   /**

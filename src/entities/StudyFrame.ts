@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, PrimaryColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, PrimaryColumn, OneToMany, Index } from 'typeorm';
 import { Major } from './Major';
 import { Subject_StudyFrameComp } from './Subject_StudyFrameComp';
 import { Faculty } from './Faculty';
@@ -8,6 +8,8 @@ import { Cycle } from './Cycle';
  * Thực thể Khung đào tạo
  */
 @Entity()
+@Index("idx_studyFrame_faculty", ["faculty"]) // Chỉ mục cho trường facultyId
+@Index("idx_studyFrame_cycle", ["cycle"]) // Chỉ mục cho trường cycleId
 export class StudyFrame {
   /**
    * Mã khung (duy nhất, không rỗng)
@@ -42,6 +44,8 @@ export class StudyFrame {
  * Thực thể thành phần khung đào tạo
  */
 @Entity("studyFrame_component")
+@Index("idx_studyFrameComponent_major", ["major"]) // Chỉ mục cho trường majorId
+@Index("idx_studyFrameComponent_frameId", ["frameComponentId"]) // Chỉ mục cho trường frameComponentId
 export class StudyFrame_Component {
   /**
    * Khóa chính

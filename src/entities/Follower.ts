@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, ManyToOne, OneToMany, JoinColumn, Unique, Index } from 'typeorm';
 import { User } from './User'; // Replace with your User entity
 import { ScientificResearch } from './ScientificResearch';
 import { Thesis } from './Thesis';
@@ -22,10 +22,12 @@ export class Follower {
   // @JoinColumn({ name: 'scientificResearchId' })
   // scientificResearch: ScientificResearch;
 
+  @Index('idx_follower_scientificResearch')
   @ManyToOne(() => ScientificResearch, scientificResearch => scientificResearch.follower, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'scientificResearchId' })
   scientificResearch: ScientificResearch;
 
+  @Index('idx_follower_thesis')
   @ManyToOne(() => Thesis, thesis => thesis.follower, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'thesisId' })
   thesis: Thesis;
@@ -52,7 +54,7 @@ export class FollowerDetail {
    */
   // @ManyToOne(() => Follower, data => data.id, { nullable: false })
   // follower: Follower;
-
+  @Index('idx_followerDetail_followerId')
   @ManyToOne(() => Follower, follower => follower.followerDetails, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'followerId' })
   follower: Follower;

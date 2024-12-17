@@ -22,52 +22,63 @@ export class SemesterService {
 	}
 
 	async create(data: any): Promise<Semester> {
-		const cycle = await this.cycleRepository.findOneBy({ cycleId: data.cycle });
-		if (!cycle) {
-			throw new Error('SemesterService - create - Not found cycle');
+		// Tìm các chu kỳ theo mảng cycleId
+		const cycles = await this.cycleRepository.findBy({
+			cycleId: In(data.cycle), // `data.cycle` là một mảng các cycleId
+		});
+
+		if (cycles.length === 0) {
+			throw new Error('SemesterService - create - No valid cycles found');
 		}
 
+		// Tạo dữ liệu học kỳ
 		const semesterData = {
 			semesterId: `${data.academicYear}${data.semesterName}`,
 			semesterName: data.semesterName,
-			cycle: cycle,
-			academicYear: data.academicYear
-		}
+			academicYear: data.academicYear,
+			cycles: cycles, // Gán mảng các chu kỳ tìm được
+		};
 
+		// Tạo và lưu học kỳ mới
 		const semester = this.semesterRepository.create(semesterData);
 		return this.semesterRepository.save(semester);
 	}
 
+
 	async getAll(): Promise<Semester[]> {
-		return this.semesterRepository.find({ relations: ['cycle'] });
+		return this.semesterRepository.find({ relations: ['cycles'] });
 	}
 
 	async getById(semesterId: string): Promise<Semester | null> {
-		return this.semesterRepository.findOne({ where: { semesterId }, relations: ['cycle'] });
+		return this.semesterRepository.findOne({ where: { semesterId }, relations: ['cycles'] });
 	}
 
 	async update(semesterId: string, data: any): Promise<Semester | null> {
-		// Tìm entity cycle
-		const cycle = await this.cycleRepository.findOneBy({ cycleId: data.cycle });
-		if (!cycle) {
-			throw new Error('SemesterService - create - Not found cycle');
+		// Tìm các chu kỳ theo mảng cycleId
+		const cycles = await this.cycleRepository.findBy({
+			cycleId: In(data.cycle),
+		});
+
+		if (cycles.length === 0) {
+			throw new Error('SemesterService - update - No valid cycles found');
 		}
 
-		// Tìm entity semester update theo id
-		const semester = await this.semesterRepository.findOne({ where: { semesterId }, relations: ['cycle'] });
+		// Tìm học kỳ cần cập nhật
+		const semester = await this.semesterRepository.findOne({ where: { semesterId }, relations: ['cycles'] });
 		if (!semester) {
 			return null;
 		}
 
-		// Tạo semesterData update
+		// Gán dữ liệu mới vào học kỳ
 		const semesterData = {
-			cycle: cycle,
-			academicYear: data.academicYear
-		}
+			academicYear: data.academicYear,
+			cycles: cycles, // Gán lại các cycles
+		};
 
 		this.semesterRepository.merge(semester, semesterData);
 		return this.semesterRepository.save(semester);
 	}
+
 
 	async checkRelatedData(ids: string[]): Promise<{ success: boolean; message?: string }> {
 		const relatedRepositories = [
@@ -99,8 +110,8 @@ export class SemesterService {
 	async getWhere(condition: Partial<Semester>): Promise<Semester[]> {
 		const whereCondition: any = {};
 
-		if (condition.cycle) {
-			whereCondition.cycle = { cycleId: condition.cycle };
+		if (condition.cycles && condition.cycles.length > 0) {
+			whereCondition.cycles = { cycleId: condition.cycles[0].cycleId };
 		}
 
 		if (condition.academicYear) {
@@ -109,9 +120,10 @@ export class SemesterService {
 
 		return this.semesterRepository.find({
 			where: whereCondition,
-			relations: ['cycle'],
+			relations: ['cycles'], // Đổi từ 'cycle' sang 'cycles'
 		});
 	}
+
 
 
 }

@@ -1,11 +1,14 @@
 import { DataSource, In, Repository } from 'typeorm';
 import { Cycle } from '../entities/Cycle';
+import { Semester } from '../entities/Semester';
 
 export class CycleService {
   private cycleRepository: Repository<Cycle>;
+  private semesterRepository: Repository<Semester>;
 
   constructor(dataSource: DataSource) {
     this.cycleRepository = dataSource.getRepository(Cycle);
+    this.semesterRepository = dataSource.getRepository(Semester);
   }
 
   async create(data: Partial<Cycle>): Promise<Cycle> {
@@ -37,6 +40,28 @@ export class CycleService {
 
     this.cycleRepository.merge(cycle, data);
     return this.cycleRepository.save(cycle);
+  }
+
+  async checkRelatedData(ids: string[]): Promise<{ success: boolean; message?: string }> {
+    const relatedRepositories = [
+      { repo: this.cycleRepository, name: 'dữ liệu học kỳ' },
+    ];
+    // Lặp qua tất cả các bảng quan hệ để kiểm tra dữ liệu liên kết
+    for (const { repo, name } of relatedRepositories) {
+      const count = await this.cycleRepository
+        .createQueryBuilder('cycle')
+        .leftJoin('cycle.semesters', 'semester') // Liên kết với bảng semesters
+        .where('cycle.cycleId In (:...ids)', { ids }) // Kiểm tra theo cycleId
+        .getCount(); // Đếm số lượng chu kỳ có liên kết với học kỳ
+
+      if (count > 0) {
+        return {
+          success: false,
+          message: `Chu kỳ đang được sử dụng trong ${name}. Bạn có chắc chắn xóa?`,
+        };
+      }
+    }
+    return { success: true };
   }
 
   async delete(ids: string[]): Promise<boolean> {

@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, PrimaryColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn, ManyToMany } from 'typeorm';
 import { Semester } from './Semester';
 
 /**
@@ -7,6 +7,9 @@ import { Semester } from './Semester';
  */
 @Entity()
 export class Cycle {
+    /**
+     * Khóa chính
+     */
     @PrimaryColumn({ type: 'varchar', length: 25 })
     cycleId: string;
 
@@ -16,16 +19,22 @@ export class Cycle {
     @Column({ nullable: false })
     cycleName: string;
 
-
+    /**
+     * Năm bắt đầu chu kỳ
+     */
     @Column({ type: 'int', width: 4, nullable: false })
     startYear: number;
 
+    /**
+     * Năm kết thúc chu kỳ
+     */
     @Column({ type: 'int', width: 4, nullable: false })
     endYear: number;
 
     /**
-     * Danh sách học kỳ thuộc chu kỳ này
+     * Danh sách học kỳ trong chu kỳ này
+     * Many-to-Many với bảng Semester
      */
-    @OneToMany(() => Semester, semester => semester.cycle)
+    @ManyToMany(() => Semester, semester => semester.cycles, { cascade: true, onDelete: 'CASCADE' })
     semesters: Semester[];
 }

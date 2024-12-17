@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { Thesis } from "./Thesis";
 import { User } from "./User";
 
@@ -7,6 +7,8 @@ import { User } from "./User";
  */
 @Entity()
 @Unique(["thesis", "user"])
+@Index("idx_thesis_user_thesisId", ["thesis"])
+@Index("idx_thesis_user_userId", ["user"])
 export class Thesis_User {
     /**
      * Khóa chính

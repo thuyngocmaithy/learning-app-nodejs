@@ -7,6 +7,7 @@ const cycleRouter = Router();
 const cycleController = new CycleController(AppDataSource);
 
 cycleRouter.get('/', cycleController.getAllCycles);
+cycleRouter.get('/checkRelatedData', cycleController.checkRelatedData.bind(cycleController));
 cycleRouter.get('/getWhere', cycleController.getCycleWhere);
 cycleRouter.get('/:id', cycleController.getCycleById);
 cycleRouter.post('/', cycleController.createCycle);
