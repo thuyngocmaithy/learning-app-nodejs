@@ -28,7 +28,7 @@ export class SubjectService {
 		this.dataSource = dataSource;
 	}
 
-	async create(data: Partial<Subject> & { frameComponentName?: string, majorId?: string }): Promise<Subject> {
+	async create(data: Partial<Subject>): Promise<Subject> {
 		const queryRunner = this.dataSource.createQueryRunner();
 		await queryRunner.connect();
 		await queryRunner.startTransaction();
@@ -121,7 +121,7 @@ export class SubjectService {
 		return await this.subjectRepository.findOne(options);
 	}
 
-	async update(subjectId: string, data: Partial<Subject> & { frameComponentName?: string, majorId?: string }): Promise<Subject | null> {
+	async update(subjectId: string, data: Partial<Subject>): Promise<Subject | null> {
 		const queryRunner = this.dataSource.createQueryRunner();
 		await queryRunner.connect();
 		await queryRunner.startTransaction();
@@ -145,28 +145,6 @@ export class SubjectService {
 		}
 	}
 
-
-
-	async getSubjectByFacultyId(facultyId: string): Promise<Subject[]> {
-		try {
-			const subjects = await this.dataSource.query('CALL GetSubjectsByFaculty(?)', [facultyId]);
-			return subjects; // Adapt based on how the result is returned
-		} catch (error) {
-			console.error('Error fetching subjects by faculty ID:', error);
-			throw new Error('Không thể load dữ liệu, vui lòng thử lại.'); // Optionally, you can throw a custom error
-		}
-	}
-
-	async getAllSubjectDetail(): Promise<Subject[]> {
-		try {
-			const subjects = await this.dataSource.query('CALL GetSubjectsWithDetails()');
-			return subjects;
-		}
-		catch (error) {
-			console.error('Error fetching subject Detail:', error);
-			throw new Error('Không thể load dữ liệu, vui lòng thử lại.'); // Optionally, you can throw a custom error
-		}
-	}
 	async getWhere(condition: any): Promise<any[]> {
 		const queryBuilder = this.dataSource.createQueryBuilder()
 			.select([

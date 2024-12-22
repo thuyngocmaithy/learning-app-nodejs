@@ -11,7 +11,7 @@ import { Permission } from '../entities/Permission';
 import jwt from 'jsonwebtoken';
 import { Subject } from '../entities/Subject';
 import { Semester } from '../entities/Semester';
-import { Major } from '../entities/Major';
+import { Specialization } from '../entities/Specialization';
 import { chromium } from 'playwright-core';
 
 const SGU_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/auth/login';
@@ -24,7 +24,7 @@ export class SguAuthService {
 	private accountService: AccountService;
 	private userService: UserService;
 	private permissionRepository: Repository<Permission>;
-	private majorRepository: Repository<Major>;
+	private specializationRepository: Repository<Specialization>;
 	private scoreRepository: Repository<Score>;
 	private componentScoreRepository: Repository<ComponentScore>;
 	private subjectRepository: Repository<Subject>;
@@ -44,7 +44,7 @@ export class SguAuthService {
 		this.accountService = new AccountService(AppDataSource);
 		this.userService = new UserService(AppDataSource);
 		this.permissionRepository = AppDataSource.getRepository(Permission);
-		this.majorRepository = AppDataSource.getRepository(Major);
+		this.specializationRepository = AppDataSource.getRepository(Specialization);
 		this.ScoreOfUser = new Object();
 		this.ImageOfUser = "";
 		this.GPAOfUser = 0;
@@ -312,10 +312,10 @@ export class SguAuthService {
 	private async createNewUser(loginData: any, studentInfo: any, imageData: any, gpaData: number, currentCreditHour: number, account: Account): Promise<User> {
 		const studentId = studentInfo.ma_sv;
 		let user = await this.userService.getByUserId(studentId);
-		const majorKTPM = await this.majorRepository.findOneBy({ majorId: "KTPM" });
-		const majorHTTT = await this.majorRepository.findOneBy({ majorId: "HTTT" });
-		const majorKHMT = await this.majorRepository.findOneBy({ majorId: "KHMT" });
-		const majorKTMT = await this.majorRepository.findOneBy({ majorId: "KTMT" });
+		const specializationKTPM = await this.specializationRepository.findOneBy({ specializationId: "KTPM" });
+		const specializationHTTT = await this.specializationRepository.findOneBy({ specializationId: "HTTT" });
+		const specializationKHMT = await this.specializationRepository.findOneBy({ specializationId: "KHMT" });
+		const specializationKTMT = await this.specializationRepository.findOneBy({ specializationId: "KTMT" });
 		const createUser = await this.userService.getByUserId('admin');
 
 		if (!user) {
@@ -329,7 +329,7 @@ export class SguAuthService {
 			user.email = studentInfo.email || loginData.principal;
 			user.isStudent = user.isStudent;
 			user.class = studentInfo.lop;
-			user.faculty = { facultyId: studentInfo.khoi?.substring(0, 3) } as any;
+			user.major = { majorId: studentInfo.khoi?.substring(0, 3) } as any;
 			user.firstAcademicYear = parseInt(studentInfo.nhhk_vao.toString().substring(0, 4));
 			user.lastAcademicYear = parseInt(studentInfo.nhhk_ra.toString().substring(0, 4));
 			user.isActive = true;
@@ -348,20 +348,20 @@ export class SguAuthService {
 				user.createUser = createUser;
 			switch (true) {
 				case studentInfo.bo_mon === 'Kỹ thuật phần mềm' || studentInfo.chuyen_nganh === 'Kỹ thuật phần mềm':
-					if (majorKTPM)
-						user.major = majorKTPM;
+					if (specializationKTPM)
+						user.specialization = specializationKTPM;
 					break;
 				case studentInfo.bo_mon === 'Kỹ thuật máy tính' || studentInfo.chuyen_nganh === 'Kỹ thuật máy tính':
-					if (majorKTMT)
-						user.major = majorKTMT;
+					if (specializationKTMT)
+						user.specialization = specializationKTMT;
 					break;
 				case studentInfo.bo_mon === 'Hệ thống thông tin' || studentInfo.chuyen_nganh === 'Hệ thống thông tin':
-					if (majorHTTT)
-						user.major = majorHTTT;
+					if (specializationHTTT)
+						user.specialization = specializationHTTT;
 					break;
 				case studentInfo.bo_mon === 'Khoa học máy tính' || studentInfo.chuyen_nganh === 'Khoa học máy tính':
-					if (majorKHMT)
-						user.major = majorKHMT;
+					if (specializationKHMT)
+						user.specialization = specializationKHMT;
 					break;
 				default:
 					break;
@@ -378,7 +378,7 @@ export class SguAuthService {
 		user.email = studentInfo.email || loginData.principal;
 		user.isStudent = user.isStudent;
 		user.class = studentInfo.lop;
-		user.faculty = { facultyId: studentInfo.khoi?.substring(0, 3) } as any;
+		user.major = { majorId: studentInfo.khoi?.substring(0, 3) } as any;
 		user.firstAcademicYear = parseInt(studentInfo.nhhk_vao?.toString().substring(0, 4)) || 0;
 		user.lastAcademicYear = parseInt(studentInfo.nhhk_ra?.toString().substring(0, 4)) || 0;
 		user.isActive = true;
@@ -395,16 +395,16 @@ export class SguAuthService {
 		user.currentCreditHour = currentCreditHour;
 		switch (true) {
 			case studentInfo.bo_mon === 'Kỹ thuật phần mềm' || studentInfo.chuyen_nganh === 'Kỹ thuật phần mềm':
-				user.major.majorId = "KTPM";
+				user.specialization.specializationId = "KTPM";
 				break;
 			case studentInfo.bo_mon === 'Kỹ thuật máy tính' || studentInfo.chuyen_nganh === 'Kỹ thuật máy tính':
-				user.major.majorId = "KTMT";
+				user.specialization.specializationId = "KTMT";
 				break;
 			case studentInfo.bo_mon === 'Hệ thống thông tin' || studentInfo.chuyen_nganh === 'Hệ thống thông tin':
-				user.major.majorId = "KTPM";
+				user.specialization.specializationId = "KTPM";
 				break;
 			case studentInfo.bo_mon === 'Khoa học máy tính' || studentInfo.chuyen_nganh === 'Khoa học máy tính':
-				user.major.majorId = "KTPM";
+				user.specialization.specializationId = "KTPM";
 				break;
 			default:
 				break;
@@ -460,7 +460,7 @@ export class SguAuthService {
 				avatar: user.avatar,
 				email: user.email,
 				roles: user.account?.permission?.permissionId,
-				faculty: user.faculty?.facultyId,
+				major: user.major?.majorId,
 			},
 		};
 	}

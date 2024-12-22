@@ -6,7 +6,6 @@ import { AppDataSource } from '../data-source';
 const studyFrameRouter = Router();
 const studyFrameController = new StudyFrameController(AppDataSource);
 
-studyFrameRouter.get('/major/:userId', studyFrameController.GetSubjectByMajor);
 studyFrameRouter.get('/checkRelatedData', studyFrameController.checkRelatedData.bind(studyFrameController));
 studyFrameRouter.get('/getWhere', studyFrameController.getStudyFrameWhere);
 studyFrameRouter.get('/findKhungCTDTByUserId', studyFrameController.findKhungCTDTByUserId);

@@ -46,18 +46,11 @@ export class FacultyService {
 		return this.facultyRepository.save(faculty);
 	}
 
-	// async delete(facultyIds: string[]): Promise<boolean> {
-	// 	const result = await this.facultyRepository.delete({ facultyId: In(facultyIds) });
-	// 	return result.affected !== 0;
-	// }
-
 	async delete(facultyIds: string[]): Promise<{ success: boolean; message?: string }> {
 		const relatedRepositories = [
-			{ repo: this.majorRepository, name: 'dữ liệu chuyên ngành' },
+			{ repo: this.majorRepository, name: 'dữ liệu ngành' },
 			{ repo: this.SRGRepository, name: 'dữ liệu nhóm đề tài NCKH' },
-			{ repo: this.studyFrameRepository, name: 'dữ liệu khung đào tạo' },
 			{ repo: this.thesisGroupRepository, name: 'dữ liệu nhóm đề tài khóa luận' },
-			{ repo: this.userRepository, name: 'dữ liệu người dùng' },
 		];
 		// Lặp qua tất cả các bảng quan hệ để kiểm tra dữ liệu liên kết
 		for (const { repo, name } of relatedRepositories) {
@@ -65,8 +58,8 @@ export class FacultyService {
 
 			if (count > 0) {
 				return {
-					success: false,
-					message: `Ngành đang được sử dụng trong ${name}. Không thể xóa.`,
+					success: true,
+					message: `Khoa đang được sử dụng trong ${name}. Không thể xóa.`,
 				};
 			}
 		}
@@ -76,14 +69,14 @@ export class FacultyService {
 
 		if (result.affected === 0) {
 			return {
-				success: false,
-				message: 'Không tìm thấy ngành để xóa.',
+				success: true,
+				message: 'Không tìm thấy khoa để xóa.',
 			};
 		}
 
 		return {
 			success: true,
-			message: 'Xóa ngành thành công.',
+			message: 'Xóa khoa thành công.',
 		};
 	}
 

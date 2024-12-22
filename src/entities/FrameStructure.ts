@@ -1,10 +1,13 @@
-import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 import { StudyFrame, StudyFrame_Component } from './StudyFrame';
 
 /**
  * Thực thể cấu trúc khung: Liên kết khung với thành phần khung
  */
 @Entity('frameStructure')
+@Index('idx_frameStructure_studyFrame', ['studyFrame']) // Chỉ mục trên studyFrameId
+@Index('idx_frameStructure_studyFrameComponent', ['studyFrameComponent']) // Chỉ mục trên studyFrameComponentId
+@Index('idx_frameStructure_studyFrameComponentParent', ['studyFrameComponentParent']) // Chỉ mục trên studyFrameComponentParentId
 export class FrameStructure {
   /**
    * Khóa chính tự động tạo

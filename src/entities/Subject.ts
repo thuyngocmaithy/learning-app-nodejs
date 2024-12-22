@@ -42,27 +42,6 @@ export class Subject {
   @JoinColumn({ name: 'subjectEqualId' })
   subjectEqual: string | null;
 
-  // /**
-  //   * ID chuyên ngành (tham chiếu đến thực thể Major)
-  //   */
-  // @ManyToMany(() => Major)
-  // @JoinTable({
-  //   name: 'subject_major',
-  //   joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
-  //   inverseJoinColumn: { name: 'majorId', referencedColumnName: 'majorId' },
-  // })
-  // majors: Major[];
-
-  // /**
-  //   * ID thành phần khung đào tạo (tham chiếu đến thực thể StudyFrame_Component)
-  //   */
-  // @ManyToMany(() => StudyFrame_Component)
-  // @JoinTable({
-  //   name: 'subject_studyFrameComponent',
-  //   joinColumn: { name: 'subjectId', referencedColumnName: 'subjectId' },
-  //   inverseJoinColumn: { name: 'frameComponentId', referencedColumnName: 'frameComponentId' },
-  // })
-  // frameComponents: StudyFrame_Component[];
 
   /**
    * ID người tạo (tham chiếu đến thực thể User, rỗng)

@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 /**
  * Thực thể Khoa
@@ -17,10 +17,10 @@ export class Faculty {
     @Column({ nullable: false })
     facultyName: string;
 
-
     /**
-     * Số tín chỉ của ngành (không rỗng)
+     * Ngày tạo (không rỗng)
      */
-    @Column({ nullable: false, default: 0 })
-    creditHourTotal: number;
+    @CreateDateColumn()
+    createDate: Date;
+
 }

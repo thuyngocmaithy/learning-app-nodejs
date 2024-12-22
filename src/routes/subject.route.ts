@@ -8,9 +8,7 @@ const subjectController = new SubjectController(AppDataSource);
 
 subjectRouter.post('/import', subjectController.importSubject);
 subjectRouter.get('/checkRelatedData', subjectController.checkRelatedData.bind(subjectController));
-subjectRouter.get('/faculty/:facultyId', subjectController.getSubjectByFacultyId);
 subjectRouter.get('/getWhere', subjectController.getSubjectWhere);
-subjectRouter.get('/detail/', subjectController.getAllSubjectDetail);
 subjectRouter.get('/', subjectController.getAllSubjects);
 subjectRouter.get('/:id', subjectController.getSubjectById);
 subjectRouter.post('/', subjectController.createSubject);

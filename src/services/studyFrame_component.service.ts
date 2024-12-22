@@ -1,37 +1,37 @@
 // studyFrame.service.ts
 import { DataSource, In, Like, Repository } from 'typeorm';
 import { StudyFrame_Component } from '../entities/StudyFrame';
-import { Major } from '../entities/Major';
 import { FrameStructure } from '../entities/FrameStructure';
+import { Specialization } from '../entities/Specialization';
 
 export class StudyFrame_ComponentService {
 	private studyFrameCompRepository: Repository<StudyFrame_Component>;
 	private frameStructureRepository: Repository<FrameStructure>;
-	private majorRepository: Repository<Major>;
+	private specializationRepository: Repository<Specialization>;
 
 	constructor(dataSource: DataSource) {
 		this.studyFrameCompRepository = dataSource.getRepository(StudyFrame_Component);
 		this.frameStructureRepository = dataSource.getRepository(FrameStructure);
-		this.majorRepository = dataSource.getRepository(Major);
+		this.specializationRepository = dataSource.getRepository(Specialization);
 	}
 
 	async create(data: any): Promise<StudyFrame_Component> {
-		let major;
-		if (data.majorId) {
-			major = await this.majorRepository.findOne({ where: { majorId: data.majorId } });
-			if (!major) {
-				throw new Error('Invalid major ID');
+		let specialization;
+		if (data.specializationId) {
+			specialization = await this.specializationRepository.findOne({ where: { specializationId: data.specializationId } });
+			if (!specialization) {
+				throw new Error('Invalid specialization ID');
 			}
 		}
 		else {
-			major = undefined;
+			specialization = undefined;
 		}
 		const studyFrame_component = this.studyFrameCompRepository.create({
 			frameComponentId: data.frameComponentId,
 			frameComponentName: data.frameComponentName,
 			description: data.description,
 			creditHour: data.creditHour,
-			major: major
+			specialization: specialization
 		});
 
 		const savedStudyFrame = await this.studyFrameCompRepository.save(studyFrame_component);
@@ -39,14 +39,14 @@ export class StudyFrame_ComponentService {
 	}
 
 	async getAll(): Promise<StudyFrame_Component[]> {
-		return this.studyFrameCompRepository.find({ relations: ["major"] });
+		return this.studyFrameCompRepository.find({ relations: ["specialization"] });
 	}
 
 	async getById(id: string): Promise<StudyFrame_Component | null> {
 		return this.studyFrameCompRepository.findOne({
 			where: { id: id },
 			relations: [
-				'major'
+				'specialization'
 			],
 		});
 	}
@@ -58,15 +58,15 @@ export class StudyFrame_ComponentService {
 		}
 
 
-		if (data.majorId) {
-			var major = await this.majorRepository.findOne({ where: { majorId: data.majorId } });
-			if (!major) {
-				throw new Error('Invalid major ID');
+		if (data.specializationId) {
+			var specialization = await this.specializationRepository.findOne({ where: { specializationId: data.specializationId } });
+			if (!specialization) {
+				throw new Error('Invalid specialization ID');
 			}
-			data.major = major;
+			data.specialization = specialization;
 		}
 		else {
-			data.major = null;
+			data.specialization = null;
 		}
 
 		// Tìm khung thành phần cha để Update số tín chỉ
@@ -155,14 +155,14 @@ export class StudyFrame_ComponentService {
 			whereCondition.description = Like(`%${condition.description}%`);
 		}
 
-		if (condition.major) {
-			whereCondition.major = { majorId: condition.major };
+		if (condition.specialization) {
+			whereCondition.specialization = { specializationId: condition.specialization };
 		}
 
 		return this.studyFrameCompRepository.find({
 			where: whereCondition,
 			relations: [
-				'major'
+				'specialization'
 			],
 		});
 	}

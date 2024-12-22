@@ -21,27 +21,6 @@ export class SubjectController {
 	public updateSubject = (req: Request, res: Response) => RequestHandler.update<Subject>(req, res, this.subjectService);
 	public deleteSubject = (req: Request, res: Response) => RequestHandler.delete(req, res, this.subjectService);
 
-	public getSubjectByFacultyId = async (req: Request, res: Response) => {
-		const { facultyId } = req.params; // Get facultyId from the request parameters
-		try {
-			const subjects = await this.subjectService.getSubjectByFacultyId(facultyId);
-			res.status(200).json(subjects);
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ message: 'Unable to fetch subjects by faculty ID.' });
-		}
-	};
-
-	public getAllSubjectDetail = async (req: Request, res: Response) => {
-		try {
-			const subjects = await this.subjectService.getAllSubjectDetail();
-			res.status(200).json(subjects);
-		} catch (error) {
-			console.error(error);
-			res.status(500).json({ message: 'Unable to fetch subjects detail.' });
-		}
-	};
-
 	public getSubjectWhere = (req: Request, res: Response) => RequestHandler.getWhere<Subject>(req, res, this.subjectService);
 
 	public importSubject = async (req: Request, res: Response) => {

@@ -17,17 +17,47 @@ export class UserService {
 	async getAll(): Promise<User[]> {
 		return this.userRepository.find({
 			order: { createDate: 'DESC' },
-			relations: ['faculty', 'major', 'account', 'createUser']
+			relations: ['major', 'specialization', 'account', 'createUser']
 		});
 	}
 
 	async getById(id: string): Promise<User | null> {
-		return this.userRepository.findOne({ where: { userId: id }, relations: ['faculty', 'major', 'account'] });
+		const user = await this.userRepository
+			.createQueryBuilder('user')
+			.leftJoinAndSelect('user.major', 'major')
+			.leftJoinAndSelect('major.faculty', 'faculty') // Kết nối tới faculty
+			.leftJoinAndSelect('user.specialization', 'specialization')
+			.leftJoinAndSelect('user.account', 'account')
+			.leftJoinAndSelect('account.permission', 'permission')
+			.where('user.userId = :id', { id })
+			.getOne();
+
+		if (user && user.major && user.major.faculty) {
+			// Đưa faculty lên cùng cấp với major
+			(user as any).faculty = user.major.faculty;
+		}
+
+		return user;
 	}
 
 
 	async getByUserId(userId: string): Promise<User | null> {
-		return this.userRepository.findOne({ where: { userId }, relations: ['faculty', 'major', 'account', 'account.permission'] });
+		const user = await this.userRepository
+			.createQueryBuilder('user')
+			.leftJoinAndSelect('user.major', 'major')
+			.leftJoinAndSelect('major.faculty', 'faculty') // Kết nối tới faculty
+			.leftJoinAndSelect('user.specialization', 'specialization')
+			.leftJoinAndSelect('user.account', 'account')
+			.leftJoinAndSelect('account.permission', 'permission')
+			.where('user.userId = :userId', { userId })
+			.getOne();
+
+		if (user && user.major && user.major.faculty) {
+			// Đưa faculty lên cùng cấp với major
+			(user as any).faculty = user.major.faculty;
+		}
+
+		return user;
 	}
 
 
@@ -38,7 +68,7 @@ export class UserService {
 				isStudent: false, // Tìm người dùng không phải là sinh viên
 				isActive: true,   // Tìm người dùng đang hoạt động
 			},
-			relations: ['faculty', 'major', 'account'],
+			relations: ['major', 'specialization', 'account'],
 		});
 	}
 
@@ -49,7 +79,7 @@ export class UserService {
 				isStudent: true,
 				isActive: true,
 			},
-			relations: ['faculty', 'major', 'account'],
+			relations: ['major', 'specialization', 'account'],
 		});
 	}
 
@@ -66,17 +96,21 @@ export class UserService {
 		const result = await this.userRepository.delete({ userId: In(ids) });
 		return result.affected !== 0;
 	}
-
 	async getUsersByFaculty(facultyId: string): Promise<User[]> {
 		return this.userRepository.find({
 			where: {
 				isStudent: false,
 				isActive: true,
-				faculty: { facultyId }
+				major: {
+					faculty: {
+						facultyId: facultyId, // Lọc dựa trên facultyId
+					},
+				},
 			},
-			relations: ['faculty', 'major', 'account'],
+			relations: ['major', 'major.faculty', 'specialization', 'account'],
 		});
 	}
+
 
 
 	async getWhere(condition: any): Promise<User[]> {
@@ -96,8 +130,8 @@ export class UserService {
 		if (condition.isStudent !== undefined) {
 			whereCondition.isStudent = condition.isStudent;
 		}
-		if (condition.facultyId) {
-			whereCondition.faculty = { facultyId: condition.facultyId };
+		if (condition.majorId) {
+			whereCondition.major = { majorId: condition.majorId };
 		}
 		if (condition.majorId) {
 			whereCondition.major = { majorId: condition.majorId };
@@ -127,7 +161,7 @@ export class UserService {
 		return this.userRepository.find({
 			where: whereCondition,
 			order: { createDate: 'DESC' },
-			relations: ['faculty', 'major', 'account', 'createUser'],
+			relations: ['major', 'specialization', 'account', 'createUser'],
 		});
 	}
 
