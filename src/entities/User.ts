@@ -1,15 +1,15 @@
 import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn, ManyToMany, Index } from 'typeorm';
-import { Faculty } from './Faculty';
 import { Major } from './Major';
 import { Account } from './Account';
 import { Notification } from './Notification';
+import { Specialization } from './Specialization';
 
 /**
  * Thực thể Người dùng
  */
 @Entity()
-@Index('IDX_USER_FACULTY', ['faculty'])
 @Index('IDX_USER_MAJOR', ['major'])
+@Index('IDX_USER_SPECIALIZATION', ['specialization'])
 export class User {
   /**
    * Mã người dùng (duy nhất, không rỗng)
@@ -60,22 +60,23 @@ export class User {
   class: string;
 
   /**
-   * ID khoa (tham chiếu đến thực thể Faculty, có thể rỗng)
-   */
-  @ManyToOne(() => Faculty, data => data.facultyId, { nullable: true })
-  @JoinColumn({ name: 'facultyId' })
-  faculty: Faculty;
-
-  /**
-   * ID chuyên ngành (tham chiếu đến thực thể Major, có thể rỗng)
+   * Ngành
    */
   @ManyToOne(() => Major, data => data.majorId, { nullable: true })
   @JoinColumn({ name: 'majorId' })
   major: Major;
 
+
   /**
-* niên khoá 
-*/
+   * Chuyên ngành
+   */
+  @ManyToOne(() => Specialization, data => data.specializationId, { nullable: true })
+  @JoinColumn({ name: 'specializationId' })
+  specialization: Specialization;
+
+  /**
+  * niên khoá 
+  */
   @Column({ nullable: true })
   nien_khoa: string;
 

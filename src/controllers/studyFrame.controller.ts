@@ -18,29 +18,6 @@ export class StudyFrameController {
   public deleteStudyFrame = (req: Request, res: Response) => RequestHandler.delete(req, res, this.studyFrameService);
   public getStudyFrameWhere = (req: Request, res: Response) => RequestHandler.getWhere<StudyFrame>(req, res, this.studyFrameService);
 
-
-  public GetSubjectByMajor = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const userId = req.params.userId as string;
-      if (!userId) {
-        res.status(400).json({ message: 'userId is required' });
-        return;
-      }
-
-      const result = await this.studyFrameService.GetSubjectByMajor(userId);
-      if (!result || result.length === 0) {
-        res.status(404).json({ message: 'No study frame found for the major' });
-        return;
-      }
-      res.json(result);
-    } catch (error) {
-      console.error('Error in GetSubjectByMajor:', error);
-      res.status(500).json({
-        error: 'Error executing stored procedure GetSubjectByMajor',
-      });
-    }
-  }
-
   public findKhungCTDTByUserId = async (req: Request, res: Response) => {
     try {
       const userId = req.query.userId as string;
@@ -64,10 +41,10 @@ export class StudyFrameController {
       let result;
       // Lấy id chu kỳ
       const cycleId = req.query.cycleId;
-      const facultyId = req.query.facultyId;
+      const majorId = req.query.majorId;
 
-      if (!facultyId) {
-        throw new Error('Not found entity faculty');
+      if (!majorId) {
+        throw new Error('Not found entity major');
       }
 
       let startYear;
@@ -79,12 +56,12 @@ export class StudyFrameController {
         if (!startYear) {
           throw new Error('Not found startYear');
         }
-        // Tìm khung CTDT theo startyear và faculty
-        result = await this.studyFrameService.findKhungCTDTDepartment(startYear as unknown as number, facultyId as string, null);
+        // Tìm khung CTDT theo startyear và major
+        result = await this.studyFrameService.findKhungCTDTDepartment(startYear as unknown as number, majorId as string, null);
       }
-      // Tìm khung CTDT theo cycleId và faculty
+      // Tìm khung CTDT theo cycleId và major
       else {
-        result = await this.studyFrameService.findKhungCTDTDepartment(null, facultyId as string, cycleId as string);
+        result = await this.studyFrameService.findKhungCTDTDepartment(null, majorId as string, cycleId as string);
       }
 
       return res.status(200).json({ message: 'success', data: result });

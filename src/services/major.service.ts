@@ -3,38 +3,29 @@ import { DataSource, In, Like, Repository } from 'typeorm';
 import { Major } from '../entities/Major';
 import { User } from '../entities/User';
 import { Faculty } from '../entities/Faculty';
-import { StudyFrame, StudyFrame_Component } from '../entities/StudyFrame';
+import { StudyFrame } from '../entities/StudyFrame';
 
 export class MajorService {
 	private majorRepository: Repository<Major>;
 	private userRepository: Repository<User>;
 	private facultyRepository: Repository<Faculty>
-	private studyFrameCompRepository: Repository<StudyFrame_Component>
+	private studyFrameRepository: Repository<StudyFrame>
 
 	constructor(dataSource: DataSource) {
 		this.majorRepository = dataSource.getRepository(Major);
 		this.userRepository = dataSource.getRepository(User);
 		this.facultyRepository = dataSource.getRepository(Faculty);
-		this.studyFrameCompRepository = dataSource.getRepository(StudyFrame_Component);
+		this.studyFrameRepository = dataSource.getRepository(StudyFrame);
 	}
 
 	async getAll(): Promise<Major[]> {
 		return this.majorRepository.find({
+			order: { createDate: "DESC" },
 			relations: ['faculty'],
 		});
 	}
 	async getById(majorId: string): Promise<Major | null> {
 		return this.majorRepository.findOneBy({ majorId });
-	}
-
-	async getMaxOrderNoByFaculty(facultyId: string): Promise<number> {
-		const result = await this.majorRepository
-			.createQueryBuilder('major')
-			.leftJoin('major.faculty', 'faculty')
-			.where('faculty.facultyId = :facultyId', { facultyId })
-			.select('MAX(major.orderNo)', 'maxOrderNo')
-			.getRawOne();
-		return result.maxOrderNo || 0;
 	}
 
 
@@ -51,12 +42,9 @@ export class MajorService {
 			throw new Error('Faculty not found');
 		}
 
-		const maxOrderNo = await this.getMaxOrderNoByFaculty(faculty.facultyId);
-
 		const major = this.majorRepository.create({
 			...data,
 			faculty: faculty,
-			orderNo: maxOrderNo + 1
 		});
 
 		return this.majorRepository.save(major);
@@ -73,7 +61,7 @@ export class MajorService {
 
 	async checkRelatedData(majorIds: string[]): Promise<{ success: boolean; message?: string }> {
 		const relatedRepositories = [
-			{ repo: this.studyFrameCompRepository, name: 'dữ liệu khối kiến thức' },
+			{ repo: this.studyFrameRepository, name: 'dữ liệu khung đào tạo' },
 			{ repo: this.userRepository, name: 'dữ liệu người dùng' },
 		];
 		// Lặp qua tất cả các bảng quan hệ để kiểm tra dữ liệu liên kết
@@ -88,7 +76,7 @@ export class MajorService {
 			if (count > 0) {
 				return {
 					success: false,
-					message: `Chuyên ngành đang được sử dụng trong ${name}. Không thể xóa.`,
+					message: `Ngành đang được sử dụng trong ${name}. Không thể xóa.`,
 				};
 			}
 		}
@@ -107,12 +95,12 @@ export class MajorService {
 		if (condition.userId) {
 			const user = await this.userRepository.findOne({
 				where: { userId: condition.userId },
-				relations: ["faculty"]
+				relations: ["major"]
 			})
 			if (!user) {
 				throw new Error('Not found entity user');
 			}
-			whereCondition.faculty = { facultyId: user.faculty.facultyId }
+			whereCondition.major = { majorId: user.major.majorId }
 		}
 
 		if (condition.majorId) {
@@ -133,6 +121,7 @@ export class MajorService {
 
 		return this.majorRepository.find({
 			where: whereCondition,
+			order: { createDate: "DESC" },
 			relations: ['faculty']
 		});
 	}

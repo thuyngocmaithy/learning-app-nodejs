@@ -56,7 +56,7 @@ export class FrameStructureService {
 
     return this.frameStructureRepository.find({
       where: whereCondition,
-      relations: ['studyFrame', 'studyFrameComponent', 'studyFrameComponent.major', 'studyFrameComponentParent']
+      relations: ['studyFrame', 'studyFrameComponent', 'studyFrameComponent.specialization', 'studyFrameComponentParent']
     });
   }
 

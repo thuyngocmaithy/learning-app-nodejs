@@ -1,14 +1,14 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, PrimaryColumn, OneToMany, Index } from 'typeorm';
 import { Major } from './Major';
 import { Subject_StudyFrameComp } from './Subject_StudyFrameComp';
-import { Faculty } from './Faculty';
 import { Cycle } from './Cycle';
+import { Specialization } from './Specialization';
 
 /**
  * Thực thể Khung đào tạo
  */
 @Entity()
-@Index("idx_studyFrame_faculty", ["faculty"]) // Chỉ mục cho trường facultyId
+@Index("idx_studyFrame_major", ["major"]) // Chỉ mục cho trường majorId
 @Index("idx_studyFrame_cycle", ["cycle"]) // Chỉ mục cho trường cycleId
 export class StudyFrame {
   /**
@@ -27,9 +27,9 @@ export class StudyFrame {
    * Mã ngành: Áp dụng cho ngành nào
    * Nhớ đổi lại nullable false
    */
-  @ManyToOne(() => Faculty, faculty => faculty.facultyId, { nullable: true })
-  @JoinColumn({ name: 'facultyId' })
-  faculty: Faculty;
+  @ManyToOne(() => Major, major => major.majorId, { nullable: true })
+  @JoinColumn({ name: 'majorId' })
+  major: Major;
 
   /**
    * Chu kỳ: Áp dụng cho chu kỳ nào
@@ -44,7 +44,7 @@ export class StudyFrame {
  * Thực thể thành phần khung đào tạo
  */
 @Entity("studyFrame_component")
-@Index("idx_studyFrameComponent_major", ["major"]) // Chỉ mục cho trường majorId
+@Index("idx_studyFrameComponent_specialization", ["specialization"]) // Chỉ mục cho trường specializationId
 @Index("idx_studyFrameComponent_frameId", ["frameComponentId"]) // Chỉ mục cho trường frameComponentId
 export class StudyFrame_Component {
   /**
@@ -81,9 +81,9 @@ export class StudyFrame_Component {
   /**
     * Mã chuyên ngành
     */
-  @ManyToOne(() => Major, major => major.majorId, { nullable: true })
-  @JoinColumn({ name: 'majorId' })
-  major: Major;
+  @ManyToOne(() => Specialization, specialization => specialization.specializationId, { nullable: true })
+  @JoinColumn({ name: 'specializationId' })
+  specialization: Specialization;
 
   // Thêm cascade: true để xóa liên quan đến Subject_StudyFrameComp khi xóa StudyFrameComp
   @OneToMany(() => Subject_StudyFrameComp, ssm => ssm.studyFrameComponent, { cascade: ['insert', 'update', 'remove'] })

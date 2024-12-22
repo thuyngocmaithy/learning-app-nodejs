@@ -42,7 +42,7 @@ export class UserController {
 			const users = await this.userService.getUsersByFaculty(facultyId);
 			res.status(StatusCodes.OK).json({ message: "success", data: users });
 		} catch (error) {
-			console.error("Get Users By Faculty Error:", error);
+			console.error("Get Users By Major Error:", error);
 			res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "error", error: (error as Error).message });
 		}
 	};

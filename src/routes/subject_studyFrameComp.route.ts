@@ -10,6 +10,7 @@ subject_studyFrameCompRouter.get('/', subject_studyFrameCompController.getAllSub
 subject_studyFrameCompRouter.get('/getWhere', subject_studyFrameCompController.getSubject_StudyFrameCompWhere);
 subject_studyFrameCompRouter.post('/createByListSubject', subject_studyFrameCompController.createSSMByListSubject);
 subject_studyFrameCompRouter.post('/updateByListSubject', subject_studyFrameCompController.updateSSMByListSubject);
+subject_studyFrameCompRouter.post('/saveSemestersForSubjects', subject_studyFrameCompController.saveSemestersForSubjects);
 subject_studyFrameCompRouter.get('/:id', subject_studyFrameCompController.getSubject_StudyFrameCompById);
 subject_studyFrameCompRouter.post('/', subject_studyFrameCompController.createSubject_StudyFrameComp);
 subject_studyFrameCompRouter.put('/:id', subject_studyFrameCompController.updateSubject_StudyFrameComp);

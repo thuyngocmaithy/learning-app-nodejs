@@ -1,4 +1,4 @@
-import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, PrimaryColumn, OneToMany, JoinColumn, Index } from 'typeorm';
 import { User } from './User';
 import { Status } from './Status';
 import { Follower } from './Follower';
@@ -9,6 +9,10 @@ import { Thesis_User } from './Thesis_User';
  * Thực thể khóa luận
  */
 @Entity()
+@Index('idx_thesis_status_id', ['status'])  // Chỉ mục cho cột statusId
+@Index('idx_thesis_create_user_id', ['createUser'])  // Chỉ mục cho cột createUserId
+@Index('idx_thesis_instructor_id', ['instructor'])  // Chỉ mục cho cột instructorId
+@Index('idx_thesis_last_modify_user_id', ['lastModifyUser'])  // Chỉ mục cho cột lastModifyUserId
 export class Thesis {
   /**
    * Mã khóa luận (duy nhất, không rỗng)

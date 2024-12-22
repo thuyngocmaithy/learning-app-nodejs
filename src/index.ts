@@ -15,6 +15,7 @@ import { setupSockets } from './socket';
 
 import path from 'path';
 import majorRoute from './routes/major.route';
+import specializationRoute from './routes/specialization.route';
 import notificationRoute from './routes/notification.route';
 import userRoutes from './routes/User.route';
 import accountRoutes from './routes/account.route';
@@ -36,7 +37,6 @@ import scientificResearchUserRoute from './routes/scientificResearch_user.route'
 import scientificResearchRoute from './routes/scientificResearch.route';
 import messageRouter from './routes/message.route';
 import featureRouter from './routes/feature.route';
-// import fs from 'fs/promises';
 import sguAuthRouter from './routes/sguAuth.route';
 import scientificResearchGroupRoute from './routes/scientificResearchGroup.route';
 import userRegisterSubjectRouter from './routes/userRegisterSubject.route';
@@ -135,6 +135,7 @@ app.use('/api/faculties', facultyRoutes);
 app.use('/api/followers', followerRoutes);
 app.use('/api/follower-details', followerDetailRoutes);
 app.use('/api/majors', majorRoute);
+app.use('/api/specializations', specializationRoute);
 app.use('/api/notifications', notificationRoute);
 app.use('/api/permission-features', permissionFeatureRouter);
 app.use('/api/permissions', permissionRoute);

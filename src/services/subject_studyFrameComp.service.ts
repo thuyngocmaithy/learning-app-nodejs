@@ -3,6 +3,7 @@ import { DataSource, In, Repository } from 'typeorm';
 import { Subject_StudyFrameComp } from '../entities/Subject_StudyFrameComp';
 import { StudyFrame_Component } from '../entities/StudyFrame';
 import { Subject } from '../entities/Subject';
+import { Semester } from '../entities/Semester';
 
 export class Subject_StudyFrameCompService {
 	private subject_studyFrameCompRepository: Repository<Subject_StudyFrameComp>;
@@ -73,13 +74,21 @@ export class Subject_StudyFrameCompService {
 			throw new Error('Invalid studyFrameComponent ID');
 		}
 
-		// Lấy danh sách subject theo major và studyFrameComponent trong SSM
+		// Lấy danh sách subject theo studyFrameComponent trong SSM
 		const listSubjectDB = await this.subject_studyFrameCompRepository.find({
 			where: {
 				studyFrameComponent: studyFrameComponent
 			},
 			relations: ["subject"]
 		})
+
+		// Tìm orderNo lớn nhất hiện tại
+		const maxOrderNoResult = await this.subject_studyFrameCompRepository
+			.createQueryBuilder('ssm')
+			.select('MAX(ssm.orderNo)', 'maxOrderNo')
+			.where('ssm.studyFrameComponentId = :id', { id: data.studyFrameComponentId })
+			.getRawOne();
+		let maxOrderNo = maxOrderNoResult?.maxOrderNo || 0; // Giá trị mặc định là 0 nếu không có orderNo nào
 
 
 		// Lặp qua danh sách môn học được chọn
@@ -95,9 +104,14 @@ export class Subject_StudyFrameCompService {
 			} else {
 				// Trường hợp "db không có, list có"
 				// Thêm vào db
+
+				// Tăng giá trị maxOrderNo
+				maxOrderNo += 1;
+
 				const subject_studyFrameComp = this.subject_studyFrameCompRepository.create({
 					subject: subject,
 					studyFrameComponent: studyFrameComponent,
+					orderNo: maxOrderNo
 				});
 				// Thực hiện tạo mới SSM
 				await this.subject_studyFrameCompRepository.save(subject_studyFrameComp);
@@ -134,7 +148,63 @@ export class Subject_StudyFrameCompService {
 
 		return this.subject_studyFrameCompRepository.find({
 			where: whereCondition,
-			relations: ['studyFrameComponent', 'subject', 'subject.subjectBefore']
+			order: { orderNo: "ASC" },
+			relations: ['studyFrameComponent', 'subject', 'subject.subjectBefore', 'semesters']
 		});
 	}
+
+	async saveSemestersForSubjects(data: { studyFrameComponentId: string, subjectSemesterMap: { subjectId: string, semesterIds: string[] }[] }): Promise<boolean> {
+		const studyFrameComponent = await this.studyFrameCompRepository.findOne({
+			where: { frameComponentId: data.studyFrameComponentId },
+		});
+
+		if (!studyFrameComponent) {
+			throw new Error('Invalid studyFrameComponent ID');
+		}
+
+		for (const subjectSemester of data.subjectSemesterMap) {
+			// Lấy Subject_StudyFrameComp
+			let subjectStudyFrameComp = await this.subject_studyFrameCompRepository.findOne({
+				where: {
+					subject: { subjectId: subjectSemester.subjectId },
+					studyFrameComponent: studyFrameComponent,
+				},
+				relations: ['semesters'], // Lấy các semester hiện tại liên kết với subjectStudyFrameComp
+			});
+
+			if (!subjectStudyFrameComp) {
+				throw new Error(`No Subject_StudyFrameComp found for Subject ID: ${subjectSemester.subjectId}`);
+			}
+
+			// Lấy danh sách semesters từ subjectSemester
+			const semesters = await this.subject_studyFrameCompRepository.manager.findBy(Semester, { semesterId: In(subjectSemester.semesterIds) });
+
+			// Cập nhật bảng subject_studyFrameComp_semester
+			// Lọc ra các semesterId không tồn tại trong current semesters của subjectStudyFrameComp
+			const newSemesters = semesters.filter(semester =>
+				!subjectStudyFrameComp.semesters.some(existingSemester => existingSemester.semesterId === semester.semesterId)
+			);
+
+			// Thêm các semester mới vào subjectStudyFrameComp
+			if (newSemesters.length > 0) {
+				subjectStudyFrameComp.semesters = [...subjectStudyFrameComp.semesters, ...newSemesters];
+				await this.subject_studyFrameCompRepository.save(subjectStudyFrameComp); // Cập nhật lại Subject_StudyFrameComp
+			}
+
+			// Xóa các semester không có trong subjectSemester
+			const semestersToRemove = subjectStudyFrameComp.semesters.filter(semester =>
+				!subjectSemester.semesterIds.includes(semester.semesterId)
+			);
+
+			if (semestersToRemove.length > 0) {
+				subjectStudyFrameComp.semesters = subjectStudyFrameComp.semesters.filter(semester =>
+					!semestersToRemove.includes(semester)
+				);
+				await this.subject_studyFrameCompRepository.save(subjectStudyFrameComp); // Cập nhật lại Subject_StudyFrameComp
+			}
+		}
+
+		return true;
+	}
+
 }
