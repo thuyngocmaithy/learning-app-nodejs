@@ -1,12 +1,15 @@
 // user.service.ts
 import { DataSource, In, Like, Repository } from 'typeorm';
 import { User } from '../entities/User';
+import { Account } from '../entities/Account';
 
 export class UserService {
 	private userRepository: Repository<User>;
+	private accountRepository: Repository<Account>;
 
 	constructor(dataSource: DataSource) {
 		this.userRepository = dataSource.getRepository(User);
+		this.accountRepository = dataSource.getRepository(Account);
 	}
 
 	async create(data: Partial<User>): Promise<User> {

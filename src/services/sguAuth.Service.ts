@@ -13,6 +13,7 @@ import { Subject } from '../entities/Subject';
 import { Semester } from '../entities/Semester';
 import { Specialization } from '../entities/Specialization';
 import { chromium } from 'playwright-core';
+import { permission } from 'process';
 
 const SGU_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/auth/login';
 const SGU_INFO_API_URL = 'https://thongtindaotao.sgu.edu.vn/api/dkmh/w-locsinhvieninfo';
@@ -34,7 +35,6 @@ export class SguAuthService {
 	private ImageOfUser: string;
 	private GPAOfUser: number;
 	private CurrentCreditHourOfUser: number;
-	private tokenConfig: { [key: string]: { secret: string; role: string; } };
 	constructor() {
 		this.scoreRepository = AppDataSource.getRepository(Score);
 		this.componentScoreRepository = AppDataSource.getRepository(ComponentScore);
@@ -49,20 +49,6 @@ export class SguAuthService {
 		this.ImageOfUser = "";
 		this.GPAOfUser = 0;
 		this.CurrentCreditHourOfUser = 0;
-		this.tokenConfig = {
-			ADMIN: {
-				secret: process.env.JWT_ADMIN_SECRET || 'TokenADMIN',
-				role: 'ADMIN',
-			},
-			SINHVIEN: {
-				secret: process.env.JWT_STUDENT_SECRET || 'TokenSINHVIEN',
-				role: 'SINHVIEN',
-			},
-			GIANGVIEN: {
-				secret: process.env.JWT_TEACHER_SECRET || 'TokenGIANGVIEN',
-				role: 'GIANGVIEN',
-			}
-		};
 	}
 	async loginToSgu(username: string, password: string, isSync: boolean) {
 		try {
@@ -135,13 +121,7 @@ export class SguAuthService {
 
 	// NEW TOKEN METHODS
 	private generateTokens(account: Account, existingAccessToken?: string, expires_in_SGU?: number) {
-		type PermissionId = keyof typeof this.tokenConfig;
-		const permissionId = account.permission.permissionId as PermissionId;
-		const config = this.tokenConfig[permissionId];
-
-		if (!config) {
-			throw new Error("Invalid permissionId");
-		}
+		const permissionId = account.permission.permissionId;
 
 		// Nếu đã có access token từ bên ngoài (SGU login API)
 		if (existingAccessToken && expires_in_SGU) {
@@ -170,9 +150,9 @@ export class SguAuthService {
 			{
 				id: account.id,
 				username: account.username,
-				role: config.role
+				role: permissionId
 			},
-			config.secret,
+			permissionId,
 			{ expiresIn: accessTokenExpiry }
 		);
 
@@ -180,9 +160,9 @@ export class SguAuthService {
 			{
 				id: account.id,
 				username: account.username,
-				role: config.role
+				role: permissionId
 			},
-			config.secret + '_refresh',
+			permissionId + '_refresh',
 			{ expiresIn: refreshTokenExpiry }
 		);
 
@@ -460,8 +440,10 @@ export class SguAuthService {
 				avatar: user.avatar,
 				email: user.email,
 				roles: user.account?.permission?.permissionId,
+				faculty: user.major?.faculty?.facultyId,
 				major: user.major?.majorId,
 			},
+			permission: user.account?.permission?.permissionId
 		};
 	}
 	private handleError(error: any) {

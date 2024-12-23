@@ -3,19 +3,35 @@ import { DataSource, In, Repository } from 'typeorm';
 import { Account } from '../entities/Account';
 import * as bcrypt from 'bcrypt';
 import { Permission } from '../entities/Permission';
+import { User } from '../entities/User';
 
 export class AccountService {
 	private accountRepository: Repository<Account>;
-	private permissionRepository: Repository<Permission>;
+	private userRepository: Repository<User>;
 
 	constructor(dataSource: DataSource) {
 		this.accountRepository = dataSource.getRepository(Account);
-		this.permissionRepository = dataSource.getRepository(Permission);
+		this.userRepository = dataSource.getRepository(User);
 	}
 
 	async create(data: Partial<Account>): Promise<Account> {
+		// 1. Tạo tài khoản
 		const account = this.accountRepository.create(data);
-		return this.accountRepository.save(account);
+		const password = data.password ?? '12345678';
+		account.password = await bcrypt.hash(password, 10);
+		const savedAccount = await this.accountRepository.save(account);
+
+		// 2. Tạo người dùng và gắn tài khoản
+		const user = this.userRepository.create({
+			account: savedAccount, // Liên kết tài khoản vừa tạo
+			userId: data.username,
+			fullname: data.username,
+			isStudent: false
+		});
+		await this.userRepository.save(user);
+
+		// 3. Trả về tài khoản đã lưu, có thể thêm thông tin user nếu cần
+		return savedAccount;
 	}
 
 	async getAll(): Promise<Account[]> {
@@ -48,22 +64,26 @@ export class AccountService {
 		return result.affected !== 0;
 	}
 
-	async getWhere(condition: Partial<Account>): Promise<Account[]> {
-		const whereCondition: any = {};
+	async getWhere(condition: Partial<Account> & { isUnused?: boolean }): Promise<Account[]> {
+		const query = this.accountRepository.createQueryBuilder('account')
+			.leftJoinAndSelect('account.permission', 'permission'); // Quan hệ với Permission
 
-
-		if (condition.isSystem) {
-			whereCondition.isSystem = condition.isSystem;
+		// Điều kiện isSystem
+		if (condition.isSystem !== undefined) {
+			query.andWhere('account.isSystem = :isSystem', { isSystem: condition.isSystem });
 		}
 
-		// if (condition.endYear) {
-		//   whereCondition.endYear = condition.endYear;
-		// }
+		// Điều kiện tài khoản chưa được sử dụng
+		if (condition.isUnused) {
+			query.leftJoin('User', 'user', 'user.accountId = account.id') // Liên kết với bảng User
+				.andWhere('user.userId IS NULL'); // Điều kiện: Không có User nào liên kết
+		}
 
-		return this.accountRepository.find({
-			where: whereCondition,
-			order: { createDate: "DESC" },
-			relations: ['permission']
-		});
+		// Sắp xếp theo ngày tạo
+		query.orderBy('account.createDate', 'DESC');
+
+		return query.getMany();
 	}
+
+
 }

@@ -8,7 +8,7 @@ const userController = new UserController(AppDataSource);
 userRouter.get('/getwhere', userController.getUserWhere);
 userRouter.get('/teachers', userController.getActiveNonStudents);
 userRouter.get('/students', userController.getActiveStudents);
-userRouter.get('/users-by-major/:majorId', userController.getUsersByFaculty);
+userRouter.get('/users-by-faculty/:facultyId', userController.getUsersByFaculty);
 userRouter.post('/import', userController.addUserFromExcel);
 userRouter.get('/', userController.getAllUsers);
 userRouter.get('/:userId', userController.getUserByUserId);

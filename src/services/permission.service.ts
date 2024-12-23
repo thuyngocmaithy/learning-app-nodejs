@@ -15,11 +15,14 @@ export class PermissionService {
 	}
 
 	public getAll = async (): Promise<Permission[]> => {
-		return this.permissionRepository.find();
+		return this.permissionRepository.find({ order: { createDate: "DESC" } });
 	}
 
 	async getById(permissionId: string): Promise<Permission | null> {
-		return this.permissionRepository.findOne({ where: { permissionId: permissionId } });
+		return this.permissionRepository.findOne({
+			order: { createDate: "DESC" },
+			where: { permissionId: permissionId }
+		});
 	}
 
 
