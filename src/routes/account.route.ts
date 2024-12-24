@@ -7,8 +7,8 @@ const accountRouter = Router();
 const accountController = new AccountController(AppDataSource);
 
 accountRouter.get('/', accountController.getAllAccounts);
-accountRouter.get('/:id', accountController.getAccountById);
 accountRouter.get('/getWhere', accountController.getAccountWhere);
+accountRouter.get('/:id', accountController.getAccountById);
 accountRouter.get('/username/:username', accountController.getAccountByUsername);
 accountRouter.post('/', accountController.createAccount);
 accountRouter.put('/:id', accountController.updateAccount);

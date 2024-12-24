@@ -1,211 +1,310 @@
 import { DataSource, Repository, Like, FindManyOptions, In, MoreThan, LessThanOrEqual } from 'typeorm';
 import { Subject_Course_Opening } from '../entities/Subject_Course_Opening';
-import { StudyFrame } from '../entities/StudyFrame';
 import { Subject } from '../entities/Subject';
 import { Semester } from '../entities/Semester';
-import { Cycle } from '../entities/Cycle';
+import { Major } from '../entities/Major';
 
 export class Subject_Course_OpeningService {
 	private subject_course_openingRepository: Repository<Subject_Course_Opening>;
 	private subjectRepository: Repository<Subject>;
-	private studyFrameRepository: Repository<StudyFrame>;
+	private majorRepository: Repository<Major>;
 	private semesterRepository: Repository<Semester>;
-	private cycleRepository: Repository<Cycle>;
 
 	constructor(dataSource: DataSource) {
 		this.subject_course_openingRepository = dataSource.getRepository(Subject_Course_Opening);
 		this.subjectRepository = dataSource.getRepository(Subject);
-		this.studyFrameRepository = dataSource.getRepository(StudyFrame);
+		this.majorRepository = dataSource.getRepository(Major);
 		this.semesterRepository = dataSource.getRepository(Semester);
-		this.cycleRepository = dataSource.getRepository(Cycle);
 	}
 
 	async getAll(): Promise<Subject_Course_Opening[]> {
-		return this.subject_course_openingRepository
-			.createQueryBuilder('subject_course_opening')
-			.leftJoinAndSelect('subject_course_opening.subject', 'subject')
-			.leftJoinAndSelect('subject_course_opening.studyFrame', 'studyFrame')
-			.leftJoinAndSelect('subject_course_opening.semester', 'semester')
-			.leftJoinAndSelect('studyFrame.faculty', 'faculty')
-			.leftJoinAndSelect('studyFrame.cycle', 'cycle')
-			.select([
-				'studyFrame.frameId as studyFrameId',
-				'studyFrame.frameName as studyFrameName',
-				'faculty.facultyId as facultyId',
-				'faculty.facultyName as facultyName',
-				'cycle.cycleId as cycleId',
-				'cycle.cycleName as cycleName',
-				'subject_course_opening.disabled as disabled',
-				'MAX(subject_course_opening.id) AS id', // Hoặc các hàm tổng hợp khác
-			])
-			.groupBy('subject_course_opening.studyFrame, subject_course_opening.disabled')
-			.getRawMany();
+		const data = await this.subject_course_openingRepository.find({
+			relations: [
+				'subject',
+				'semester',
+				'major'
+			]
+		});
+
+		// Nhóm và chỉ giữ item đầu tiên
+		const grouped = data.reduce((result: Record<string, Record<string, Subject_Course_Opening>>, item) => {
+			const semesterName = item.semester?.semesterName || 'Unknown Semester';
+			const majorName = item.major?.majorName || 'Unknown Major';
+
+			if (!result[semesterName]) {
+				result[semesterName] = {};
+			}
+
+			// Chỉ thêm phần tử đầu tiên nếu nhóm chưa tồn tại
+			if (!result[semesterName][majorName]) {
+				result[semesterName][majorName] = item;
+			}
+
+			return result;
+		}, {});
+
+		// Chuyển cấu trúc thành mảng
+		return Object.values(grouped)
+			.flatMap((majorMap) => Object.values(majorMap));
 	}
+
+
+
 
 	async getById(id: string): Promise<Subject_Course_Opening | null> {
 		return this.subject_course_openingRepository.findOne({
 			where: { id },
 			relations: [
 				'subject',
-				'studyFrame',
-				'semester'
+				'semester',
+				'major'
 			]
 		});
 	}
 
-	public create = async (data: any): Promise<Subject_Course_Opening> => {
-		const subject = await this.subjectRepository.findOne({ where: { subjectId: data.subject } });
-		if (!subject) {
-			throw new Error('Invalid subject ID');
-		}
+	// async saveMulti(data: any | any[]): Promise<Subject_Course_Opening[]> {
+	// 	const recordsToSave: Subject_Course_Opening[] = [];
+	// 	const subjectsMap = new Map<string, any>();
+	// 	const semestersMap = new Map<string, any>();
+	// 	const majorsMap = new Map<string, any>();
 
-		const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: data.studyFrame } });
-		if (!studyFrame) {
-			throw new Error('Invalid studyFrame ID');
-		}
+	// 	try {
+	// 		const dataArray = Array.isArray(data) ? data : [data];
 
-		const semester = await this.semesterRepository.findOne({ where: { semesterId: data.semester } });
-		if (!semester) {
-			throw new Error('Invalid semester ID');
-		}
+	// 		// Lấy danh sách các ID duy nhất để truy vấn trước
+	// 		const subjectIds = [...new Set(dataArray.map((item) => item.subjectId))];
+	// 		const semesterIds = [...new Set(dataArray.map((item) => item.semester))];
+	// 		const majorIds = [...new Set(dataArray.map((item) => item.major))];
 
-		const cycle = await this.cycleRepository.findOne({ where: { cycleId: data.cycle } });
-		if (!cycle) {
-			throw new Error('Invalid cycle ID');
-		}
+	// 		// Truy vấn trước các dữ liệu cần thiết
+	// 		const subjects = await this.subjectRepository.findBy({ subjectId: In(subjectIds) });
+	// 		const semesters = await this.semesterRepository.findBy({ semesterId: In(semesterIds) });
+	// 		const majors = await this.majorRepository.findBy({ majorId: In(majorIds) });
 
-		const subject_course_opening = this.subject_course_openingRepository.create({
-			subject: subject,
-			instructor: data.instructor,
-			studyFrame: studyFrame,
-		});
+	// 		// Tạo map để tra cứu nhanh
+	// 		subjects.forEach((subject) => subjectsMap.set(subject.subjectId, subject));
+	// 		semesters.forEach((semester) => semestersMap.set(semester.semesterId, semester));
+	// 		majors.forEach((major) => majorsMap.set(major.majorId, major));
 
-		const savedSubject_Course_Opening = await this.subject_course_openingRepository.save(subject_course_opening);
+	// 		// Sử dụng transaction để đảm bảo toàn vẹn dữ liệu
+	// 		await this.subject_course_openingRepository.manager.transaction(async (transactionalEntityManager) => {
+	// 			for (const record of dataArray) {
+	// 				// Kiểm tra và xử lý Subject
+	// 				let subject = subjectsMap.get(record.subjectId);
+	// 				if (!subject) {
+	// 					if (!record.subjectName || !record.creditHour) {
+	// 						throw new Error(`Subject details (name and creditHour) are required for subjectId: ${record.subjectId}`);
+	// 					}
 
-		return savedSubject_Course_Opening;
-	}
+	// 					// Thử tìm bản ghi trong CSDL trước khi tạo mới
+	// 					subject = await transactionalEntityManager.findOne(this.subjectRepository.target, {
+	// 						where: { subjectId: record.subjectId },
+	// 					});
 
-	public saveMulti = async (data: any[]): Promise<Subject_Course_Opening[]> => {
+	// 					if (!subject) {
+	// 						// Tạo mới nếu không tồn tại
+	// 						subject = this.subjectRepository.create({
+	// 							subjectId: record.subjectId,
+	// 							subjectName: record.subjectName,
+	// 							creditHour: record.creditHour,
+	// 						});
+	// 						await transactionalEntityManager.save(subject);
+	// 					}
+	// 					subjectsMap.set(record.subjectId, subject);
+	// 				}
+
+	// 				// Kiểm tra Semester
+	// 				const semester = semestersMap.get(record.semester);
+	// 				if (!semester) {
+	// 					throw new Error(`Invalid semester ID: ${record.semester}`);
+	// 				}
+
+	// 				// Kiểm tra Major
+	// 				const major = majorsMap.get(record.major);
+	// 				if (!major) {
+	// 					throw new Error(`Invalid major ID: ${record.major}`);
+	// 				}
+
+	// 				// Xử lý instructors
+	// 				const instructors = Array.isArray(record.instructors) ? record.instructors : [];
+
+	// 				// Tìm xem bản ghi đã tồn tại chưa
+	// 				const existingRecord = await this.subject_course_openingRepository.findOne({
+	// 					where: {
+	// 						subject: { subjectId: record.subjectId },
+	// 						semester: { semesterId: record.semester },
+	// 						major: { majorId: record.major },
+	// 					},
+	// 				});
+
+	// 				if (existingRecord) {
+	// 					// Cập nhật nếu đã tồn tại
+	// 					this.subject_course_openingRepository.merge(existingRecord, {
+	// 						openGroup: record.openGroup || existingRecord.openGroup,
+	// 						studentsPerGroup: record.studentsPerGroup || existingRecord.studentsPerGroup,
+	// 						instructors: instructors.length > 0 ? instructors : existingRecord.instructors,
+	// 						disabled: record.disabled !== undefined ? record.disabled : existingRecord.disabled,
+	// 					});
+	// 					recordsToSave.push(existingRecord);
+	// 				} else {
+	// 					// Tạo mới nếu không tồn tại
+	// 					const newRecord = this.subject_course_openingRepository.create({
+	// 						subject,
+	// 						semester,
+	// 						major,
+	// 						openGroup: record.openGroup || 0,
+	// 						studentsPerGroup: record.studentsPerGroup || 0,
+	// 						instructors,
+	// 						disabled: record.disabled || false,
+	// 					});
+	// 					recordsToSave.push(newRecord);
+	// 				}
+	// 			}
+
+	// 			// Lưu tất cả các bản ghi trong transaction
+	// 			await transactionalEntityManager.save(recordsToSave);
+	// 		});
+
+	// 		return recordsToSave;
+	// 	} catch (error) {
+	// 		console.error('Error in saveMulti:', error);
+	// 		throw new Error('Failed to save subject course openings');
+	// 	}
+	// }
+
+	async saveMulti(data: any | any[]): Promise<Subject_Course_Opening[]> {
+		const recordsToSave: Subject_Course_Opening[] = [];
+		const subjectsMap = new Map<string, any>();
+		const semestersMap = new Map<string, any>();
+		const majorsMap = new Map<string, any>();
+
 		try {
-			const savedSubjectCourseOpenings: Subject_Course_Opening[] = [];
+			const dataArray = Array.isArray(data) ? data : [data];
 
-			// Lấy danh sách tất cả Subject_Course_Opening hiện có trong cơ sở dữ liệu
-			const existingSubjectCourseOpenings = await this.subject_course_openingRepository.find({
-				relations: ['studyFrame.cycle', 'subject', 'studyFrame', 'semester']
+			// Lấy danh sách các ID duy nhất
+			const subjectIds = [...new Set(dataArray.map((item) => item.subjectId))];
+			const semesterIds = [...new Set(dataArray.map((item) => item.semester))];
+			const majorIds = [...new Set(dataArray.map((item) => item.major))];
+
+			// Parallelize các truy vấn
+			const [subjects, semesters, majors] = await Promise.all([
+				this.subjectRepository.findBy({ subjectId: In(subjectIds) }),
+				this.semesterRepository.findBy({ semesterId: In(semesterIds) }),
+				this.majorRepository.findBy({ majorId: In(majorIds) }),
+			]);
+
+			// Tạo Map để tra cứu nhanh
+			subjects.forEach((subject) => subjectsMap.set(subject.subjectId, subject));
+			semesters.forEach((semester) => semestersMap.set(semester.semesterId, semester));
+			majors.forEach((major) => majorsMap.set(major.majorId, major));
+
+			// Lấy các bản ghi Subject_Course_Opening hiện tại để giảm truy vấn trong vòng lặp
+			const existingRecords = await this.subject_course_openingRepository.find({
+				where: dataArray.map((record) => ({
+					subject: { subjectId: record.subjectId },
+					semester: { semesterId: record.semester },
+					major: { majorId: record.major },
+				})),
+				relations: ['subject', 'semester', 'major']
 			});
 
-			for (const item of data) {
-				// Kiểm tra xem bản ghi có tồn tại trong cơ sở dữ liệu không
-				const existingRecord = existingSubjectCourseOpenings.find(existing =>
-					existing.subject.subjectId === item.subject &&
-					existing.studyFrame.frameId === item.studyFrame &&
-					existing.semester.semesterId === item.semester
-				);
+			// Tạo Map từ các bản ghi hiện tại
+			const existingRecordsMap = new Map(
+				existingRecords.map((record) => [
+					`${record.subject.subjectId}-${record.semester.semesterId}-${record.major.majorId}`,
+					record
+				])
+			);
 
-				if (existingRecord) {
-					// Nếu bản ghi đã tồn tại và có sự khác biệt về instructor, cập nhật instructor
-					if (existingRecord.instructor !== item.instructor) {
-						existingRecord.instructor = item.instructor; // Cập nhật instructor
-						const updatedRecord = await this.subject_course_openingRepository.save(existingRecord);
-						savedSubjectCourseOpenings.push(updatedRecord);
+			// Transaction
+			await this.subject_course_openingRepository.manager.transaction(async (transactionalEntityManager) => {
+				for (const record of dataArray) {
+					// Kiểm tra và xử lý Subject
+					let subject = subjectsMap.get(record.subjectId);
+					if (!subject) {
+						// Nếu subject chưa tồn tại trong subjectsMap, kiểm tra trong cơ sở dữ liệu
+						if (!record.subjectName || !record.creditHour) {
+							throw new Error(`Subject details (name and creditHour) are required for subjectId: ${record.subjectId}`);
+						}
+
+						// Kiểm tra xem subject đã tồn tại trong cơ sở dữ liệu
+						subject = await this.subjectRepository.findOneBy({ subjectId: record.subjectId });
+
+						if (!subject) {
+							// Nếu subject chưa tồn tại, tạo mới subject
+							subject = this.subjectRepository.create({
+								subjectId: record.subjectId,
+								subjectName: record.subjectName,
+								creditHour: record.creditHour,
+							});
+
+							// Lưu subject vào cơ sở dữ liệu
+							await transactionalEntityManager.save(subject);
+						}
+
+						// Thêm vào subjectsMap để sử dụng sau
+						subjectsMap.set(record.subjectId, subject);
 					}
-					// Nếu instructor giống nhau, không làm gì cả
-					continue;
-				} else {
-					// Nếu bản ghi không có, tạo mới và lưu vào cơ sở dữ liệu
-					const subjectCourseOpening = this.subject_course_openingRepository.create({
-						subject: item.subject,
-						instructor: item.instructor,
-						studyFrame: item.studyFrame,
-						semester: item.semester
-					});
 
-					const savedRecord = await this.subject_course_openingRepository.save(subjectCourseOpening);
-					savedSubjectCourseOpenings.push(savedRecord);
+					// Kiểm tra Semester và Major
+					const semester = semestersMap.get(record.semester);
+					if (!semester) {
+						throw new Error(`Invalid semester ID: ${record.semester}`);
+					}
+
+					const major = majorsMap.get(record.major);
+					if (!major) {
+						throw new Error(`Invalid major ID: ${record.major}`);
+					}
+
+					// Xử lý instructors
+					const instructors = Array.isArray(record.instructors) ? record.instructors : [];
+
+					// Kiểm tra xem bản ghi đã tồn tại chưa
+					const key = `${record.subjectId}-${record.semester}-${record.major}`;
+					const existingRecord = existingRecordsMap.get(key);
+
+					if (existingRecord) {
+						// Cập nhật nếu đã tồn tại
+						this.subject_course_openingRepository.merge(existingRecord, {
+							openGroup: record.openGroup || existingRecord.openGroup,
+							studentsPerGroup: record.studentsPerGroup || existingRecord.studentsPerGroup,
+							instructors: instructors.length > 0 ? instructors : existingRecord.instructors,
+							disabled: record.disabled !== undefined ? record.disabled : existingRecord.disabled,
+						});
+						recordsToSave.push(existingRecord);
+					} else {
+						// Tạo mới nếu không tồn tại
+						const newRecord = this.subject_course_openingRepository.create({
+							subject,
+							semester,
+							major,
+							openGroup: record.openGroup || 0,
+							studentsPerGroup: record.studentsPerGroup || 0,
+							instructors,
+							disabled: record.disabled || false,
+						});
+						recordsToSave.push(newRecord);
+					}
 				}
-			}
 
-			// Xóa những bản ghi cũ không có trong yêu cầu
-			for (const existingRecord of existingSubjectCourseOpenings) {
-				const match = data.find(item =>
-					item.subject === existingRecord.subject.subjectId &&
-					item.instructor === existingRecord.instructor &&
-					item.studyFrame === existingRecord.studyFrame.frameId &&
-					item.semester === existingRecord.semester.semesterId
-				);
+				// Lưu tất cả các bản ghi trong transaction
+				await transactionalEntityManager.save(recordsToSave);
+			});
 
-				if (!match) {
-					// Nếu không có trong yêu cầu, xóa bản ghi
-					await this.subject_course_openingRepository.remove(existingRecord);
-				}
-			}
-
-			return savedSubjectCourseOpenings;
+			return recordsToSave;
 		} catch (error) {
-			console.error('Error in saveMulti service:', error);
-			throw new Error('Unable to create, update, or delete Subject_Course_Opening entries.');
+			console.error('Error in saveMulti:', error);
+			throw new Error('Failed to save subject course openings');
 		}
-	};
-
-
-
-
-	async update(id: string, data: any): Promise<Subject_Course_Opening | null> {
-		const subject_course_opening = await this.subject_course_openingRepository.findOne({ where: { id } });
-		if (!subject_course_opening) {
-			return null;
-		}
-		if (data.subject) {
-			const subject = await this.subjectRepository.findOne({ where: { subjectId: data.subject } });
-			if (!subject) {
-				throw new Error('Invalid subject ID');
-			}
-			data.subject = subject;
-		}
-
-		if (data.studyFrame) {
-			const studyFrame = await this.studyFrameRepository.findOne({ where: { frameId: data.studyFrame } });
-			if (!studyFrame) {
-				throw new Error('Invalid studyFrame ID');
-			}
-			data.studyFrame = studyFrame;
-		}
-
-		if (data.semester) {
-			const semester = await this.semesterRepository.findOne({ where: { semesterId: data.semester } });
-			if (!semester) {
-				throw new Error('Invalid semester ID');
-			}
-			data.semester = semester;
-		}
-
-
-		this.subject_course_openingRepository.merge(subject_course_opening, data);
-		return this.subject_course_openingRepository.save(subject_course_opening);
 	}
+
+
 
 	async delete(ids: string[]): Promise<boolean> {
 		const result = await this.subject_course_openingRepository.delete({ id: In(ids) });
 		return result.affected !== null && result.affected !== undefined && result.affected > 0;
 	}
-
-
-	async deleteSubjectCourseOpening(cycleId: string, studyFrameId: string): Promise<boolean> {
-		try {
-			// Xóa các bản ghi theo year và studyFrameId
-			const result = await this.subject_course_openingRepository.delete({
-				studyFrame: {
-					frameId: studyFrameId,
-					cycle: { cycleId: cycleId }
-				},
-			});
-
-			return true;
-		} catch (error) {
-			console.error('Error in deleteSubjectCourseOpeningService:', error);
-			throw new Error('Service error');
-		}
-	};
 
 	async getWhere(condition: any): Promise<Subject_Course_Opening[]> {
 		const whereCondition: any = {};
@@ -213,54 +312,85 @@ export class Subject_Course_OpeningService {
 		if (condition.subject) {
 			whereCondition.subject = { subjectId: condition.subject }
 		}
-		if (condition.studyFrame) {
-			whereCondition.studyFrame = { frameId: condition.studyFrame }
-		}
-
-		if (condition.cycle) {
-			whereCondition.studyFrame = {
-				...whereCondition.studyFrame,
-				cycle: { cycleId: condition.cycle } // Thêm điều kiện cho cycle
-			};
-		}
 
 		if (condition.semester) {
 			whereCondition.semester = { semesterId: condition.semester };
 		}
 
+		if (condition.major) {
+			whereCondition.major = { majorId: condition.major };
+		}
+
+
 		return this.subject_course_openingRepository.find({
 			where: whereCondition,
+			order: { createDate: "ASC" },
 			relations: [
 				'subject',
-				'studyFrame',
-				'semester'
+				'semester',
+				'major'
 			],
 		});
 	}
 
-	public async getTeacherAssignmentsAndSemesters() {
-		try {
-			const subjectCourseOpenings = await this.subject_course_openingRepository.find({
-				relations: ['subject', 'semester', 'studyFrame'],
-			});
 
-			const teacherAssignments = new Map<string, string>();
-			const selectedSemesters = new Set<string>();
+	// Hàm xóa dữ liệu theo semester và major
+	async deleteBySemesterAndMajor(semesterId: string, majorId: string): Promise<void> {
+		// Tìm các khóa học theo semesterId và majorId
+		const courseOpeningsToDelete = await this.subject_course_openingRepository.find({
+			where: {
+				semester: { semesterId: semesterId },
+				major: { majorId: majorId }
+			}
+		});
 
-			subjectCourseOpenings.forEach((item) => {
-				const key = `${item.semester.semesterId}-${item.subject.subjectId}`;
-				if (item.instructor) {
-					teacherAssignments.set(key, item.instructor);
-				}
-				selectedSemesters.add(key);
-			});
-
-			return { teacherAssignments, selectedSemesters };
-		} catch (error) {
-			console.error('Error fetching data from database:', error);
-			throw new Error('Error fetching data from database');
+		// Nếu có dữ liệu tìm thấy, xóa
+		if (courseOpeningsToDelete.length > 0) {
+			await this.subject_course_openingRepository.remove(courseOpeningsToDelete);
+			console.log(`Deleted ${courseOpeningsToDelete.length} course openings for semesterId: ${semesterId} and majorId: ${majorId}`);
+		} else {
+			console.log('No course openings found to delete.');
 		}
 	}
+
+	// Lấy danh sách mở học phần của các học kỳ theo học phần
+	async getGroupedBySubjectForSemesters(major: string, semesterIds: string[]): Promise<Record<string, any>> {
+		try {
+			// Truy vấn các Subject_Course_Opening liên quan đến danh sách semesterIds
+			const courseOpenings = await this.subject_course_openingRepository.find({
+				where: {
+					major: { majorId: major },
+					semester: { semesterId: In(semesterIds) },
+				},
+				relations: ['subject', 'semester', 'major'],
+				order: { createDate: 'ASC' },
+			});
+
+			// Nhóm theo subjectId và semesterId
+			const groupedBySubjectAndSemester = courseOpenings.reduce((result: Record<string, any>, course) => {
+				const key = `${course.subject.subjectId}_${course.semester.semesterId}`; // Tạo key từ subjectId và semesterId
+
+				// Nếu chưa có nhóm cho key, khởi tạo nhóm
+				if (!result[key]) {
+					result[key] = {
+						openGroup: course.openGroup,
+						studentsPerGroup: course.studentsPerGroup,
+						instructors: course.instructors,
+						disabled: course.disabled,
+					};
+				}
+
+				return result;
+			}, {});
+
+			return groupedBySubjectAndSemester;
+		} catch (error) {
+			console.error('Error in getGroupedBySubjectForSemesters:', error);
+			throw new Error('Failed to fetch and group course openings by subject and semester');
+		}
+	}
+
+
 
 }
 

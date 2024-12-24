@@ -135,12 +135,12 @@ export class ScientificResearchGroupService {
 
 		// Kiểm tra và thêm điều kiện faculty nếu có
 		if (condition.faculty) {
-			queryBuilder.andWhere('srg.facultyId = :facultyId', { facultyId: condition.faculty });
+			queryBuilder.andWhere('faculty.facultyId = :facultyId', { facultyId: condition.faculty });
 		}
 
 		// Kiểm tra và thêm điều kiện status nếu có
 		if (condition.status) {
-			queryBuilder.andWhere('srg.statusId = :statusId', { statusId: condition.status });
+			queryBuilder.andWhere('status.statusId = :statusId', { statusId: condition.status });
 		}
 
 		// Kiểm tra và thêm điều kiện scientificResearchGroupId

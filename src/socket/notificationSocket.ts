@@ -96,6 +96,9 @@ export const setupNotificationSocket = (io: Server) => {
                     const notifications = await notificationService.getByUserId(userId);
                     socket.emit('notificationsList', notifications);
                 }
+                else {
+                    socket.emit('notificationsList', []);
+                }
             } catch (error) {
                 console.error('Lỗi khi lấy thông báo:', error);
                 socket.emit('notificationsList', []);

@@ -44,7 +44,7 @@ export class UserRegisterSubjectService {
 			});
 
 			if (existingRegistration) {
-				return { success: false, message: `User has already registered for subject ${subjectId} in semester ${semesterId}` };
+				return { success: true, message: `User has already registered for subject ${subjectId} in semester ${semesterId}` };
 			}
 
 			const userRegisterSubject = this.userRegisterSubjectRepository.create({

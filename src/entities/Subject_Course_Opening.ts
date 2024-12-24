@@ -1,53 +1,78 @@
-import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
-import { StudyFrame } from './StudyFrame';
+import { Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn, Column, Index, CreateDateColumn } from 'typeorm';
 import { Subject } from './Subject';
 import { Semester } from './Semester';
-import { Cycle } from './Cycle';
+import { Major } from './Major';
 
 /**
- * Mở học phần: 1 môn có thể được mở nhiều năm, nhiều khung
+ * Mở học phần: 1 môn có thể được mở nhiều năm, nhiều giảng viên dạy
  */
 @Entity('subject_course_opening')
-@Index("IDX_SUBJECT_SEMESTER", ["subject", "semester"])  // Chỉ mục composite cho subjectId và semesterId
-@Index("IDX_STUDYFRAME_SEMESTER", ["studyFrame", "semester"])  // Chỉ mục composite cho studyFrameId và semesterId
-@Index("IDX_SUBJECT_STUDYFRAME", ["subject", "studyFrame"])  // Chỉ mục composite cho subjectId và studyFrameId
+@Index("IDX_SUBJECT", ["subject"])  // Chỉ mục composite cho subjectId 
+@Index("IDX_SEMESTER", ["semester"])  // Chỉ mục composite cho semesterId
 export class Subject_Course_Opening {
-  /**
-   * Khóa chính tự động tạo
-   */
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+	/**
+	 * Khóa chính tự động tạo
+	 */
+	@PrimaryGeneratedColumn('uuid')
+	id: string;
 
-  /**
-   * Mã môn học
-   */
-  @ManyToOne(() => Subject, subject => subject.subjectId, { nullable: false })
-  @JoinColumn({ name: 'subjectId' })
-  subject: Subject;
+	/**
+	 * Mã môn học
+	 */
+	@ManyToOne(() => Subject, subject => subject.subjectId, { nullable: false })
+	@JoinColumn({ name: 'subjectId' })
+	subject: Subject;
 
-  /**
-   * Học kỳ mở
-   */
-  @ManyToOne(() => Semester, semester => semester.semesterId, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'semesterId', referencedColumnName: 'semesterId' })
-  semester: Semester;
+	/**
+	 * Học kỳ mở
+	 */
+	@ManyToOne(() => Semester, semester => semester.semesterId, { nullable: false, onDelete: 'CASCADE' })
+	@JoinColumn({ name: 'semesterId', referencedColumnName: 'semesterId' })
+	semester: Semester;
 
-  /**
-   * Giảng viên dạy
-   */
-  @Column({ nullable: true })
-  instructor: string;
+	/**
+	 * Ngành
+	 */
+	@ManyToOne(() => Major, major => major.majorId, { nullable: false, onDelete: 'CASCADE' })
+	@JoinColumn({ name: 'majorId', referencedColumnName: 'majorId' })
+	major: Major;
 
-  /**
-   * Trạng thái ẩn giảng viên dạy
-   */
-  @Column({ default: false, nullable: false })
-  disabled: boolean;
+	/**
+	 * Số nhóm mở
+	 */
+	@Column('int', { default: 0, nullable: false })
+	openGroup: number;
 
+<<<<<<< HEAD
   /**
    * Mã Khung ctr đào tạo 
    */
   @ManyToOne(() => StudyFrame, studyFrame => studyFrame.frameId, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'studyFrameId', referencedColumnName: 'frameId' })
   studyFrame: StudyFrame;
+=======
+	/**
+	 * SL SV / 1 nhóm
+	 */
+	@Column('int', { default: 0, nullable: false })
+	studentsPerGroup: number;
+
+	/**
+	 * Danh sách giảng viên, lưu dưới dạng mảng chuỗi, phân tách bằng dấu phẩy.
+	 */
+	@Column('simple-array', { nullable: true })
+	instructors: string[];
+
+	/**
+	 * Trạng thái ẩn giảng viên dạy
+	 */
+	@Column({ default: false, nullable: false })
+	disabled: boolean;
+
+	/**
+	 * Ngày tạo (không rỗng)
+	 */
+	@CreateDateColumn()
+	createDate: Date;
+>>>>>>> a779ee9b0ab4a584387b12dde6b3b795ce5ab3d0
 }

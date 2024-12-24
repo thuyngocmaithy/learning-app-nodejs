@@ -146,6 +146,7 @@ export class StudyFrameService {
 					major: { majorId: user.major?.majorId },
 					cycle: cycle
 				},
+				relations: ['cycle']
 			})
 			return studyFrame;
 		} catch (error) {
