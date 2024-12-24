@@ -47,7 +47,7 @@ export class Subject_Course_Opening {
   /**
    * Mã Khung ctr đào tạo 
    */
-  @ManyToOne(() => StudyFrame, studyFrame => studyFrame.frameId, { nullable: false, onDelete: 'CASCADE' })
+  @ManyToOne(() => StudyFrame, studyFrame => studyFrame.frameId, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'studyFrameId', referencedColumnName: 'frameId' })
   studyFrame: StudyFrame;
 }
