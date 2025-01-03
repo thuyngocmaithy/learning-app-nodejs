@@ -43,14 +43,6 @@ export class Subject_Course_Opening {
 	@Column('int', { default: 0, nullable: false })
 	openGroup: number;
 
-<<<<<<< HEAD
-  /**
-   * Mã Khung ctr đào tạo 
-   */
-  @ManyToOne(() => StudyFrame, studyFrame => studyFrame.frameId, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'studyFrameId', referencedColumnName: 'frameId' })
-  studyFrame: StudyFrame;
-=======
 	/**
 	 * SL SV / 1 nhóm
 	 */
@@ -74,5 +66,4 @@ export class Subject_Course_Opening {
 	 */
 	@CreateDateColumn()
 	createDate: Date;
->>>>>>> a779ee9b0ab4a584387b12dde6b3b795ce5ab3d0
 }

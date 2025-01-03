@@ -4,6 +4,8 @@ import { Status } from './Status';
 import { Follower } from './Follower';
 import { ThesisGroup } from './ThesisGroup';
 import { Thesis_User } from './Thesis_User';
+import { Specialization } from './Specialization';
+import { Major } from './Major';
 
 /**
  * Thực thể khóa luận
@@ -64,7 +66,6 @@ export class Thesis {
   @JoinColumn({ name: 'instructorId' })
   instructor: User;
 
-
   /**
    * Số lượng đã đăng ký (có thể rỗng)
    */
@@ -111,6 +112,20 @@ export class Thesis {
   @ManyToOne(() => ThesisGroup, data => data.thesisGroupId, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'thesisGroupId' })
   thesisGroup: ThesisGroup;
+
+  /**
+   * Chuyên ngành (tham chiếu đến thực thể Specialization, không rỗng)
+   */
+  @ManyToOne(() => Specialization, data => data.specializationId, { nullable: false })
+  @JoinColumn({ name: 'specializationId' })
+  specialization: Specialization;
+
+  /**
+   * Ngành (tham chiếu đến thực thể Major, không rỗng)
+   */
+  @ManyToOne(() => Major, data => data.majorId, { nullable: false })
+  @JoinColumn({ name: 'majorId' })
+  major: Major;
 
   /**
    * Hiển thị
