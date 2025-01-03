@@ -96,6 +96,7 @@ export class ThesisService {
 				'status.color as color',
 				'instructor.userId as instructorUserId',
 				'instructor.fullname as instructorFullname',
+				'instructor.faculty as instructorFaculty',
 				'createUser.userId as creatorUserId',
 				'createUser.fullname as creatorFullname',
 				'lastModifyUser.userId as lastModifierUserId',
@@ -109,6 +110,7 @@ export class ThesisService {
 				'user.fullname as userFullname',
 				'userThesis.isLeader as isLeader',
 				'userThesis.isApprove as isApprove',
+				'user.currentCreditHour as currentCreditHour',
 				'follower.id as followerId',
 				'followerDetail.id as followerDetailId',
 				'followerUser.userId as followerUserId',
@@ -160,6 +162,7 @@ export class ThesisService {
 					instructor: {
 						userId: row.instructorUserId,
 						fullname: row.instructorFullname,
+						faculty: row.instructorFaculty,
 					},
 					createUser: {
 						userId: row.creatorUserId,
