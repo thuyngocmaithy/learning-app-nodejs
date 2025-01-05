@@ -91,41 +91,41 @@ export class MajorService {
 
 	async getWhere(condition: any): Promise<Major[]> {
 		const whereCondition: any = {};
-
+	
 		if (condition.userId) {
 			const user = await this.userRepository.findOne({
 				where: { userId: condition.userId },
 				relations: ["major"]
-			})
+			});
 			if (!user) {
 				throw new Error('Not found entity user');
 			}
-			whereCondition.major = { majorId: user.major.majorId }
+			whereCondition.major = { majorId: user.major.majorId };
 		}
-
+	
 		if (condition.majorId) {
 			whereCondition.majorId = Like(`%${condition.majorId}%`);
 		}
-
+	
 		if (condition.majorName) {
 			whereCondition.majorName = Like(`%${condition.majorName}%`); // Tìm kiếm tương đối
 		}
-
+	
 		if (condition.facultyId) {
-			whereCondition.faculty = { facultyId: condition.facultyId };
+			whereCondition.faculty = { facultyId: condition.facultyId }; // Sử dụng đối tượng quan hệ
 		}
-
+	
 		if (condition.facultyName) {
-			whereCondition.faculty = { facultyName: condition.facultyName };
+			whereCondition.faculty = { facultyName: Like(`%${condition.facultyName}%`) }; // Tìm kiếm tương đối qua quan hệ
 		}
-
+	
 		return this.majorRepository.find({
 			where: whereCondition,
 			order: { createDate: "DESC" },
-			relations: ['faculty']
+			relations: ['faculty'] // Load thêm thông tin của faculty
 		});
 	}
-
+	
 	async importMajor(data: any[]): Promise<Major[]> {
 		let majorSaved = [];
 		for (const major of data) {

@@ -256,7 +256,7 @@ export class Thesis_UserService {
 		]);
 		queryBuilder
 			.leftJoin('tu.user', 'user')
-			.addSelect(['user.userId', 'user.fullname', 'user.avatar', 'user.GPA']);
+			.addSelect(['user.userId', 'user.fullname', 'user.avatar', 'user.GPA', 'user']);
 
 		queryBuilder
 			.leftJoin('tu.thesis', 'thesis')

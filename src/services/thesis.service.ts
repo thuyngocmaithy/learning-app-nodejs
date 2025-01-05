@@ -9,6 +9,8 @@ import { Thesis_User } from '../entities/Thesis_User';
 import { Attach } from '../entities/Attach';
 import { Follower } from '../entities/Follower';
 import { Message } from '../entities/Message';
+import { Specialization } from '../entities/Specialization';
+import { Major } from '../entities/Major';
 
 export class ThesisService {
 	private thesisRepository: Repository<Thesis>;
@@ -20,6 +22,8 @@ export class ThesisService {
 	private attachRepository: Repository<Attach>;
 	private followerRepository: Repository<Follower>;
 	private messageRepository: Repository<Message>;
+	private specializationRepository: Repository<Specialization>;
+	private majorRepository: Repository<Major>;
 
 	constructor(dataSource: DataSource) {
 		this.thesisRepository = dataSource.getRepository(Thesis);
@@ -31,6 +35,8 @@ export class ThesisService {
 		this.attachRepository = dataSource.getRepository(Attach);
 		this.followerRepository = dataSource.getRepository(Follower);
 		this.messageRepository = dataSource.getRepository(Message);
+		this.specializationRepository = dataSource.getRepository(Specialization);
+		this.majorRepository = dataSource.getRepository(Major);
 	}
 
 	async getAll(): Promise<Thesis[]> {
@@ -58,6 +64,14 @@ export class ThesisService {
 			.leftJoin('thesis.createUser', 'user2')
 			.addSelect(['user2.userId']);
 
+		queryBuilder
+			.leftJoin('thesis.specialization', 'specialization')
+			.addSelect(['specialization.specializationId', 'specialization.specializationName']);
+
+		queryBuilder
+			.leftJoin('thesis.major', 'major')
+			.addSelect(['major.majorId', 'major.majorName']);
+
 		queryBuilder.orderBy("thesis.createDate", 'DESC');
 		return queryBuilder.getMany();
 	}
@@ -82,6 +96,7 @@ export class ThesisService {
 				'status.color as color',
 				'instructor.userId as instructorUserId',
 				'instructor.fullname as instructorFullname',
+				'instructor.faculty as instructorFaculty',
 				'createUser.userId as creatorUserId',
 				'createUser.fullname as creatorFullname',
 				'lastModifyUser.userId as lastModifierUserId',
@@ -95,11 +110,16 @@ export class ThesisService {
 				'user.fullname as userFullname',
 				'userThesis.isLeader as isLeader',
 				'userThesis.isApprove as isApprove',
+				'user.currentCreditHour as currentCreditHour',
 				'follower.id as followerId',
 				'followerDetail.id as followerDetailId',
 				'followerUser.userId as followerUserId',
 				'followerUser.fullname as followerFullname',
 				'followerUser.avatar as followerAvatar',
+				'specialization.specializationId as specializationId',
+				'specialization.specializationName as specializationName',
+				'major.majorId as majorId',
+				'major.majorName as majorName',
 			])
 			.leftJoin('thesis.status', 'status')
 			.leftJoin('thesis.instructor', 'instructor')
@@ -111,7 +131,9 @@ export class ThesisService {
 			.leftJoin('userThesis.user', 'user') // Lấy thông tin user từ bảng liên kết
 			.leftJoin('thesis.follower', 'follower')
 			.leftJoin('follower.followerDetails', 'followerDetail')
-			.leftJoin('followerDetail.user', 'followerUser');
+			.leftJoin('followerDetail.user', 'followerUser')
+			.leftJoin('thesis.specialization', 'specialization')
+			.leftJoin('thesis.major', 'major');
 
 		const rawResults = await queryBuilder.getRawMany();
 
@@ -140,6 +162,7 @@ export class ThesisService {
 					instructor: {
 						userId: row.instructorUserId,
 						fullname: row.instructorFullname,
+						faculty: row.instructorFaculty,
 					},
 					createUser: {
 						userId: row.creatorUserId,
@@ -156,6 +179,14 @@ export class ThesisService {
 							facultyId: row.facultyId,
 							facultyName: row.facultyName,
 						},
+					},
+					specialization: {
+						specializationId: row.specializationId,
+						specializationName: row.specializationName,
+					},
+					major: {
+						majorId: row.majorId,
+						majorName: row.majorName,
 					},
 					users: [],
 					follower: [],
@@ -241,6 +272,16 @@ export class ThesisService {
 			throw new Error('Invalid ThesisGroups ID');
 		}
 
+		const specialization = await this.specializationRepository.findOne({ where: { specializationId: thesisData.specializationId } });
+		if (!specialization) {
+			throw new Error('Invalid specialization ID');
+		}
+
+		const major = await this.majorRepository.findOne({ where: { majorId: thesisData.majorId } });
+		if (!major) {
+			throw new Error('Invalid major ID');
+		}
+
 		const newId = await this.generateNewId(thesisGroup.faculty.facultyId);
 
 		const followerDetails = [{ user: thesisData.createUserId }];
@@ -260,6 +301,8 @@ export class ThesisService {
 			createUser: thesisData.createUserId,
 			lastModifyUser: thesisData.lastModifyUserId,
 			thesisGroup: thesisGroup,
+			specialization: specialization,
+			major: major,
 			follower: [
 				{
 					followerDetails: followerDetails
@@ -290,6 +333,20 @@ export class ThesisService {
 			thesis.status = status;
 		}
 
+		if (data.specialization?.specializationId) {
+			const specialization = await this.specializationRepository.findOne({ where: { specializationId: data.specialization.specializationId } });
+			if (specialization) {
+				thesis.specialization = specialization;
+			}
+		}
+
+		if (data.major?.majorId) {
+			const major = await this.majorRepository.findOne({ where: { majorId: data.major.majorId } });
+			if (major) {
+				thesis.major = major;
+			}
+		}
+
 		this.thesisRepository.merge(thesis, data);
 		return this.thesisRepository.save(thesis);
 	}
@@ -303,6 +360,24 @@ export class ThesisService {
 		// Nếu không tìm thấy bản ghi nào
 		if (thesisList.length === 0) {
 			return null;
+		}
+
+		if (data.specialization?.specializationId) {
+			const specialization = await this.specializationRepository.findOne({ where: { specializationId: data.specialization.specializationId } });
+			if (specialization) {
+				thesisList.forEach((thesis) => {
+					thesis.specialization = specialization;
+				});
+			}
+		}
+
+		if (data.major?.majorId) {
+			const major = await this.majorRepository.findOne({ where: { majorId: data.major.majorId } });
+			if (major) {
+				thesisList.forEach((thesis) => {
+					thesis.major = major;
+				});
+			}
 		}
 
 		// Cập nhật từng bản ghi
@@ -394,6 +469,14 @@ export class ThesisService {
 			.leftJoin('thesis.createUser', 'user2')
 			.addSelect(['user2.userId']);
 
+		queryBuilder
+			.leftJoin('thesis.specialization', 'specialization')
+			.addSelect(['specialization.specializationId', 'specialization.specializationName']);
+
+		queryBuilder
+			.leftJoin('thesis.major', 'major')
+			.addSelect(['major.majorId', 'major.majorName']);
+
 		queryBuilder.orderBy('thesis.createDate', 'DESC');
 		return queryBuilder.getMany();
 	}
@@ -425,6 +508,12 @@ export class ThesisService {
 		if (condition.thesisGroup) {
 			whereCondition.thesisGroup = { thesisGroupId: condition.thesisGroup };
 		}
+		if (condition.specializationId) {
+			whereCondition.specialization = { specializationId: condition.specializationId };
+		}
+		if (condition.majorId) {
+			whereCondition.major = { majorId: condition.majorId };
+		}
 
 		if (condition.facultyId) {
 			whereCondition.thesisGroup = { faculty: { facultyId: condition.facultyId } };
@@ -434,7 +523,7 @@ export class ThesisService {
 		return this.thesisRepository.find({
 			order: { createDate: 'DESC' },
 			where: whereCondition,
-			relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower'],
+			relations: ['status', 'instructor', 'createUser', 'lastModifyUser', 'follower', 'major', 'specialization'],
 		});
 	}
 
@@ -471,13 +560,19 @@ export class ThesisService {
 				'thesisUser.isLeader as isLeader',
 				'thesisUser.isApprove as isApprove',
 				'userDetail.userId as userId',
-				'userDetail.fullname as fullname'
+				'userDetail.fullname as fullname',
+				'specialization.specializationId as specializationId',
+				'specialization.specializationName as specializationName',
+				'major.majorId as majorId',
+				'major.majorName as majorName',
 			])
 			.leftJoin('thesis.status', 'status')
 			.leftJoin('thesis.instructor', 'user')
 			.leftJoin('thesis.createUser', 'user2')
 			.leftJoin(Thesis_User, 'thesisUser', 'thesisUser.thesisId = thesis.thesisId')
 			.leftJoin('thesisUser.user', 'userDetail')
+			.leftJoin('thesis.specialization', 'specialization')
+			.leftJoin('thesis.major', 'major')
 			.orderBy('thesis.createDate', 'DESC');
 
 		const rawResults = await queryBuilder.getRawMany();
@@ -503,6 +598,14 @@ export class ThesisService {
 					},
 					createUser: {
 						userId: row.creatorUserId
+					},
+					specialization: {
+						specializationId: row.specializationId,
+						specializationName: row.specializationName,
+					},
+					major: {
+						majorId: row.majorId,
+						majorName: row.majorName,
 					},
 					users: []
 				};
@@ -561,7 +664,11 @@ export class ThesisService {
 				'instructor.userId',
 				'instructor.fullname',
 				'faculty.facultyId',
-				'faculty.facultyName'
+				'faculty.facultyName',
+				'specialization.specializationId',
+				'specialization.specializationName',
+				'major.majorId',
+				'major.majorName',
 			])
 			.leftJoin('thesis.status', 'status')
 			.leftJoin('thesis.instructor', 'instructor')
@@ -573,6 +680,8 @@ export class ThesisService {
 			.addSelect(['followerUser.userId', 'followerUser.fullname', 'followerUser.avatar'])
 			.leftJoin('thesis.createUser', 'user2')
 			.addSelect(['user2.userId'])
+			.leftJoin('thesis.specialization', 'specialization')
+			.leftJoin('thesis.major', 'major')
 			.orderBy('thesis.createDate', 'DESC');
 
 		// Lấy danh sách khóa luận
@@ -667,6 +776,24 @@ export class ThesisService {
 				const entity = await this.userRepository.findOneBy({ userId: createUserId });
 				if (entity) {
 					thesis.createUser = entity;
+				}
+			}
+
+			if (thesis.specializationId) {
+				const entity = await this.specializationRepository.findOne({ where: { specializationId: thesis.specializationId } });
+				if (entity) {
+					thesis.specialization = entity;
+				} else {
+					thesis.specialization = null;
+				}
+			}
+
+			if (thesis.majorId) {
+				const entity = await this.majorRepository.findOne({ where: { majorId: thesis.majorId } });
+				if (entity) {
+					thesis.major = entity;
+				} else {
+					thesis.major = null;
 				}
 			}
 
