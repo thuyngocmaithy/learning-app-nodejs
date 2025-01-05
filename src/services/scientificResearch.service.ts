@@ -247,9 +247,7 @@ export class ScientificResearchService {
 		const followerDetails = [{ user: scientificResearchData.createUserId }];
 
 		// Nếu instructor khác với createUserId, thêm instructor vào followerDetails
-		if ((scientificResearchData.instructorId !== scientificResearchData.createUserId.userId)
-			&& (scientificResearchData.instructor.userId !== scientificResearchData.createUserId.userId)
-		) {
+		if (scientificResearchData.instructorId !== scientificResearchData.createUserId.userId) {
 			followerDetails.push({ user: instructor });
 		}
 
@@ -431,6 +429,11 @@ export class ScientificResearchService {
 			whereCondition.scientificResearchGroup = { scientificResearchGroupId: condition.scientificResearchGroup };
 		}
 
+		if (condition.facultyId) {
+			whereCondition.scientificResearchGroup = { faculty: { facultyId: condition.facultyId } };
+		}
+
+
 		return this.scientificResearchRepository.find({
 			order: { createDate: 'DESC' },
 			where: whereCondition,
@@ -531,7 +534,7 @@ export class ScientificResearchService {
 	 * @param userId ID của người dùng cần kiểm tra trạng thái duyệt
 	 * @returns Danh sách các đề tài cùng với thông tin số lượng đăng ký và trạng thái duyệt của người dùng
 	 */
-	public getBySRGIdAndCheckApprove = async (scientificResearchGroupId: string, userId: string): Promise<any[]> => {
+	public getBySRGIdAndCheckApprove = async (scientificResearchGroupId: string, userId: string, facultyId: string): Promise<any[]> => {
 		// Tạo queryBuilder cho bảng scientificResearch
 		const queryBuilder = this.scientificResearchRepository.createQueryBuilder('sr');
 
@@ -543,6 +546,11 @@ export class ScientificResearchService {
 			});
 		} else {
 			queryBuilder.andWhere('sr.isDisable = false');
+		}
+
+		// Thêm điều kiện lọc theo facultyId nếu tồn tại
+		if (facultyId && facultyId !== "null") {
+			queryBuilder.andWhere('faculty.facultyId = :facultyId', { facultyId });
 		}
 
 		// Chọn các cột cần thiết và thêm thông tin liên kết

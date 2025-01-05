@@ -490,7 +490,6 @@ export class SguAuthService {
 	async saveScoresForUserFromSgu(userId: string) {
 		try {
 			const semesters = this.ScoreOfUser.ds_diem_hocky;
-
 			// Lấy thông tin người dùng một lần
 			const user = await this.userRepository.findOne({ where: { userId: userId } });
 			if (!user) {
@@ -500,6 +499,9 @@ export class SguAuthService {
 			// Xử lý từng học kỳ
 			for (const semesterData of semesters) {
 				const semesterCode = semesterData.hoc_ky;
+				if (semesterCode === '0') {
+					continue; // Bỏ qua vòng lặp hiện tại và tiếp tục sang vòng lặp tiếp theo
+				}
 				const yearString = semesterCode.substring(0, 4);
 				const semesterNumber = parseInt(semesterCode.substring(4));
 
@@ -513,6 +515,7 @@ export class SguAuthService {
 
 				// Nếu chưa có ID học kỳ, lưu học kỳ mới
 				if (!semester.semesterId) {
+					semester.semesterId = semesterCode;
 					semester.semesterName = semesterNumber;
 					semester.academicYear = yearString;
 					await this.semesterRepository.save(semester);

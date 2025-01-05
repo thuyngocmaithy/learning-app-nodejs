@@ -41,18 +41,6 @@ export class ExpectedScore {
     expectedGPA: number | null;
 
     /**
-     * Số tín chỉ của ngành 
-     */
-    @Column({ nullable: true, default: 0 })
-    expectedCreditHourTotal: number;
-
-    /**
-     * Số tín chỉ dự kiến đạt loại A B C D F
-     */
-    @Column('varchar', { nullable: true })
-    expectedCreditType: number | null;
-
-    /**
      * Tham chiếu đến sinh viên (User)
      */
     @ManyToOne(() => User, data => data.userId, { nullable: false })

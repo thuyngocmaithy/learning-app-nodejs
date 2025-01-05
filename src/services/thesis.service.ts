@@ -426,6 +426,11 @@ export class ThesisService {
 			whereCondition.thesisGroup = { thesisGroupId: condition.thesisGroup };
 		}
 
+		if (condition.facultyId) {
+			whereCondition.thesisGroup = { faculty: { facultyId: condition.facultyId } };
+		}
+
+
 		return this.thesisRepository.find({
 			order: { createDate: 'DESC' },
 			where: whereCondition,
@@ -524,7 +529,7 @@ export class ThesisService {
 	 * @param userId ID của người dùng cần kiểm tra trạng thái duyệt
 	 * @returns Danh sách các khóa luận cùng với thông tin số lượng đăng ký và trạng thái duyệt của người dùng
 	 */
-	public getByThesisGroupIdAndCheckApprove = async (thesisGroupId: string, userId: string): Promise<any[]> => {
+	public getByThesisGroupIdAndCheckApprove = async (thesisGroupId: string, userId: string, facultyId: string): Promise<any[]> => {
 		// Tạo queryBuilder cho bảng thesis
 		const queryBuilder = this.thesisRepository.createQueryBuilder('thesis');
 
@@ -536,6 +541,11 @@ export class ThesisService {
 			});
 		} else {
 			queryBuilder.andWhere('thesis.isDisable = false');
+		}
+
+		// Thêm điều kiện lọc theo facultyId nếu tồn tại
+		if (facultyId && facultyId !== "null") {
+			queryBuilder.andWhere('faculty.facultyId = :facultyId', { facultyId });
 		}
 
 		// Chọn các cột cần thiết và thêm thông tin liên kết

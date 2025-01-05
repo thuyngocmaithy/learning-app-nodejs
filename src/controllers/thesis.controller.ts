@@ -38,8 +38,9 @@ export class ThesisController {
 		try {
 			const thesisGroupId = req.query.thesisGroupId as string;
 			const userId = req.query.userId as string;
+			const facultyId = req.query.faculty as string;
 
-			const data = await this.thesisService.getByThesisGroupIdAndCheckApprove(thesisGroupId, userId);
+			const data = await this.thesisService.getByThesisGroupIdAndCheckApprove(thesisGroupId, userId, facultyId);
 
 			return res.status(200).json({ message: 'success', data: data });
 		} catch (error) {

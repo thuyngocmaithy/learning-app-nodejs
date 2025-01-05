@@ -121,6 +121,7 @@ export class SemesterService {
 		return this.semesterRepository.find({
 			where: whereCondition,
 			relations: ['cycles'], // Đổi từ 'cycle' sang 'cycles'
+			order: { semesterId: "ASC" }
 		});
 	}
 

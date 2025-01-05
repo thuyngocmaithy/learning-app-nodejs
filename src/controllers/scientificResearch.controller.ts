@@ -39,8 +39,9 @@ export class ScientificResearchController {
 		try {
 			const SRGId = req.query.SRGId as string;
 			const userId = req.query.userId as string;
+			const facultyId = req.query.faculty as string;
 
-			const data = await this.scientificResearchService.getBySRGIdAndCheckApprove(SRGId, userId);
+			const data = await this.scientificResearchService.getBySRGIdAndCheckApprove(SRGId, userId, facultyId);
 
 			return res.status(200).json({ message: 'success', data: data });
 		} catch (error) {

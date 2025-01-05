@@ -14,6 +14,7 @@ export class Subject_Course_OpeningController {
 	public getAllSubjectCourseOpenings = (req: Request, res: Response) => RequestHandler.getAll<Subject_Course_Opening>(req, res, this.service);
 	public getSubjectCourseOpeningWhere = (req: Request, res: Response) => RequestHandler.getWhere<Subject_Course_Opening>(req, res, this.service);
 	public getSubjectCourseOpeningById = (req: Request, res: Response) => RequestHandler.getById<Subject_Course_Opening>(req, res, this.service);
+	public updateSubjectCourseOpening = (req: Request, res: Response) => RequestHandler.update<Subject_Course_Opening>(req, res, this.service);
 
 
 	public saveMultiSubjectCourseOpenings = async (req: Request, res: Response) => {

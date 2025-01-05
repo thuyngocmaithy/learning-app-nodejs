@@ -87,7 +87,7 @@ export class ComponentScore {
   /**
    * ID điểm (tham chiếu đến thực thể Score, không rỗng)
    */
-  @ManyToOne(() => Score, data => data.id, { nullable: false })
+  @ManyToOne(() => Score, data => data.id, { nullable: false, onDelete: 'CASCADE' })
   score: Score;
 
   /**
