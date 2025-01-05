@@ -96,7 +96,6 @@ export class ThesisService {
 				'status.color as color',
 				'instructor.userId as instructorUserId',
 				'instructor.fullname as instructorFullname',
-				'instructor.faculty as instructorFaculty',
 				'createUser.userId as creatorUserId',
 				'createUser.fullname as creatorFullname',
 				'lastModifyUser.userId as lastModifierUserId',
