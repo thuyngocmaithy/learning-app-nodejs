@@ -223,7 +223,9 @@ export class ScientificResearch_UserService {
 		})
 
 		const result = await this.scientificResearchUserRepository.delete({
-			group: findGroupDel?.group
+			group: findGroupDel?.group,
+			user: { userId: user.userId },
+			scientificResearch: { scientificResearchId: scientificResearch.scientificResearchId },
 		});
 		return result.affected !== null && result.affected !== undefined && result.affected > 0;
 	}

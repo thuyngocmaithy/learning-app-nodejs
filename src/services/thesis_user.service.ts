@@ -235,7 +235,9 @@ export class Thesis_UserService {
 		})
 
 		const result = await this.thesisUserRepository.delete({
-			group: findGroupDel?.group
+			group: findGroupDel?.group,
+			user: { userId: user.userId },
+			thesis: { thesisId: thesis.thesisId },
 		});
 		return result.affected !== null && result.affected !== undefined && result.affected > 0;
 	}
