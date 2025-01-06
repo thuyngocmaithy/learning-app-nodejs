@@ -116,14 +116,14 @@ export class Thesis {
   /**
    * Chuyên ngành (tham chiếu đến thực thể Specialization, không rỗng)
    */
-  @ManyToOne(() => Specialization, data => data.specializationId, { nullable: false })
+  @ManyToOne(() => Specialization, data => data.specializationId, { nullable: true })
   @JoinColumn({ name: 'specializationId' })
   specialization: Specialization;
 
   /**
    * Ngành (tham chiếu đến thực thể Major, không rỗng)
    */
-  @ManyToOne(() => Major, data => data.majorId, { nullable: false })
+  @ManyToOne(() => Major, data => data.majorId, { nullable: true })
   @JoinColumn({ name: 'majorId' })
   major: Major;
 
