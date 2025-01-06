@@ -23,21 +23,22 @@ export class Subject_Course_OpeningService {
 				'subject',
 				'semester',
 				'major'
-			]
+			],
+			order: { semester: { semesterId: "DESC" } }
 		});
 
 		// Nhóm và chỉ giữ item đầu tiên
 		const grouped = data.reduce((result: Record<string, Record<string, Subject_Course_Opening>>, item) => {
-			const semesterName = item.semester?.semesterName || 'Unknown Semester';
-			const majorName = item.major?.majorName || 'Unknown Major';
+			const semesterId = item.semester?.semesterId || 'Unknown Semester';
+			const majorId = item.major?.majorId || 'Unknown Major';
 
-			if (!result[semesterName]) {
-				result[semesterName] = {};
+			if (!result[semesterId]) {
+				result[semesterId] = {};
 			}
 
 			// Chỉ thêm phần tử đầu tiên nếu nhóm chưa tồn tại
-			if (!result[semesterName][majorName]) {
-				result[semesterName][majorName] = item;
+			if (!result[semesterId][majorId]) {
+				result[semesterId][majorId] = item;
 			}
 
 			return result;
@@ -45,7 +46,12 @@ export class Subject_Course_OpeningService {
 
 		// Chuyển cấu trúc thành mảng
 		return Object.values(grouped)
-			.flatMap((majorMap) => Object.values(majorMap));
+			.flatMap((majorMap) => Object.values(majorMap))
+			.sort((a, b) => {
+				const semesterIdA = Number(a.semester?.semesterId) || 0;
+				const semesterIdB = Number(b.semester?.semesterId) || 0;
+				return semesterIdB - semesterIdA; // Sắp xếp giảm dần
+			});
 	}
 
 
